@@ -1,0 +1,53 @@
+[ Description("Model an atom, For use with CIMOM and PyWBEM Provider")]
+class Test_Atom
+{
+    /*
+    INTRINSIC DATA TYPE INTERPRETATION
+    uint8 Unsigned 8-bit integer
+    sint8 Signed 8-bit integer
+    uint16 Unsigned 16-bit integer
+    sint16 Signed 16-bit integer
+    uint32 Unsigned 32-bit integer
+    sint32 Signed 32-bit integer
+    uint64 Unsigned 64-bit integer
+    sint64 Signed 64-bit integer
+    string UCS-2 string
+    boolean Boolean
+    real32 IEEE 4-byte floating-point
+    real64 IEEE 8-byte floating-point
+    datetime A string containing a date-time
+    <classname> ref Strongly typed reference
+    char16 16-bit UCS-2 character
+    */
+    uint8 uint8Prop;
+    uint8 uint8Propa[];
+    sint8 sint8prop;
+    sint8 sint8propa[];
+    uint16 uint16Prop; 
+    uint16 uint16Propa[]; 
+    sint16 sint16Prop;
+    sint16 sint16Propa[];
+    uint32 uint32Prop;
+    uint32 uint32Propa[];
+    sint32 sint32Prop;
+    sint32 sint32Propa[];
+    uint64 uint64Prop;
+    uint64 uint64Propa[];
+    sint64 sint64Prop;
+    sint64 sint64Propa[];
+    string stringProp;
+    string stringPropa[];
+    real32 real32Prop;
+    real32 real32Propa[];
+    real64 real64Prop;
+    real64 real64Propa[];
+//    char16 char16Prop;
+//    char16 char16Propa[];
+    datetime dateProp;
+    boolean boolProp;
+   [Key, Description("The Name of the atom.")]
+      string Name;
+
+    //<classname> ref //Strongly typed reference "its value is an object path -- pointer to another instance
+
+};

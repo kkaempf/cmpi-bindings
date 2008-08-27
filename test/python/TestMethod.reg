@@ -1,0 +1,10 @@
+// Provider registration for TestMethod
+instance of OpenWBEM_PyProviderRegistration
+{
+        InstanceID = "pywbem:test:TestMethod:001"; 
+        NamespaceNames = {"root/cimv2"}; 
+        ClassName = "Test_Method"; 
+        ProviderTypes = {1,6};  // Instance, Method
+        ModulePath = "/usr/lib/pycim/TestMethod.py";
+}; 
+

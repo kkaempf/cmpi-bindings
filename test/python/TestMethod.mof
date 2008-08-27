@@ -1,0 +1,264 @@
+[ Description("Class with several methods to test method provider capabilities.")]
+class Test_Method
+{
+	[Key, Description("Unique identifier for this instance.")]
+	string id;
+
+	string p_str; 
+	sint32 p_sint32; 
+
+	sint8 genRand_sint8(
+	       [in] sint8 min,
+	       [in] sint8 max,
+	       [in(false), out] boolean success
+	);
+	sint16 genRand_sint16(
+	       [in] sint16 min,
+	       [in] sint16 max,
+	       [in(false), out] boolean success
+	);
+	sint32 genRand_sint32(
+	       [in] sint32 min,
+	       [in] sint32 max,
+	       [in(false), out] boolean success
+	);
+	sint64 genRand_sint64(
+	       [in] sint64 min,
+	       [in] sint64 max,
+	       [in(false), out] boolean success
+	);
+	uint8 genRand_uint8(
+	       [in] uint8 min,
+	       [in] uint8 max,
+	       [in(false), out] boolean success
+	);
+	uint16 genRand_uint16(
+	       [in] uint16 min,
+	       [in] uint16 max,
+	       [in(false), out] boolean success
+	);
+	uint32 genRand_uint32(
+	       [in] uint32 min,
+	       [in] uint32 max,
+	       [in(false), out] boolean success
+	);
+	uint64 genRand_uint64(
+	       [in] uint64 min,
+	       [in] uint64 max,
+	       [in(false), out] boolean success
+	);
+	real32 genRand_real32(
+	       [in] real32 min,
+	       [in] real32 max,
+	       [in(false), out] boolean success
+	);
+	real64 genRand_real64(
+	       [in] real64 min,
+	       [in] real64 max,
+	       [in(false), out] boolean success
+	);
+
+	boolean genRandList_sint8(
+		 [in, out, required] sint8 lo,
+		 [in, out, required] sint8 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] sint8 nlist[]
+	);
+	boolean genRandList_sint16(
+		 [in, out, required] sint16 lo,
+		 [in, out, required] sint16 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] sint16 nlist []
+	);
+	boolean genRandList_sint32(
+		 [in, out, required] sint32 lo,
+		 [in, out, required] sint32 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] sint32 nlist []
+	);
+	boolean genRandList_sint64(
+		 [in, out, required] sint64 lo,
+		 [in, out, required] sint64 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] sint64 nlist []
+	);
+	boolean genRandList_uint8(
+		 [in, out, required] uint8 lo,
+		 [in, out, required] uint8 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] uint8 nlist []
+	);
+	boolean genRandList_uint16(
+		 [in, out, required] uint16 lo,
+		 [in, out, required] uint16 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] uint16 nlist []
+	);
+	boolean genRandList_uint32(
+		 [in, out, required] uint32 lo,
+		 [in, out, required] uint32 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] uint32 nlist []
+	);
+	boolean genRandList_uint64(
+		 [in, out, required] uint64 lo,
+		 [in, out, required] uint64 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] uint64 nlist []
+	);
+	boolean genRandList_real32(
+		 [in, out, required] real32 lo,
+		 [in, out, required] real32 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] real32 nlist []
+	);
+	boolean genRandList_real64(
+		 [in, out, required] real64 lo,
+		 [in, out, required] real64 hi,
+		 [in, required] sint32 nelems,
+		 [in(false), out] real64 nlist []
+	);
+
+	boolean minmedmax_sint8(
+	       [in, required] sint8 numlist[],
+	       [in(false), out] sint8 min,
+	       [in(false), out] sint8 max,
+	       [in(false), out] sint8 med
+	);
+	boolean minmedmax_sint16(
+	       [in, required] sint16 numlist[],
+	       [in(false), out] sint16 min,
+	       [in(false), out] sint16 max,
+	       [in(false), out] sint16 med
+	);
+	boolean minmedmax_sint32(
+	       [in, required] sint32 numlist[],
+	       [in(false), out] sint32 min,
+	       [in(false), out] sint32 max,
+	       [in(false), out] sint32 med
+	);
+	boolean minmedmax_sint64(
+	       [in, required] sint64 numlist[],
+	       [in(false), out] sint64 min,
+	       [in(false), out] sint64 max,
+	       [in(false), out] sint64 med
+	);
+	boolean minmedmax_uint8(
+	       [in, required] uint8 numlist[],
+	       [in(false), out] uint8 min,
+	       [in(false), out] uint8 max,
+	       [in(false), out] uint8 med
+	);
+	boolean minmedmax_uint16(
+	       [in, required] uint16 numlist[],
+	       [in(false), out] uint16 min,
+	       [in(false), out] uint16 max,
+	       [in(false), out] uint16 med
+	);
+	boolean minmedmax_uint32(
+	       [in, required] uint32 numlist[],
+	       [in(false), out] uint32 min,
+	       [in(false), out] uint32 max,
+	       [in(false), out] uint32 med
+	);
+	boolean minmedmax_uint64(
+	       [in, required] uint64 numlist[],
+	       [in(false), out] uint64 min,
+	       [in(false), out] uint64 max,
+	       [in(false), out] uint64 med
+	);
+	boolean minmedmax_real32(
+	       [in, required] real32 numlist[],
+	       [in(false), out] real32 min,
+	       [in(false), out] real32 max,
+	       [in(false), out] real32 med
+	);
+	boolean minmedmax_real64(
+	       [in, required] real64 numlist[],
+	       [in(false), out] real64 min,
+	       [in(false), out] real64 max,
+	       [in(false), out] real64 med
+	);
+
+	boolean strSplit(
+		 [in, required] string str,
+		 [in] string sep,
+		 [in(false), out] sint32 nelems,
+		 [in(false), out] string elems[]
+	);
+	string strCat(
+	       [in, required] string strs[],
+	       [in] string sep
+	);
+
+	datetime getDate(
+		 [in, required] string datestr
+	);
+	boolean getDates(
+		   [in, required] string datestrs[],
+		   [in(false), out] sint32 nelems,
+		   [in(false), out] datetime elems[]
+	);
+
+	char16 mkUniChar(
+		[in, required] sint8 c
+	);
+	boolean mkUniCharArray(
+		  [in, required] sint8 inArr[],
+		  [in(false), out] char16 outArr[]
+	);
+	string mkUniStr_sint8(
+	       [in, required] sint8 cArr[]
+	);
+	string mkUniStr_char16(
+	       [in, required] char16 cArr[]
+	);
+
+	string getStrProp(); 
+
+	[ Description("Set the value of p_str.  Return the previous value of "
+                  "p_str.")]
+	string setStrProp(
+		  [in, required] string value
+	); 
+
+	sint32 getIntProp(); 
+
+	[ Description("Set the value of p_sint32.  Return the previous value of "
+                  "p_sint32.")]
+	sint32 setIntProp(
+			[in, required] sint32 value
+	); 
+
+    [ Description("Return the instance name of any instance of Test_Method") ]
+	sint32 getObjectPath(
+			[in(false), out] Test_Method REF path
+	); 
+
+    [ Description("Return instance names of all instances of Test_Method") ]
+	sint32 getObjectPaths(
+			[in(false), out] Test_Method REF paths[]
+	); 
+
+    [ Description("Delete the specified instance of Test_Method") ]
+	sint32 delObject(
+			[in, required] Test_Method REF path
+	); 
+
+    [ Description("Delete the specified instances of Test_Method") ]
+	sint32 delObjects(
+			[in, required] Test_Method REF paths[]
+	); 
+
+    [ Description("Create the specified instance of Test_Method") ]
+	sint32 createObject(
+			[in, required, EmbeddedInstance("Test_Method")] string inst
+	); 
+
+    [ Description("Create the specified instances of Test_Method") ]
+	sint32 createObjects(
+			[in, required, EmbeddedInstance("Test_Method")] string insts[]
+	); 
+	
+};
+

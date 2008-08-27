@@ -1,0 +1,5 @@
+[Test_Method]   
+   provider: TestMethod
+   location: pyCmpiProvider
+   type: instance method
+   namespace: root/cimv2

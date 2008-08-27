@@ -1,0 +1,55 @@
+[ Description("Testing up-calls into the CIMOM from a provider")]
+class UpcallAtom
+{
+
+	[Description("Kickoff the method provider test")]
+	string starttest(
+	//return a string array of log messages
+	);
+	[Description("Send an export_indication")]
+	string send_indication(
+	//return a string array of log messages
+	);
+};
+class UpcallAtom_Indication : CIM_AlertIndication
+{
+};
+class UpcallAtom_Indication_Handler : CIM_ListenerDestination
+{
+};
+
+
+
+
+
+
+// Filter Instance
+//INSTANCE OF CIM_IndicationFilter as $filter
+//{
+//    SystemCreationClassName = "OMC_UnitaryComputerSystem";
+//    SystemName = "127.0.0.1";
+//    CreationClassName = "CIM_IndicationFilter";
+//    Name = "/UpcallAtom_Indication_Handler";
+//    SourceNamespace = "root/cimv2";
+//    Query = "select * from UpcallAtom_Indication";
+//    QueryLanguage = "wql1";
+//};
+
+// Listener Destination Instance
+//INSTANCE OF UpcallAtom_Indication_Handler as $dest
+//{
+//    SystemCreationClassName = "OMC_UnitaryComputerSystem";
+//    SystemName = "127.0.0.1";
+//    CreationClassName = "UpcallAtom_Indication_Handler";
+//    Name = "/UpcallAtom_Indication_Handler";
+//};
+
+// Subscription Instance Tie together the indication filter
+// and the indication handler
+//INSTANCE OF CIM_IndicationSubscription
+//{
+//    Filter=$filter;
+//    Handler=$dest;
+//    AlertOnStateChange=false;
+//};
+

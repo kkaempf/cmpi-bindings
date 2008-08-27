@@ -1,0 +1,9 @@
+// Provider registration for TestAtom
+instance of OpenWBEM_PyProviderRegistration
+{
+        InstanceID = "<org:product:TestAtom:unique_id>"; // TODO
+        NamespaceNames = {"root/cimv2"}; 
+        ClassName = "Test_Atom"; 
+        ProviderTypes = {1};  // Instance
+        ModulePath = "/usr/lib/pycim/TestAtomProvider.py";  // TODO
+}; 

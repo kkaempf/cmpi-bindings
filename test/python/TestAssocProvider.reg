@@ -1,0 +1,27 @@
+// Provider registration for TestAssoc
+instance of OpenWBEM_PyProviderRegistration
+{
+	InstanceID = "<Novell:ZENworks:TestAssoc:001>";
+	NamespaceNames = {"root/cimv2"};
+	ClassName = "TestAssoc_User";
+	ProviderTypes = {1};
+	ModulePath = "/usr/lib/pycim/TestAssocProvider.py";
+};
+
+instance of OpenWBEM_PyProviderRegistration
+{
+	InstanceID = "<Novell:ZENworks:TestAssoc:002>";
+	NamespaceNames = {"root/cimv2"};
+	ClassName = "TestAssoc_Group";
+	ProviderTypes = {1};
+	ModulePath = "/usr/lib/pycim/TestAssocProvider.py";
+};
+
+instance of OpenWBEM_PyProviderRegistration
+{
+	InstanceID = "<Novell:ZENworks:TestAssoc:003>";
+	NamespaceNames = {"root/cimv2"};
+	ClassName = "TestAssoc_MemberOfGroup";
+	ProviderTypes  = {1, 3};
+	ModulePath = "/usr/lib/pycim/TestAssocProvider.py";
+};

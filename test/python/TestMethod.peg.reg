@@ -1,0 +1,28 @@
+//////// TestMethod 
+instance of PG_ProviderModule
+{
+    Name = "/usr/lib/pycim/TestMethod.py"; 
+    InterfaceType = "Python"; 
+    InterfaceVersion = "1.0.0"; 
+    Location = "/usr/lib/pycim/TestMethod.py"; 
+    Vendor = "OMC"; 
+    Version = "0.1.0"; 
+}; 
+
+instance of PG_Provider
+{
+    Name = "TestMethod"; 
+    ProviderModuleName = "/usr/lib/pycim/TestMethod.py"; 
+}; 
+
+instance of PG_ProviderCapabilities
+{
+    CapabilityID = "TestMethod"; 
+    ProviderModuleName = "/usr/lib/pycim/TestMethod.py"; 
+    ProviderName = "TestMethod"; 
+    ClassName = "Test_Method"; 
+    Namespaces = {"root/cimv2"}; 
+    ProviderType = {2,5}; // Instance, Method 
+}; 
+
+

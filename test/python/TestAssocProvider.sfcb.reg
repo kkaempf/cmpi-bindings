@@ -1,0 +1,17 @@
+[TestAssoc_Group]
+   provider: TestAssocProvider
+   location: pyCmpiProvider
+   type: instance
+   namespace: root/cimv2
+
+[TestAssoc_User]
+   provider: TestAssocProvider
+   location: pyCmpiProvider
+   type: instance
+   namespace: root/cimv2
+
+[TestAssoc_MemberOfGroup]
+   provider: TestAssocProvider
+   location: pyCmpiProvider
+   type: instance association
+   namespace: root/cimv2

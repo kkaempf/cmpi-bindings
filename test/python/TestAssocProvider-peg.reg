@@ -1,0 +1,47 @@
+// Provider registration for TestAssoc
+instance of PG_ProviderModule
+{
+	Name = "TestAssocProvider-Module";
+	InterfaceType = "Python";
+	InterfaceVersion = "1.0.0";
+	Location = "/usr/lib/pycim/TestAssocProvider.py";
+	Vendor = "Novell";
+	Version = "1.0.0";
+};
+
+instance of PG_Provider
+{
+	Name = "TestAssocProvider-Provider";
+	ProviderModuleName = "TestAssocProvider-Module";
+};
+
+instance of PG_ProviderCapabilities
+{
+	CapabilityID = "TestAssocProvider-Capability1";
+	ProviderModuleName = "TestAssocProvider-Module";
+	ProviderName = "TestAssocProvider-Provider";
+	ClassName = "TestAssoc_User";
+	Namespaces = {"root/cimv2"};
+	ProviderType = {2};		// Instance
+};
+
+instance of PG_ProviderCapabilities
+{
+	CapabilityID = "TestAssocProvider-Capability2";
+	ProviderModuleName = "TestAssocProvider-Module";
+	ProviderName = "TestAssocProvider-Provider";
+	ClassName = "TestAssoc_Group";
+	Namespaces = {"root/cimv2"};
+	ProviderType = {2};		// Instance
+};
+
+instance of PG_ProviderCapabilities
+{
+	CapabilityID = "TestAssocProvider-Capability3";
+	ProviderModuleName = "TestAssocProvider-Module";
+	ProviderName = "TestAssocProvider-Provider";
+	ClassName = "TestAssoc_MemberOfGroup";
+	Namespaces = {"root/cimv2"};
+	ProviderType = {2,3};		// Instance/Association
+};
+

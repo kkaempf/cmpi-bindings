@@ -1,0 +1,39 @@
+[ Description("Local user of the system on which the CIMOM is running")]
+class TestAssoc_User
+{
+	[Key, Description("The user's numeric user ID")]
+	string UserID;
+
+	[Required, Description("The user's username")]
+	string UserName;
+
+	[Description("The user's home directory, if any")]
+	string HomeDirectory;
+
+	[Description("The user's login shell, if any")]
+	string LoginShell;
+};
+
+[ Description("Local group of users on the system on which the CIMOM is running")]
+class TestAssoc_Group
+{
+	[Key, Description("The group's numeric group ID")]
+	string GroupID;
+
+	[Required, Description("The group's name")]
+	string GroupName;
+};
+
+[ Association, Description("Association that shows relationship of users and groups")]
+class TestAssoc_MemberOfGroup
+{
+	[Key, Override("Antecedent"), Description ("The group")]
+	TestAssoc_Group REF Antecedent;
+
+	[Key, Override("Dependent"), Description("The user")]
+	TestAssoc_User REF Dependent;
+
+	[Required, Description("Indicates whether the associated group is the primary group for the associated user")]
+	boolean isPrimaryGroup;
+};
+

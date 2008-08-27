@@ -1,0 +1,28 @@
+// Provider registration for UpcallAtom
+instance of OpenWBEM_PyProviderRegistration
+{
+        InstanceID = "<Novell:Zenworks:UpcallAtom:001>"; 
+        NamespaceNames = {"root/cimv2"}; 
+        ClassName = "UpcallAtom"; 
+        ProviderTypes = {6};  //  Method
+        ModulePath = "/usr/lib/pycim/UpcallAtomProvider.py";  
+}; 
+
+instance of OpenWBEM_PyProviderRegistration
+{
+        InstanceID = "<Novell:Zenworks:UpcallAtom:002>"; 
+        NamespaceNames = {"root/cimv2"}; 
+        ClassName = "UpcallAtom_Indication"; 
+        ProviderTypes = {5};  //  Indication
+        ModulePath = "/usr/lib/pycim/UpcallAtomProvider.py";  
+}; 
+instance of OpenWBEM_PyProviderRegistration
+{
+        InstanceID = "<Novell:Zenworks:UpcallAtom:003>"; 
+        NamespaceNames = {"root/cimv2"}; 
+        //ClassName = "UpcallAtom_Indication_Handler"; 
+	    IndicationExportHandlerClassNames = {"UpcallAtom_Indication_Handler"};
+        ProviderTypes = {7};  //  Indication_Handler
+        ModulePath = "/usr/lib/pycim/UpcallAtomProvider.py";  
+		Description = "Indication Handler for export_indications";
+}; 

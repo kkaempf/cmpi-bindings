@@ -1,0 +1,47 @@
+[ Description("Testing up-calls into the CIMOM from a provider")]
+class UpcallAtom
+{
+
+	[Description("Kickoff the method provider test")]
+	string starttest(
+	//return a string array of log messages
+	);
+
+	[Description("Send an export_indication")]
+	string send_indication(
+	//return a string array of log messages
+	);
+};
+
+[ Description("This is the indication the UpcallAtomProvider generates. "
+	"The UpcallAtomProvider is for testing purposes only")]
+class UpcallAtom_Indication : CIM_AlertIndication
+{
+};
+
+INSTANCE OF CIM_IndicationFilter as $filter
+{
+    CreationClassName = "CIM_IndicationFilter";
+    Name = "UpcallAtom_Indication_Filter";
+    SystemCreationClassName = "CIM_ComputerSystem";
+    SystemName = "jmc2.provo.novell.com";
+    SourceNamespace = "root/cimv2";
+    Query = "select * from UpcallAtom_Indication";
+    QueryLanguage = "WQL";
+};
+
+INSTANCE OF CIM_IndicationHandlerCIMXML as $dest
+{
+	CreationClassName = "CIM_IndicationHandlerCIMXML";
+	Name = "UpcallAtom_Indication_Handler";
+	SystemCreationClassName = "CIM_ComputerSystem";
+	SystemName = "jmc2.provo.novell.com";
+	Destination = "localhost/cimlistener/UpcallAtom";
+};
+
+INSTANCE OF CIM_IndicationSubscription
+{
+	Filter = $filter;
+	Handler = $dest;
+};
+
