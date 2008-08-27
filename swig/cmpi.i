@@ -27,7 +27,13 @@ clone_data(const CMPIData *dp)
  * provider code
  */
 
-#include "../src/cmpi_provider.c"
+#if defined(SWIGRUBY)
+#include "../src/cmpi_provider_ruby.c"
+#endif
+
+#if defined(SWIGPYTHON)
+#include "../src/cmpi_provider_python.c"
+#endif
 
 %}
 
