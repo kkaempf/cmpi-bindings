@@ -1,0 +1,5 @@
+[Py_UnixProcess]   
+   provider: Py_UnixProcessProvider
+   location: pyCmpiProvider
+   type: instance method
+   namespace: root/cimv2

@@ -1,0 +1,27 @@
+Keep track of which objects are created with new*() methods from the 
+brokerEncFT, and which are created with clone().  We have to release the 
+later, not the former. 
+
+Fix memory leaks related to cloning of CMPIData structs. 
+
+Items marked as "TODO" in the code. 
+
+Fix the build to determine the python version and dynamically link
+to libpython.  Cmake only knows how to statically link to libpython. 
+Right now it is hard-coded for libpython-2.5. 
+
+Finish wrapping broker FTs, such as upcalls. 
+
+Handling CMPIStatus:
+Instead of returning CMPIStatus, check it in C code, and throw and 
+exception if it isn't CMPI_RC_OK.  Functions that return CMPIStatus
+would then be void instead.  We'll check CMPIStatus* output parameters
+as well, and do the same.  We need to create an exception class with a 
+code and error string in swig.  
+[Not possible to pass status+message in a generic way. How about a
+toplevel function which raised the execption ?]
+
+Split src/ into target-specific and common parts
+
+Wrap CMPIEnumeration and CMPIArray in typemaps. 
+

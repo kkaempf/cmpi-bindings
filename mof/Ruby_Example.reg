@@ -1,0 +1,5 @@
+[Ruby_Example]   
+   provider: CmpiInstanceRuby
+   location: rbCmpiInstance
+   type: instance
+   namespace: root/cimv2

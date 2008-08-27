@@ -1,0 +1,11 @@
+[ Description("Model a Linux Process, For use with PyWBEM Provider QuickStart Guide")]
+class Py_UnixProcess : CIM_UnixProcess
+{
+        [Description("Send a signal to a process.")]
+        sint32 kill(
+                [Description("The signal to send the process"),
+                 ValueMap{"1","9","15"},
+                 Values{"SIGHUP","SIGKILL","SIGTERM"},
+                 IN(true), OUT(false)]
+                uint16 signal);
+};

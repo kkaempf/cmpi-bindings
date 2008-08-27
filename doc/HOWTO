@@ -1,0 +1,44 @@
+CMPI providers with SWIG
+------------------------
+
+Problem statement
+-----------------
+
+SWIG (www.swig.org) is a bindings generator used to create language
+bindings (i.e. Perl, Ruby, Python) for C or C++ libraries.
+This makes library functions accessible from a foreign language.
+
+Using SWIG to create CMPI providers reverts the flow of control. This
+is usally from the foreign language to the C or C++ library. The SWIG
+bindings 'call into' the library.
+
+Writing CMPI providers in a foreign language reverts the calling
+process. The CIMOM call into functions implemented in the foreign
+language.
+
+
+Solution
+--------
+
+The problem is solved by creating a shim layer, providing a CMPI API
+towards the CIMOM and transfering calls to this API through the SWIG
+bindings into the scripting language interpreter.
+
+This shim links with and initializes the target language interpreter.
+When loaded by the CIMOM, an init function is called. This in turn
+initializes the target interpreter and calls it to load the SWIG
+binding code.
+
+It then calls an initialization function (a singleton class) which
+provides hooks to fill the function pointer table defined by CMPI.
+
+
+Target language considerations
+------------------------------
+
+Implementing a provider needs information defined in the .mof file of
+the CIM class to be instrumented. Thus the target language
+implementation is best driven by a MOF parser. The concept to be
+used here is similar to SWIG, which uses a C/C++ parser to
+automatically generate bindings.
+

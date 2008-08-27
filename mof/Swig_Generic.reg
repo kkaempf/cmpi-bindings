@@ -1,0 +1,5 @@
+[Cmpi_Swig]   
+   provider: Cmpi_Swig
+   location: pyCmpiProvider
+   type: instance
+   namespace: root/cimv2

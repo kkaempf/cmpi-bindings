@@ -1,0 +1,44 @@
+//
+// Swig_Generic.mof
+//
+// (C) Copyright SUSE Linux Products GmbH 2008
+//
+// THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+// ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+// CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+//
+// You can obtain a current copy of the Common Public License from
+// http://www.opensource.org/licenses/cpl1.0.txt
+//
+// Author:       Klaus Kaempf <kkaempf@suse.de>
+// Contributors:
+//
+// Description:
+// CIM classes for SWIG/CMPI
+//
+
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+
+// -------------------------------------------------------------------
+// *******************************************************************
+// 	Classes
+// *******************************************************************
+// -------------------------------------------------------------------
+
+
+
+// ===================================================================
+// 	Cmpi_Swig
+// ===================================================================
+
+[ Provider("cmpi:cmpi_swig"),
+  Description ("A sample class to demonstrate cmpi/swig" )
+]
+class Cmpi_Swig : CIM_ManagedElement
+{ 
+  [Description ("A friendly greeting") ]
+  string hello;
+};

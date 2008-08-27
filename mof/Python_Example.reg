@@ -1,0 +1,5 @@
+[Python_Example]   
+   provider: CmpiInstancePython
+   location: pyCmpiInstance
+   type: instance
+   namespace: root/cimv2

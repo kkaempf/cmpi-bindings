@@ -1,0 +1,17 @@
+#
+# CMakeLists.txt for cmpi-bindings/swig
+#
+
+enable_testing()
+
+FIND_PACKAGE(Ruby)
+IF (RUBY_LIBRARY AND RUBY_INCLUDE_PATH)
+  MESSAGE(STATUS "Building Ruby...")
+#  ADD_SUBDIRECTORY(ruby)
+ENDIF (RUBY_LIBRARY AND RUBY_INCLUDE_PATH)
+
+FIND_PACKAGE(PythonLibs)
+IF (PYTHON_LIBRARY)
+  MESSAGE(STATUS "Building Python...")
+  ADD_SUBDIRECTORY(python)
+ENDIF (PYTHON_LIBRARY)
