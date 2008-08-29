@@ -626,9 +626,11 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
     #TODO memory leak alert (clone_data)
     PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
 
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
     PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
+    SWIG_PYTHON_THREAD_END_BLOCK; 
     return pl;
 #endif
   }
@@ -722,9 +724,11 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
     #TODO memory leak alert (clone_data)
     PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
 
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
     PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
+    SWIG_PYTHON_THREAD_END_BLOCK; 
     return pl;
 #endif
   }

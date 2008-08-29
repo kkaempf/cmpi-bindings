@@ -23,7 +23,7 @@ SET( SWIG_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/../cmpi.i" )
 ADD_CUSTOM_COMMAND (
    OUTPUT  ${SWIG_OUTPUT}
    COMMAND ${CMAKE_COMMAND} -E echo_append "Creating wrapper code for Python ..."
-   COMMAND ${SWIG_EXECUTABLE} -python -features autodoc -o ${SWIG_OUTPUT} -I${CMPI_INCLUDE_DIR} ${SWIG_INPUT}
+   COMMAND ${SWIG_EXECUTABLE} -python -threads -features autodoc -o ${SWIG_OUTPUT} -I${CMPI_INCLUDE_DIR} ${SWIG_INPUT}
    COMMAND ${CMAKE_COMMAND} -E echo "Done."
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../*.i
@@ -57,4 +57,4 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmpi.py DESTINATION ${PYTHON_LIB_DIR}/
 # pycmpi_provider.py: provider implementation
 #
 INSTALL(FILES pycmpi_provider.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
-INSTALL(FILES Py_UnixProcessProvider.py DESTINATION /usr/lib/pycim )
+#INSTALL(FILES Py_UnixProcessProvider.py DESTINATION /usr/lib/pycim )

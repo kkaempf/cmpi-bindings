@@ -94,6 +94,7 @@ static char* fmtstr(const char* fmt, ...)
 	return str; 
 }
 
+
 static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st);
 #define PY_CMPI_INIT { if (((PyProviderMIHandle*)(self->hdl))->pyMod == NULL) if (PyInitialize(((PyProviderMIHandle*)(self->hdl)), &status) != 0) return status; }
 
@@ -103,11 +104,14 @@ static PyObject* proplist2py(const char** cplist)
 	{
 		Py_RETURN_NONE;
 	}
-	PyObject* pl = PyList_New(0); 
+	PyObject* pl;
+	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
+	pl = PyList_New(0); 
 	for (; *cplist != NULL; ++cplist)
 	{
 		PyList_Append(pl, PyString_FromString(*cplist)); 
 	}
+	//SWIG_PYTHON_THREAD_END_BLOCK; 
 	return pl; 
 }
 
@@ -129,6 +133,7 @@ static CMPIString* get_exc_trace()
 
 	PyObject *type, *value, *traceback;
 	_SBLIM_TRACE(1, ("PyErr_Occurred() %d", PyErr_Occurred())); 
+	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
 	PyErr_Fetch(&type, &value, &traceback);
     _SBLIM_TRACE(1,("** type %p, value %p, traceback %p", type, value, traceback)); 
 	PyErr_Print(); 
@@ -188,6 +193,7 @@ static CMPIString* get_exc_trace()
 
 cleanup:
 	PyErr_Restore(type, value, traceback);
+	//SWIG_PYTHON_THREAD_END_BLOCK; 
 
 	if (rv == NULL)
 	{
@@ -217,6 +223,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     PyObject *pyargs = NULL; 
     PyObject *pyfunc = NULL; 
 	PyObject *prv = NULL; 
+	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     pyargs = PyTuple_New(nargs); 
     pyfunc = PyObject_GetAttrString(hdl->pyMod, opname); 
     if (pyfunc == NULL)
@@ -310,6 +317,7 @@ cleanup:
     Py_DecRef(pyargs);
     Py_DecRef(pyfunc);
     Py_DecRef(prv);
+	//SWIG_PYTHON_THREAD_END_BLOCK; 
     return rc; 
 }
 
@@ -327,8 +335,11 @@ static CMPIStatus Cleanup(
    
     _SBLIM_TRACE(1,("Cleanup() called"));
    
+	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     Py_DecRef(_PYPROVMOD); 
     Py_Finalize();
+	// TODO should release come before finalize? 
+	//SWIG_PYTHON_THREAD_END_BLOCK; 
     _SBLIM_TRACE(1,("Cleanup(Python) called"));
 
 	if (miHdl != NULL) 
