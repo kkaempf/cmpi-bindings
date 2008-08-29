@@ -205,7 +205,7 @@ class CMPIProvider(object):
 
 
     def exec_query(self, ctx, rslt, objname, query, lang):
-        pass
+        return (pywbem.CIM_ERR_NOT_SUPPORTED, '')
 
 
     def associator_names(self, ctx, rslt, objName, assocClass, resultClass,
