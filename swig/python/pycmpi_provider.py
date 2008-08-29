@@ -117,7 +117,6 @@ class CMPIProvider(object):
         self.env = ProviderEnvironment(self.broker)
         self.proxy = ProviderProxy(self.env, 
                 '/usr/lib/pycim/'+miname+'.py')
-        broker = cmpi.CMPIBroker()
         print '*** broker.name()', broker.name()
         print '*** broker.capabilities()', broker.capabilities()
         print '*** broker.version()', broker.version()
