@@ -112,6 +112,7 @@ class CMPIProvider(object):
 
     def __init__(self, miname, broker):
         print 'called CMPIProvider(', miname, ',', broker, ')'
+        broker = cmpi.CMPIBroker()
         self.broker = broker
         self.miname = miname
         self.env = ProviderEnvironment(self.broker)
