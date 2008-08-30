@@ -15,8 +15,10 @@ function __install {
         exit 1
     fi
 
+    echo "rm -f $dir/$fn"
     rm -f $dir/$fn
-    ln -s $fn $dir
+    echo "ln -s `pwd`/$fn $dir"
+    ln -s `pwd`/$fn $dir
 }
 
 __install TestMethod.mof /var/lib/sfcb/stage/mofs/root/cimv2
