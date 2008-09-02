@@ -31,6 +31,8 @@
 
 static char _CLASSNAME[] = "CmpiInstanceSwig";
 
+#define WITH_SWIG_THREADS 0
+
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -98,27 +100,51 @@ static char* fmtstr(const char* fmt, ...)
 static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st);
 #define PY_CMPI_INIT { if (((PyProviderMIHandle*)(self->hdl))->pyMod == NULL) if (PyInitialize(((PyProviderMIHandle*)(self->hdl)), &status) != 0) return status; }
 
-static PyObject* proplist2py(const char** cplist)
+static PyObject*
+proplist2py(const char** cplist)
 {
-	if (cplist == NULL)
-	{
-		Py_RETURN_NONE;
-	}
-	PyObject* pl;
-	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-	pl = PyList_New(0); 
-	for (; *cplist != NULL; ++cplist)
-	{
-		PyList_Append(pl, PyString_FromString(*cplist)); 
-	}
-	//SWIG_PYTHON_THREAD_END_BLOCK; 
-	return pl; 
+    if (cplist == NULL)
+    {
+	Py_RETURN_NONE;
+    }
+    PyObject* pl;
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+#endif
+ 
+    pl = PyList_New(0); 
+    for (; *cplist != NULL; ++cplist)
+    {
+	PyList_Append(pl, PyString_FromString(*cplist)); 
+    }
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_END_BLOCK
+#endif
+ 
+    return pl; 
 }
 
 
+static PyObject *
+string2py(const char *s)
+{
+    PyObject *obj;
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+#endif
+ 
+    obj = PyString_FromString(s);
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_END_BLOCK
+#endif
+ 
+    return obj;
+}
+
 
 #define TB_ERROR(str) {tbstr = str; goto cleanup;}
-static CMPIString* get_exc_trace()
+static CMPIString*
+get_exc_trace()
 {
 	char *tbstr = NULL; 
 
@@ -133,7 +159,7 @@ static CMPIString* get_exc_trace()
 
 	PyObject *type, *value, *traceback;
 	_SBLIM_TRACE(1, ("PyErr_Occurred() %d", PyErr_Occurred())); 
-	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
+	SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
 	PyErr_Fetch(&type, &value, &traceback);
     _SBLIM_TRACE(1,("** type %p, value %p, traceback %p", type, value, traceback)); 
 	PyErr_Print(); 
@@ -178,8 +204,8 @@ static CMPIString* get_exc_trace()
 		TB_ERROR("getvalue() did not return a string");
 
 	args = PyTuple_New(2);
-	PyTuple_SetItem(args, 0, PyString_FromString("\n")); 
-	PyTuple_SetItem(args, 1, PyString_FromString("<br>")); 
+	PyTuple_SetItem(args, 0, string2py("\n")); 
+	PyTuple_SetItem(args, 1, string2py("<br>")); 
 	
 	func = PyObject_GetAttrString(obstr, "replace"); 
 	//newstr = PyObject_CallMethod(obstr, "replace", args); 
@@ -193,7 +219,6 @@ static CMPIString* get_exc_trace()
 
 cleanup:
 	PyErr_Restore(type, value, traceback);
-	//SWIG_PYTHON_THREAD_END_BLOCK; 
 
 	if (rv == NULL)
 	{
@@ -209,6 +234,7 @@ cleanup:
 	Py_DecRef(tbmod);
 
 
+	SWIG_PYTHON_THREAD_END_BLOCK; 
 	return rv;
 }
 
@@ -222,14 +248,17 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     va_list vargs; 
     PyObject *pyargs = NULL; 
     PyObject *pyfunc = NULL; 
-	PyObject *prv = NULL; 
-	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
+    PyObject *prv = NULL; 
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+#endif
+ 
     pyargs = PyTuple_New(nargs); 
     pyfunc = PyObject_GetAttrString(hdl->pyMod, opname); 
     if (pyfunc == NULL)
     {
-		PyErr_Print(); 
-		PyErr_Clear(); 
+	PyErr_Print(); 
+	PyErr_Clear(); 
         char* str = fmtstr("Python module does not contain \"%s\"", opname); 
         _SBLIM_TRACE(1,(str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
@@ -317,7 +346,10 @@ cleanup:
     Py_DecRef(pyargs);
     Py_DecRef(pyfunc);
     Py_DecRef(prv);
-	//SWIG_PYTHON_THREAD_END_BLOCK; 
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_END_BLOCK
+#endif
+ 
     return rc; 
 }
 
@@ -335,11 +367,17 @@ static CMPIStatus Cleanup(
    
     _SBLIM_TRACE(1,("Cleanup() called"));
    
-	//SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+#endif
+ 
     Py_DecRef(_PYPROVMOD); 
     Py_Finalize();
-	// TODO should release come before finalize? 
-	//SWIG_PYTHON_THREAD_END_BLOCK; 
+    // TODO should release come before finalize? 
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_END_BLOCK
+#endif
+ 
     _SBLIM_TRACE(1,("Cleanup(Python) called"));
 
 	if (miHdl != NULL) 
@@ -548,13 +586,13 @@ static CMPIStatus SetInstance(
  
     _SBLIM_TRACE(1,("SetInstance(Python) called, context %p, results %p, reference %p, newinstance %p, properties %p", context, results, reference, newinstance, properties));
 
-	PY_CMPI_INIT
+    PY_CMPI_INIT
 
     PyObject *pycontext = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyresult = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     PyObject *pyreference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     PyObject *pynewinst = SWIG_NewPointerObj((void*) newinstance, SWIGTYPE_p__CMPIInstance, 0);
-	PyObject *plist = proplist2py(properties); 
+    PyObject *plist = proplist2py(properties); 
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "set_instance", 5, 
                                                                pycontext,
@@ -621,8 +659,8 @@ static CMPIStatus ExecQuery(
     PyObject *pycontext = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyresult = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     PyObject *pyreference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
-	PyObject *pyquery = PyString_FromString(query); 
-	PyObject *pylang = PyString_FromString(language); 
+    PyObject *pyquery = string2py(query); 
+    PyObject *pylang = string2py(language); 
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "exec_query", 5, 
                                                                pycontext,
@@ -653,43 +691,63 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
 
 
    _SBLIM_TRACE(1,("Python: Loading"));
+  
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+#endif
+ 
     Py_SetProgramName("cmpi_swig");
     Py_Initialize();
+  
     SWIG_init();
 
-	_PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
-	if (_PYPROVMOD == NULL)
-	{
-		_SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
-		PY_CMPI_SETFAIL(get_exc_trace()); 
-		return -1; 
-	}
-	_SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
-	PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
+    _PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
+    if (_PYPROVMOD == NULL)
+    {
+        _SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
+	PY_CMPI_SETFAIL(get_exc_trace()); 
+#if WITH_SWIG_THREADS
+        SWIG_PYTHON_THREAD_END_BLOCK; 
+#endif
+	return -1; 
+    }
+    _SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
+    PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
 			"CMPIProvider"); 
-	if (provclass == NULL)
-	{
-		PY_CMPI_SETFAIL(get_exc_trace()); 
-		return -1; 
-	}
-	PyObject* broker = SWIG_NewPointerObj((void*) _BROKER, SWIGTYPE_p__CMPIBroker, 0);
-	PyObject* args = PyTuple_New(2); 
+    if (provclass == NULL)
+    {
+	PY_CMPI_SETFAIL(get_exc_trace()); 
+#if WITH_SWIG_THREADS
+        SWIG_PYTHON_THREAD_END_BLOCK; 
+#endif
+	return -1; 
+    }
+    PyObject* broker = SWIG_NewPointerObj((void*) _BROKER, SWIGTYPE_p__CMPIBroker, 0);
+    PyObject* args = PyTuple_New(2); 
     _SBLIM_TRACE(1,("\n>>>>> PyInitialize(Python) called, MINAME=%s\n", hdl->miName));
-	PyTuple_SetItem(args, 0, PyString_FromString(hdl->miName)); 
-	PyTuple_SetItem(args, 1, broker); 
-	PyObject* provinst = PyObject_CallObject(provclass, args); 
-	Py_DecRef(args); 
-	Py_DecRef(provclass); 
-	if (provinst == NULL)
-	{
-		PY_CMPI_SETFAIL(get_exc_trace()); 
-		return -1; 
-	}
+    PyTuple_SetItem(args, 0, string2py(hdl->miName)); 
+    PyTuple_SetItem(args, 1, broker); 
+    PyObject* provinst = PyObject_CallObject(provclass, args); 
+    Py_DecRef(args); 
+    Py_DecRef(provclass); 
+    if (provinst == NULL)
+    {
+	PY_CMPI_SETFAIL(get_exc_trace()); 
+#if WITH_SWIG_THREADS
+        SWIG_PYTHON_THREAD_END_BLOCK; 
+#endif
+	return -1; 
+    }
 
-	hdl->pyMod = provinst; 
+    hdl->pyMod = provinst; 
 
-   	_SBLIM_TRACE(1,("PyInitialize() succeeded")); 
-   	return 0; 
+#if WITH_SWIG_THREADS
+    SWIG_PYTHON_THREAD_END_BLOCK
+#endif
+ 
+
+    _SBLIM_TRACE(1,("PyInitialize() succeeded")); 
+    return 0; 
 }
 
 
@@ -722,19 +780,19 @@ CMPIStatus associatorNames(
 	PyObject* pyresultRole = NULL; 
 	if (assocClass != NULL)
 	{
-		pyassocClass = PyString_FromString(assocClass); 
+		pyassocClass = string2py(assocClass); 
 	}
 	if (resultClass != NULL)
 	{
-		pyresultClass = PyString_FromString(resultClass); 
+		pyresultClass = string2py(resultClass); 
 	}
 	if (role != NULL) 
 	{ 
-		pyrole = PyString_FromString(role); 
+		pyrole = string2py(role); 
 	}
 	if (resultRole != NULL) 
 	{ 
-		pyresultRole = PyString_FromString(resultRole); 
+		pyresultRole = string2py(resultRole); 
 	}
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "associator_names", 7, 
@@ -782,19 +840,19 @@ CMPIStatus associators(
 	PyObject* pyresultRole = NULL; 
 	if (assocClass != NULL)
 	{
-		pyassocClass = PyString_FromString(assocClass); 
+		pyassocClass = string2py(assocClass); 
 	}
 	if (resultClass != NULL)
 	{
-		pyresultClass = PyString_FromString(resultClass); 
+		pyresultClass = string2py(resultClass); 
 	}
 	if (role != NULL) 
 	{ 
-		pyrole = PyString_FromString(role); 
+		pyrole = string2py(role); 
 	}
 	if (resultRole != NULL) 
 	{ 
-		pyresultRole = PyString_FromString(resultRole); 
+		pyresultRole = string2py(resultRole); 
 	}
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "associators", 8, 
@@ -837,11 +895,11 @@ CMPIStatus referenceNames(
 	PyObject* pyrole = NULL; 
 	if (role != NULL) 
 	{ 
-		pyrole = PyString_FromString(role); 
+		pyrole = string2py(role); 
 	}
 	if (resultClass != NULL) 
 	{ 
-		pyresultClass = PyString_FromString(resultClass); 
+		pyresultClass = string2py(resultClass); 
 	}
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "reference_names", 5,
@@ -883,11 +941,11 @@ CMPIStatus references(
 	PyObject* pyresultClass = NULL; 
 	if (role != NULL) 
 	{ 
-		pyrole = PyString_FromString(role); 
+		pyrole = string2py(role); 
 	}
 	if (resultClass != NULL) 
 	{ 
-		pyresultClass = PyString_FromString(resultClass); 
+		pyresultClass = string2py(resultClass); 
 	}
 	PyObject *pyprops = proplist2py(properties); 
 
@@ -924,7 +982,7 @@ CMPIStatus invokeMethod(
     PyObject *pyctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyrslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     PyObject *pyobjName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-	PyObject *pymethod = PyString_FromString(method); 
+	PyObject *pymethod = string2py(method); 
     PyObject *pyin = SWIG_NewPointerObj((void*) in, SWIGTYPE_p__CMPIArgs, 0);
     PyObject *pyout = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
 
@@ -960,8 +1018,8 @@ CMPIStatus authorizeFilter(
     PyObject *pyctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyfilter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     PyObject *pyclassPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
-	PyObject *pyclassName = PyString_FromString(className); 
-	PyObject *pyowner = PyString_FromString(owner); 
+	PyObject *pyclassName = string2py(className); 
+	PyObject *pyowner = string2py(owner); 
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "authorize_filter", 5, 
                                                                pyctx,
@@ -994,7 +1052,7 @@ CMPIStatus activateFilter(
     PyObject *pyctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyfilter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     PyObject *pyclassPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
-	PyObject *pyclassName = PyString_FromString(className); 
+	PyObject *pyclassName = string2py(className); 
     PyObject *pyfirstActivation = PyBool_FromLong(firstActivation); 
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "activate_filter", 5, 
@@ -1028,7 +1086,7 @@ CMPIStatus deActivateFilter(
     PyObject *pyctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyfilter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     PyObject *pyclassPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
-	PyObject *pyclassName = PyString_FromString(className); 
+	PyObject *pyclassName = string2py(className); 
     PyObject *pylastActivation = PyBool_FromLong(lastActivation); 
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "deactivate_filter", 5, 
@@ -1067,7 +1125,7 @@ CMPIStatus mustPoll(
     //PyObject *pyrslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     PyObject *pyfilter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     PyObject *pyclassPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
-	PyObject *pyclassName = PyString_FromString(className); 
+    PyObject *pyclassName = string2py(className); 
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "must_poll", 4, 
                                                                pyctx,
@@ -1223,4 +1281,3 @@ SWIG_CMPI_MI_FACTORY(Instance)
 SWIG_CMPI_MI_FACTORY(Method)
 SWIG_CMPI_MI_FACTORY(Association)
 SWIG_CMPI_MI_FACTORY(Indication)
-
