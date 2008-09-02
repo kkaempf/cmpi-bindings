@@ -1,0 +1,36 @@
+These are tests for the various CMPI interface functions
+
+
+Setup
+-----
+
+- Be sure you have the latest pywbem from
+  https://pywbem.svn.sourceforge.net/svnroot/pywbem/pywbem/trunk
+  (svn co https://pywbem.svn.sourceforge.net/svnroot/pywbem/pywbem/trunk pywbem)
+  
+  [Debug setup:
+   x86_64
+   # cd pywbem
+   # rm /usr/lib64/python/site-packages/pywbem/*.py
+   # ln -s `pwd`/*.py /usr/lib64/python/site-packages/pywbem/
+
+   x86
+   # cd pywbem
+   # rm /usr/lib/python/site-packages/pywbem/*.py
+   # ln -s `pwd`/*.py /usr/lib/python/site-packages/pywbem/
+  ]
+  
+- Create symlinks for sfcb mof/reg
+
+  sudo ./setup.sh
+  
+  This also runs "sfcbrepos -f"
+  
+- Restart sfcbd
+
+- now run TestMethod_Test.py, TestAtomProvider_Test.py as root.
+  (they only need to run as root because they use the passwordless local unix connection).
+  those two tests should all pass.
+  test_assoc.py should partially pass.
+
+  ["Property Not Found in PropertyList: uint64" is an expected error]
