@@ -88,10 +88,12 @@ ADD_SUBDIRECTORY(mof)
 ####################################################################
 
 MACRO(SPECFILE)
+  IF (NOT EXISTS /.buildenv)
   MESSAGE(STATUS "Writing spec file...")
   CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/package/${PACKAGE}.spec.in ${CMAKE_BINARY_DIR}/package/${PACKAGE}.spec @ONLY)
   #MESSAGE(STATUS "I hate you rpm-lint...!!!")
   #CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/package/${PACKAGE}-rpmlint.in ${CMAKE_BINARY_DIR}/package/${PACKAGE}-rpmlintrc @ONLY)
+  ENDIF (NOT EXISTS /.buildenv)
 ENDMACRO(SPECFILE)
 
 SPECFILE()
