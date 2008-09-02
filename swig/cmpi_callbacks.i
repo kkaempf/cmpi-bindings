@@ -9,71 +9,72 @@ typedef struct _CMPIBroker {} CMPIBroker;
 
 
 %extend CMPIBroker {
+  CMPIBroker() { return _BROKER; }
   void LogMessage(int severity, const char *id, const char *text) {
-    CMLogMessage(_BROKER, severity, id, text, NULL);
+    CMLogMessage($self, severity, id, text, NULL);
   }
   unsigned long capabilities() {
-    return CBGetCapabilities(_BROKER);
+    return CBGetCapabilities($self);
   }
   int version() {
-    return CBBrokerVersion(_BROKER);
+    return CBBrokerVersion($self);
   }
   const char *name() {
-    return CBBrokerName(_BROKER);
+    return CBBrokerName($self);
   }
   CMPIStatus deliverIndication(const CMPIContext * ctx, const char * ns, const CMPIInstance * ind) {
-    return CBDeliverIndication(_BROKER, ctx, ns, ind);
+    return CBDeliverIndication($self, ctx, ns, ind);
   }
   CMPIEnumeration* enumInstanceNames(const CMPIContext * ctx, const CMPIObjectPath * op) {
-    return CBEnumInstanceNames(_BROKER, ctx, op, NULL);
+    return CBEnumInstanceNames($self, ctx, op, NULL);
   }
   CMPIEnumeration *enumInstances(const CMPIContext * ctx, const CMPIObjectPath * op, const char **properties) {
-    return CBEnumInstances(_BROKER, ctx, op, properties, NULL);
+    return CBEnumInstances($self, ctx, op, properties, NULL);
   }
   CMPIInstance *getInstance(const CMPIContext * ctx, const CMPIObjectPath * op, const char **properties) {
-    return CBGetInstance(_BROKER, ctx, op, properties, NULL);
+    return CBGetInstance($self, ctx, op, properties, NULL);
   }
   CMPIObjectPath *createInstance(const CMPIContext * ctx, const CMPIObjectPath * op, const CMPIInstance * inst) {
-    return CBCreateInstance(_BROKER, ctx, op, inst, NULL);
+    return CBCreateInstance($self, ctx, op, inst, NULL);
   }
   /*
   CMPIStatus setInstance(const CMPIContext* ctx, const CMPIObjectPath* op, const CMPIInstance* inst, const char** properties) { 
-    return CBSetInstance(_BROKER, ctx, op, inst, properties);
+    return CBSetInstance($self, ctx, op, inst, properties);
   }
   */
   CMPIStatus deleteInstance(const CMPIContext * ctx, const CMPIObjectPath * op) {
-    return CBDeleteInstance(_BROKER, ctx, op);
+    return CBDeleteInstance($self, ctx, op);
   }
   CMPIEnumeration *execQuery(const CMPIContext * ctx, const CMPIObjectPath * op, const char *query, const char *lang) {	  
-    return CBExecQuery(_BROKER, ctx, op, query, lang, NULL);
+    return CBExecQuery($self, ctx, op, query, lang, NULL);
   }
   CMPIEnumeration *associators(const CMPIContext * ctx, const CMPIObjectPath * op,
                                const char *assocClass, const char *resultClass, const char *role,
 			       const char *resultRole, const char **properties) {
-    return CBAssociators(_BROKER, ctx, op, assocClass, resultClass, role, resultRole, properties, NULL);
+    return CBAssociators($self, ctx, op, assocClass, resultClass, role, resultRole, properties, NULL);
   }
   CMPIEnumeration *associatorNames(const CMPIContext * ctx, const CMPIObjectPath * op,
                                    const char *assocClass, const char *resultClass, const char *role,
 				   const char *resultRole) {
-    return CBAssociatorNames (_BROKER, ctx, op, assocClass, resultClass, role, resultRole, NULL);
+    return CBAssociatorNames ($self, ctx, op, assocClass, resultClass, role, resultRole, NULL);
   }
   CMPIEnumeration *references(const CMPIContext * ctx, const CMPIObjectPath * op,
                               const char *resultClass, const char *role, const char **properties) {
-    return CBReferences(_BROKER, ctx, op, resultClass, role, properties, NULL);
+    return CBReferences($self, ctx, op, resultClass, role, properties, NULL);
   }
   CMPIEnumeration *referenceNames(const CMPIContext * ctx, const CMPIObjectPath * op,
                                   const char *resultClass, const char *role) {
-    return CBReferenceNames(_BROKER, ctx, op, resultClass, role, NULL);
+    return CBReferenceNames($self, ctx, op, resultClass, role, NULL);
   }
   CMPIData invokeMethod(const CMPIContext * ctx, const CMPIObjectPath * op, const char *method,
                         const CMPIArgs * in, CMPIArgs * out) {
-    return CBInvokeMethod(_BROKER, ctx, op, method, in, out, NULL);
+    return CBInvokeMethod($self, ctx, op, method, in, out, NULL);
   }
   CMPIStatus setProperty(const CMPIContext * ctx, const CMPIObjectPath * op, const char *name,
                          const CMPIValue * value, const CMPIType type) {
-    return CBSetProperty(_BROKER, ctx, op, name, (CMPIValue *)value, type);
+    return CBSetProperty($self, ctx, op, name, (CMPIValue *)value, type);
   }
   CMPIData getProperty(const CMPIContext * ctx, const CMPIObjectPath *op, const char *name) {
-    return CBGetProperty(_BROKER, ctx, op, name, NULL);
+    return CBGetProperty($self, ctx, op, name, NULL);
   }
 }
