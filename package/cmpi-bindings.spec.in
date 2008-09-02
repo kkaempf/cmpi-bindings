@@ -48,26 +48,26 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %clean
 %{__rm} -rf %{buildroot}
 
-%package -n ruby-cmpi-bindings
+%package -n cmpi-bindings-ruby
 Summary:        Ruby bindings for cmpi
 Group:          Development/Languages/Ruby
 
-%description -n ruby-cmpi-bindings
+%description -n cmpi-bindings-ruby
 -
 
-%files -n ruby-cmpi-bindings
+%files -n cmpi-bindings-ruby
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/librbCmpiProvider.so
 %{_libdir}/ruby/vendor_ruby/%{rb_ver}/rcmpi_instance.rb
 
-%package -n python-cmpi-bindings
+%package -n cmpi-bindings-pywbem
 Summary:        Python bindings for cmpi
 Group:          Development/Languages/Python
 
-%description -n python-cmpi-bindings
+%description -n cmpi-bindings-pywbem
 -
 
-%files -n python-cmpi-bindings
+%files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/libpyCmpiProvider.so
 %{py_sitedir}/pycmpi_provider.py
