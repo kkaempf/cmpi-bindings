@@ -14,7 +14,7 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 	      
 # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
-#SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 #SET(CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/share/cmake/Modules ${CMAKE_MODULE_PATH})
 
 # Library
