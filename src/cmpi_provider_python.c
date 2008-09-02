@@ -697,6 +697,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
 #endif
  
     Py_SetProgramName("cmpi_swig");
+    PyEval_InitThreads();
     Py_Initialize();
   
     SWIG_init();
