@@ -9,8 +9,6 @@ typedef struct _CMPIBroker {} CMPIBroker;
 
 
 %extend CMPIBroker {
-  CMPIBroker() { return _BROKER; }
-  ~CMPIBroker() { }
   void LogMessage(int severity, const char *id, const char *text) {
     CMLogMessage(_BROKER, severity, id, text, NULL);
   }

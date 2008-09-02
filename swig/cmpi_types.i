@@ -123,7 +123,7 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
   ~CMPIError() { }
   /* Gets the type of this Error */
   CMPIErrorType type() {
-    CMGetErrorType( $self, NULL );
+    return CMGetErrorType( $self, NULL );
   }
   /* Sets the error type of this error object. */
 #if defined(SWIGRUBY)
@@ -282,9 +282,11 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 
 %extend _CMPIMsgFileHandle {
   CMPIMsgFileHandle(const char *msgFile) {
-    CMPIMsgFileHandle handle;
-    CMPIStatus st = CMOpenMessageFile(_BROKER, msgFile, &handle);
-    /* FIXME */
+    CMPIMsgFileHandle *handle = calloc(1, sizeof( CMPIMsgFileHandle ));
+    CMPIStatus st = CMOpenMessageFile(_BROKER, msgFile, handle);
+    if (st.rc != CMPI_RC_OK)
+      abort();
+    return handle;
   }
   ~CMPIMsgFileHandle() {
     CMCloseMessageFile( _BROKER, $self );
@@ -766,8 +768,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPISelectCond
 
 %extend _CMPISelectCond {
-  CMPISelectCond() { }
-  ~CMPISelectCond() { }
   const char* to_s() {
     CMPIString *s = CDToString(_BROKER, $self, NULL);
     return CMGetCharPtr(s);
@@ -779,8 +779,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPISubCond
 
 %extend _CMPISubCond {
-  CMPISubCond() { }
-  ~CMPISubCond() { }
 }
 
 #-----------------------------------------------------
@@ -788,8 +786,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIPredicate
 
 %extend _CMPIPredicate {
-  CMPIPredicate() { }
-  ~CMPIPredicate() { }
   const char* to_s() {
     CMPIString *s = CDToString(_BROKER, $self, NULL);
     return CMGetCharPtr(s);
@@ -801,8 +797,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIEnumeration
 
 %extend _CMPIEnumeration {
-  CMPIEnumeration() { }
-  ~CMPIEnumeration() { }
 #if defined(SWIGRUBY)
   %alias length "size";
 #endif
@@ -846,7 +840,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
   CMPIArray(int count, CMPIType type ) {
     return CMNewArray( _BROKER, count, type, NULL);
   }
-  CMPIArray( ) { }
   const char* to_s() {
     CMPIString *s = CDToString(_BROKER, $self, NULL);
     return CMGetCharPtr(s);
@@ -883,7 +876,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
   CMPIString(const char *s) {
     return CMNewString(_BROKER, s, NULL);
   }
-  CMPIString() { }
   const char* to_s() {
     return CMGetCharPtr($self);
   }
@@ -894,8 +886,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIContext
 
 %extend _CMPIContext {
-  CMPIContext() { }
-  ~CMPIContext() { }
   const char* to_s() {
     CMPIString *s = CDToString(_BROKER, $self, NULL);
     return CMGetCharPtr(s);
