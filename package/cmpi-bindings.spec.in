@@ -17,9 +17,10 @@ License:        GPL
 Summary:        Bindings for cmpi
 Group:          Development/Sources
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  cmake gcc-c++ ruby-devel swig
-BuildRequires:  sblim-sfcb-devel
+BuildRequires:  cmake gcc-c++ ruby-devel python-devel swig
+BuildRequires:  sblim-sfcb
 Source:         %{name}-%{version}.tar.bz2
+Prefix:         /usr
 
 %description
 -
@@ -47,38 +48,29 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %clean
 %{__rm} -rf %{buildroot}
 
-%package -n cmpi-ruby
+%package -n ruby-cmpi-bindings
 Summary:        Ruby bindings for cmpi
 Group:          Development/Languages/Ruby
 
-%description -n cmpi-ruby
+%description -n ruby-cmpi-bindings
 -
 
-%files -n cmpi-ruby
+%files -n ruby-cmpi-bindings
 %defattr(-,root,root,-)
-%{_libdir}/ruby/vendor_ruby/%{rb_ver}/%{rb_arch}/yui.so
+%{_libdir}/cmpi/librbCmpiProvider.so
+%{_libdir}/ruby/vendor_ruby/%{rb_ver}/rcmpi_instance.rb
 
-#%package -n python-yui
-#Summary:        Python bindings for cmpi
-#Group:          Development/Languages/Python
-#%description -n python-yui
-#-
-#
-#%files -n python-yui
-#%defattr(-,root,root,-)
-#%{_libdir}/python2.5/site-packages/_yui.so
-#%{_libdir}/python2.5/site-packages/yui.py
+%package -n python-cmpi-bindings
+Summary:        Python bindings for cmpi
+Group:          Development/Languages/Python
 
-#%package -n perl-yui
-#Summary:        Perl bindings for cmpi
-#Group:          Development/Languages/Perl
-#
-#%description -n perl-yui
-#-
-#
-#%files -n perl-yui
-#%defattr(-,root,root,-)
-#/usr/lib/perl5/*/*/yui.pm
-#/usr/lib/perl5/*/*/yui.so
+%description -n python-cmpi-bindings
+-
+
+%files -n python-cmpi-bindings
+%defattr(-,root,root,-)
+%{_libdir}/cmpi/libpyCmpiProvider.so
+%{py_sitedir}/pycmpi_provider.py
+%{py_sitedir}/cmpi.py
 
 %changelog
