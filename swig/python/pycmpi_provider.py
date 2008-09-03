@@ -167,7 +167,7 @@ class CMPIProvider(object):
         cc = _get_class(op.namespace, op.classname)
         try:
             pinst = self.proxy.MI_getInstance(self.env, op, plist, cc)
-        except pywbem.CIMError, arg:
+        except pywbem.CIMError, args:
             return args[:2]
         cinst = pywbem2cmpi_inst(pinst)
         rslt.return_instance(cinst)
