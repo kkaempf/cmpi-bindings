@@ -63,6 +63,7 @@ void _logstderr(char *fmt,...)
 
 /* Global handle to the CIM broker. This is initialized by the CIMOM when the provider is loaded */
 static const CMPIBroker * _BROKER = NULL;
+static int _CMPI_INIT = 0; 
 //static char* _MINAME = NULL; 
 PyObject* _PYPROVMOD = NULL; 
 
@@ -246,8 +247,8 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     pyfunc = PyObject_GetAttrString(hdl->pyMod, opname); 
     if (pyfunc == NULL)
     {
-	PyErr_Print(); 
-	PyErr_Clear(); 
+		PyErr_Print(); 
+		PyErr_Clear(); 
         char* str = fmtstr("Python module does not contain \"%s\"", opname); 
         _SBLIM_TRACE(1,(str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
@@ -665,33 +666,52 @@ exit:
 
 
 #define PY_CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
+static int PyGlobalInitialize(CMPIStatus* st)
+{
+	int rc = 0; 
+
+   _SBLIM_TRACE(1,("PyGlobalInitialize() called"));
+	if (_CMPI_INIT)
+	{
+   		_SBLIM_TRACE(1,("PyGlobalInitialize() returning: already initialized"));
+		return 0; 
+	}
+	_CMPI_INIT = 1; 
+	SWIGEXPORT void SWIG_init(void);
+	_SBLIM_TRACE(1,("Python: Loading"));
+ 
+	Py_SetProgramName("cmpi_swig");
+	PyEval_InitThreads();
+	Py_Initialize();
+  
+	SWIG_init();
+	SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+	_PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
+	if (_PYPROVMOD == NULL)
+	{
+		SWIG_PYTHON_THREAD_END_BLOCK; 
+		_SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
+		PY_CMPI_SETFAIL(get_exc_trace()); 
+		return -1; 
+	}
+	_SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
+
+    SWIG_PYTHON_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("PyGlobalInitialize() succeeded")); 
+    return 0; 
+}
 static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
 {
 	int rc = 0; 
-    SWIGEXPORT void SWIG_init(void);
-    
+	rc = PyGlobalInitialize(st); 
+	if (rc != 0)
+	{
+		return rc; 
+	}
+
    _SBLIM_TRACE(1,("PyInitialize() called"));
 
-
-   _SBLIM_TRACE(1,("Python: Loading"));
-  
- 
-    Py_SetProgramName("cmpi_swig");
-    //PyEval_InitThreads();
-    Py_Initialize();
-  
-    SWIG_init();
-
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-    _PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
-    if (_PYPROVMOD == NULL)
-    {
-        SWIG_PYTHON_THREAD_END_BLOCK; 
-        _SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
-		PY_CMPI_SETFAIL(get_exc_trace()); 
-		return -1; 
-    }
-    _SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
     PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
 			"CMPIProvider"); 
     if (provclass == NULL)
@@ -718,8 +738,6 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
     hdl->pyMod = provinst; 
 
     SWIG_PYTHON_THREAD_END_BLOCK; 
- 
-
     _SBLIM_TRACE(1,("PyInitialize() succeeded")); 
     return 0; 
 }
