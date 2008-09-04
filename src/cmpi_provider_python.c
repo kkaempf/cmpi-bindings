@@ -64,6 +64,7 @@ void _logstderr(char *fmt,...)
 /* Global handle to the CIM broker. This is initialized by the CIMOM when the provider is loaded */
 static const CMPIBroker * _BROKER = NULL;
 static int _CMPI_INIT = 0; 
+static PyThreadState* cmpiMainPyThreadState = NULL; 
 //static char* _MINAME = NULL; 
 PyObject* _PYPROVMOD = NULL; 
 
@@ -358,9 +359,10 @@ static CMPIStatus Cleanup(
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
  
     Py_DecRef(_PYPROVMOD); 
-    Py_Finalize();
-    // TODO should release come before finalize? 
     SWIG_PYTHON_THREAD_END_BLOCK; 
+	PyEval_AcquireLock(); 
+	PyThreadState_Swap(cmpiMainPyThreadState); 
+    Py_Finalize();
  
     _SBLIM_TRACE(1,("Cleanup(Python) called"));
 
@@ -681,11 +683,13 @@ static int PyGlobalInitialize(CMPIStatus* st)
 	_SBLIM_TRACE(1,("Python: Loading"));
  
 	Py_SetProgramName("cmpi_swig");
-	PyEval_InitThreads();
 	Py_Initialize();
+	PyEval_InitThreads();
+	cmpiMainPyThreadState = PyGILState_GetThisThreadState();
+	PyEval_ReleaseThread(cmpiMainPyThreadState); 
   
-	SWIG_init();
 	SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+	SWIG_init();
 	_PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
 	if (_PYPROVMOD == NULL)
 	{
