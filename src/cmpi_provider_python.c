@@ -34,6 +34,7 @@ static char _CLASSNAME[] = "CmpiInstanceSwig";
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 /* Include the required CMPI macros, data types, and API function headers */
 #include <cmpidt.h>
@@ -63,6 +64,7 @@ void _logstderr(char *fmt,...)
 
 /* Global handle to the CIM broker. This is initialized by the CIMOM when the provider is loaded */
 static const CMPIBroker * _BROKER = NULL;
+static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER; 
 static int _CMPI_INIT = 0; 
 static PyThreadState* cmpiMainPyThreadState = NULL; 
 //static char* _MINAME = NULL; 
@@ -352,31 +354,48 @@ static CMPIStatus Cleanup(
 		const CMPIContext * context,
 		CMPIBoolean terminating)	
 {
-    CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations. */
-   
-    _SBLIM_TRACE(1,("Cleanup() called"));
-   
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
- 
-    Py_DecRef(_PYPROVMOD); 
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-	PyEval_AcquireLock(); 
-	PyThreadState_Swap(cmpiMainPyThreadState); 
-    Py_Finalize();
- 
-    _SBLIM_TRACE(1,("Cleanup(Python) called"));
+  CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations. */
+  
+  _SBLIM_TRACE(1,("<%d/%d> Cleanup() called", getpid(), pthread_self()));
 
-	if (miHdl != NULL) 
-	{ 
-        _SBLIM_TRACE(1,("\n>>>>> Cleanup(Python) called, freeing PyProviderMIHandle (%s)\n", miHdl->miName));
-		free(miHdl->miName); 
-        free(miHdl);
-		miHdl = NULL; 
-	}
-   
+  SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+  Py_DecRef(_PYPROVMOD); 
+  SWIG_PYTHON_THREAD_END_BLOCK; 
+  
+  if (miHdl != NULL) 
+    { 
+      _SBLIM_TRACE(1,("\n<%d/%d> >>>>> Cleanup(Python) called, freeing PyProviderMIHandle (%s)\n", getpid(), pthread_self(), miHdl->miName));
+      free(miHdl->miName); 
+      
+      /* Isn't this been done by the broker ?! */
+      free(miHdl);
+      miHdl = NULL; 
+    }
+  
+  /* De-reference _CMPI_INIT, protected by _CMPI_INIT_MUTEX
+   * call Py_Finalize when _CMPI_INIT drops to zero
+   */
+  if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
+    {
+      perror("Can't lock _CMPI_INIT_MUTEX");
+      abort();
+    }
+  if (--_CMPI_INIT > 0) 
+    {
+      pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+      return status;
+    }
+  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+  
+  PyEval_AcquireLock(); 
+  PyThreadState_Swap(cmpiMainPyThreadState); 
+  Py_Finalize();
+  
+  _SBLIM_TRACE(1,("<%d/%d> Cleanup(Python) called", getpid(), pthread_self()));
+  
    /* Finished. */
 exit:
-   _SBLIM_TRACE(1,("Cleanup() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+   _SBLIM_TRACE(1,("<%d/%d> Cleanup() %s", getpid(), pthread_self(), (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
 
@@ -670,80 +689,93 @@ exit:
 #define PY_CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
 static int PyGlobalInitialize(CMPIStatus* st)
 {
-	int rc = 0; 
+  int rc = 0; 
 
-   _SBLIM_TRACE(1,("PyGlobalInitialize() called"));
-	if (_CMPI_INIT)
-	{
-   		_SBLIM_TRACE(1,("PyGlobalInitialize() returning: already initialized"));
-		return 0; 
-	}
-	_CMPI_INIT = 1; 
-	SWIGEXPORT void SWIG_init(void);
-	_SBLIM_TRACE(1,("Python: Loading"));
- 
-	Py_SetProgramName("cmpi_swig");
-	Py_Initialize();
-	PyEval_InitThreads();
-	cmpiMainPyThreadState = PyGILState_GetThisThreadState();
-	PyEval_ReleaseThread(cmpiMainPyThreadState); 
+  _SBLIM_TRACE(1,("<%d/%d> PyGlobalInitialize() called", getpid(), pthread_self()));
   
-	SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-	SWIG_init();
-	_PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
-	if (_PYPROVMOD == NULL)
+  /* Do a reference count on _CMPI_INIT, protected by _CMPI_INIT_MUTEX
+   * so we call Py_Finalize() only once.
+   */
+  if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
+    {
+      perror("Can't lock _CMPI_INIT_MUTEX");
+      abort();
+    }
+  if (_CMPI_INIT++)
 	{
-		SWIG_PYTHON_THREAD_END_BLOCK; 
-		_SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
-		PY_CMPI_SETFAIL(get_exc_trace()); 
-		return -1; 
+	  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+	  _SBLIM_TRACE(1,("<%d/%d> PyGlobalInitialize() returning: already initialized", getpid(), pthread_self()));
+	  return 0; 
 	}
-	_SBLIM_TRACE(1,("Python: _PYPROVMOD at %p", _PYPROVMOD));
-
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    _SBLIM_TRACE(1,("PyGlobalInitialize() succeeded")); 
-    return 0; 
+  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+  
+  SWIGEXPORT void SWIG_init(void);
+  _SBLIM_TRACE(1,("<%d/%d> Python: Loading", getpid(), pthread_self()));
+  
+  Py_SetProgramName("cmpi_swig");
+  Py_Initialize();
+  PyEval_InitThreads();
+  cmpiMainPyThreadState = PyGILState_GetThisThreadState();
+  PyEval_ReleaseThread(cmpiMainPyThreadState); 
+  
+  SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+  SWIG_init();
+  _PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
+  if (_PYPROVMOD == NULL)
+    {
+      SWIG_PYTHON_THREAD_END_BLOCK; 
+      _SBLIM_TRACE(1,("<%d/%d> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
+      PY_CMPI_SETFAIL(get_exc_trace()); 
+      return -1; 
+    }
+  _SBLIM_TRACE(1,("<%d/%d> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
+  
+  SWIG_PYTHON_THREAD_END_BLOCK; 
+  _SBLIM_TRACE(1,("<%d/%d> PyGlobalInitialize() succeeded", getpid(), pthread_self())); 
+  return 0; 
 }
+
+
 static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
 {
-	int rc = 0; 
-	rc = PyGlobalInitialize(st); 
-	if (rc != 0)
-	{
-		return rc; 
-	}
-
-   _SBLIM_TRACE(1,("PyInitialize() called"));
-
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-    PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
-			"CMPIProvider"); 
-    if (provclass == NULL)
+  int rc = 0; 
+  rc = PyGlobalInitialize(st); 
+  if (rc != 0)
     {
-        SWIG_PYTHON_THREAD_END_BLOCK; 
-	    PY_CMPI_SETFAIL(get_exc_trace()); 
-	    return -1; 
-    }
-    PyObject* broker = SWIG_NewPointerObj((void*) _BROKER, SWIGTYPE_p__CMPIBroker, 0);
-    PyObject* args = PyTuple_New(2); 
-    _SBLIM_TRACE(1,("\n>>>>> PyInitialize(Python) called, MINAME=%s\n", hdl->miName));
-    PyTuple_SetItem(args, 0, string2py(hdl->miName)); 
-    PyTuple_SetItem(args, 1, broker); 
-    PyObject* provinst = PyObject_CallObject(provclass, args); 
-    Py_DecRef(args); 
-    Py_DecRef(provclass); 
-    if (provinst == NULL)
-    {
-        SWIG_PYTHON_THREAD_END_BLOCK; 
-		PY_CMPI_SETFAIL(get_exc_trace()); 
-		return -1; 
+      return rc; 
     }
 
-    hdl->pyMod = provinst; 
-
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    _SBLIM_TRACE(1,("PyInitialize() succeeded")); 
-    return 0; 
+  _SBLIM_TRACE(1,("<%d/%d> PyInitialize() called", getpid(), pthread_self()));
+  
+  SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+  PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
+					       "CMPIProvider"); 
+  if (provclass == NULL)
+    {
+      SWIG_PYTHON_THREAD_END_BLOCK; 
+      PY_CMPI_SETFAIL(get_exc_trace()); 
+      return -1; 
+    }
+  PyObject* broker = SWIG_NewPointerObj((void*) _BROKER, SWIGTYPE_p__CMPIBroker, 0);
+  PyObject* args = PyTuple_New(2); 
+  _SBLIM_TRACE(1,("\n<%d/%d> >>>>> PyInitialize(Python) called, MINAME=%s\n", getpid(), pthread_self(), hdl->miName));
+  PyTuple_SetItem(args, 0, string2py(hdl->miName)); 
+  PyTuple_SetItem(args, 1, broker); 
+  PyObject* provinst = PyObject_CallObject(provclass, args); 
+  Py_DecRef(args); 
+  Py_DecRef(provclass); 
+  if (provinst == NULL)
+    {
+      SWIG_PYTHON_THREAD_END_BLOCK; 
+      PY_CMPI_SETFAIL(get_exc_trace()); 
+      return -1; 
+    }
+  
+  hdl->pyMod = provinst; 
+  
+  SWIG_PYTHON_THREAD_END_BLOCK; 
+  _SBLIM_TRACE(1,("<%d/%d> PyInitialize() succeeded", getpid(), pthread_self())); 
+  return 0; 
 }
 
 
@@ -1185,13 +1217,6 @@ exit:
 /***************************************************************************/
 
 
-
-
-
-
-
-
-
 static CMPIMethodMIFT MethodMIFT__={ 
 	CMPICurrentVersion, 
 	CMPICurrentVersion, 
@@ -1245,7 +1270,13 @@ static void createInit(const CMPIBroker* broker,
 		const CMPIContext* context, const char* miname, CMPIStatus* st)
 {
     _SBLIM_TRACE(1,("\n>>>>> createInit(Python) called, miname= %s (ctx=%p)\n", miname, context));
-   _BROKER = broker;
+  if (!_BROKER) 
+    {
+      _BROKER = broker;
+    }
+  else if (_BROKER != broker)
+    fprintf(stderr, "createInit broker %p, _BROKER %p\n", broker, _BROKER);
+  
    //_MINAME = strdup(miname); 
    /*
 	* We can't initialize Python here and load Python modules, because
