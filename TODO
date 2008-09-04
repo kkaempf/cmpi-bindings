@@ -6,10 +6,6 @@ Fix memory leaks related to cloning of CMPIData structs.
 
 Items marked as "TODO" in the code. 
 
-Fix the build to determine the python version and dynamically link
-to libpython.  Cmake only knows how to statically link to libpython. 
-Right now it is hard-coded for libpython-2.5. 
-
 Finish wrapping broker FTs, such as upcalls. 
 
 Handling CMPIStatus:
@@ -20,8 +16,6 @@ as well, and do the same.  We need to create an exception class with a
 code and error string in swig.  
 [Not possible to pass status+message in a generic way. How about a
 toplevel function which raised the execption ?]
-
-Split src/ into target-specific and common parts
 
 Wrap CMPIEnumeration and CMPIArray in typemaps. 
 
