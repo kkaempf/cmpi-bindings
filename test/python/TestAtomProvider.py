@@ -6,8 +6,9 @@ Instruments the CIM class TestAtom
 
 import pywbem
 import sys
+from cim_provider import CIMProvider
 
-class TestAtomProvider(pywbem.CIMProvider):
+class TestAtomProvider(CIMProvider):
     """Instrument the CIM class TestAtom 
 
     Model an atom, For use with CIMOM and PyWBEM Provider
@@ -23,7 +24,7 @@ class TestAtomProvider(pywbem.CIMProvider):
         # parameters, set self.filter_results to False
         # self.filter_results = False
 
-    def get_instance(self, env, model, cim_class):
+    def get_instance(self, env, model, property_list):
         """Return an instance.
 
         Keyword arguments:
@@ -55,21 +56,21 @@ class TestAtomProvider(pywbem.CIMProvider):
             #logger.log_debug("**** GET_INSTANCE model[name]: %s ****" % model['Name'])
             #print "**** GET_INSTANCE model[name]: %s ****" % str(model['Name'])
             #if model['Name'] in self.storage.keys():
-            inst = self.storage[model['Name']]
+            inst = self.storage[model.path['Name']]
             #else:
                 #print "This is not working.... ******* FIX ME"
 
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         #print " **** Setting Model Properties: ****"
-        for k, v in inst.items():
-            model.update_existing(((k, v),))
+        for k, v in inst.properties.items():
+            model[k] = v
 
         #return inst
         return model
 
 
-    def enum_instances(self, env, model, cim_class, keys_only):
+    def enum_instances(self, env, model, property_list, keys_only):
         """Enumerate instances.
 
         The WBEM operations EnumerateInstances and EnumerateInstanceNames
@@ -106,14 +107,15 @@ class TestAtomProvider(pywbem.CIMProvider):
             #print "************ ENUM_INSTANCES ********"
             #print " **** model['Name'] = %s ****" % key
             model['Name'] = key
+            model.path['Name'] = key
             try:
-                yield self.get_instance(env, model, cim_class)
+                yield self.get_instance(env, model, property_list)
             except pywbem.CIMError, (num, msg):
                 if num not in (pywbem.CIM_ERR_NOT_FOUND, 
                                pywbem.CIM_ERR_ACCESS_DENIED):
                     raise
 
-    def set_instance(self, env, instance, previous_instance, cim_class):
+    def set_instance(self, env, instance, previous_instance, property_list):
         """Return a newly created or modified instance.
 
         Keyword arguments:
@@ -146,16 +148,19 @@ class TestAtomProvider(pywbem.CIMProvider):
         logger.log_debug('Entering %s.set_instance()' \
                 % self.__class__.__name__)
 
-        if previous_instance is not None:#Existing Instance or Modify
+        if previous_instance:
             if instance['Name'] not in self.storage:
                 raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
-            inst = self.storage[instance['Name']] 
-            inst.properties.update(instance.properties)
+            inst = self.storage[instance.path['Name']] 
+            if property_list:
+                for pn in property_list:
+                    inst.properties[pn] = instance.properties[pn]
+            else:
+                inst.properties.update(instance.properties)
             #logger.log_debug("***** Updating stuff :%s *****" % instance.properties)
 
-        #loop, if it exists, throw exception (Already_Exists)
-        elif previous_instance is None:
-            if instance['Name'] in self.storage:
+        else:
+            if instance.path['Name'] in self.storage:
                     raise pywbem.CIMError(pywbem.CIM_ERR_ALREADY_EXISTS)
             else:
                 #Creating a new instance
@@ -163,8 +168,9 @@ class TestAtomProvider(pywbem.CIMProvider):
                 #print "Instance name: %s"%str(instance['Name'])
                 #for key in instance.properties.keys():
                     #print "key=%s"%str(key)
-                self.storage[instance['Name']] = instance.copy()
+                self.storage[instance.path['Name']] = instance.copy()
 
+        instance.path['Name'] = instance['Name']
         return instance
 
     def delete_instance(self, env, instance_name):

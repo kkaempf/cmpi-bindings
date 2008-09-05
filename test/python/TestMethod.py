@@ -6,10 +6,11 @@ Instruments the CIM class TestMethod
 
 import pywbem
 import random
+from cim_provider import CIMProvider
 
 g_insts = {}
 
-class TestMethodProvider(pywbem.CIMProvider):
+class TestMethodProvider(CIMProvider):
     """Instrument the CIM class TestMethod 
 
     Class with several methods to test method provider capabilities.
@@ -25,7 +26,7 @@ class TestMethodProvider(pywbem.CIMProvider):
         # parameters, set self.filter_results to False
         # self.filter_results = False
 
-    def get_instance(self, env, model, cim_class):
+    def get_instance(self, env, model, property_list):
         logger = env.get_logger()
         logger.log_debug('Entering %s.get_instance()' \
                 % self.__class__.__name__)
@@ -35,33 +36,34 @@ class TestMethodProvider(pywbem.CIMProvider):
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-        model.update_existing(p_sint32=inst[1])
-        model.update_existing(p_str=inst[0])
+        model['p_sint32']=inst[1]
+        model['p_str']=inst[0]
         return model
 
-    def enum_instances(self, env, model, cim_class, keys_only):
+    def enum_instances(self, env, model, property_list, keys_only):
         logger = env.get_logger()
         logger.log_debug('Entering %s.enum_instances()' \
                 % self.__class__.__name__)
 
         for key in g_insts.keys():
             model['id'] = key
+            model.path['id'] = key
             if keys_only:
                 yield model
             else:
                 try:
-                    yield self.get_instance(env, model, cim_class)
+                    yield self.get_instance(env, model, property_list)
                 except pywbem.CIMError, (num, msg):
                     if num not in (pywbem.CIM_ERR_NOT_FOUND, 
                                    pywbem.CIM_ERR_ACCESS_DENIED):
                         raise
 
-    def set_instance(self, env, instance, previous_instance, cim_class):
+    def set_instance(self, env, instance, previous_instance, property_list):
         logger = env.get_logger()
         logger.log_debug('Entering %s.set_instance()' \
                 % self.__class__.__name__)
 
-        if previous_instance is not None:
+        if previous_instance:
             if instance['id'] not in g_insts:
                 raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         else:

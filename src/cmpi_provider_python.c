@@ -734,7 +734,7 @@ static int PyGlobalInitialize(CMPIStatus* st)
   
   SWIG_PYTHON_THREAD_BEGIN_BLOCK;
   SWIG_init();
-  _PYPROVMOD = PyImport_ImportModule("pycmpi_provider");
+  _PYPROVMOD = PyImport_ImportModule("cmpi_bindings");
   if (_PYPROVMOD == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 

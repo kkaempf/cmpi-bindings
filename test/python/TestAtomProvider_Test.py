@@ -77,7 +77,8 @@ def _compare_values(conn, instance, time):
         atoms_value = _atoms.get(instance['Name'])
         atoms_weight = _atomic_weights[instance['Name']]
         for prop,value in instance.items():
-            #print "Property=%s"%str(prop)
+            #print "\nProperty=%s"%str(prop),"Value=%s"%str(value)
+            #print "Type=%s"%instance.properties[prop].type
             #Char and Char_array
             if prop == 'char16Prop' or prop == 'char16Propa':
                 pass
@@ -107,7 +108,7 @@ def _compare_values(conn, instance, time):
                 elif atoms_value != value:
                     raise "%s == %s"%(atoms_value,value)
             #All list values
-            elif type(instance.properties[prop].value) == type([]) and \
+            elif isinstance(instance.properties[prop].value, list) and \
                  instance.properties[prop].type == types.get(prop):
                 if prop == 'stringPropa':
                     if value[0] != 'proton' and value[1] != 'electron' \
@@ -307,10 +308,10 @@ class TestAtomProvider(unittest.TestCase):
         new_instance['uint64Propa']  = [pywbem.Uint64(number), \
                                         pywbem.Uint64(number), \
                                         pywbem.Uint64(number)]
-        new_instance['uint8Prop']    = pywbem.Uint64(number)
-        new_instance['uint8Propa']   = [pywbem.Uint64(number), \
-                                        pywbem.Uint64(number), \
-                                        pywbem.Uint64(number)]
+        new_instance['uint8Prop']    = pywbem.Uint8(number)
+        new_instance['uint8Propa']   = [pywbem.Uint8(number), \
+                                        pywbem.Uint8(number), \
+                                        pywbem.Uint8(number)]
 
         try:
             cipath = self.conn.CreateInstance(new_instance)
@@ -444,7 +445,7 @@ class TestAtomProvider(unittest.TestCase):
             self.fail('%s: CreateInstance Failed.' % str(msg))
             return
 
-        propertylist = ['uint64Prop', 'dateProp', 'stringProp', 'real32Prop', \
+        propertylist = ['uint64Prop', 'dateProp', 'stringProp', 'real32Prop', 
                         'sint64Propa', 'sint64prop', 'boolProp']
         keybindings = {'Name': 'Boron'}
 
@@ -467,7 +468,7 @@ class TestAtomProvider(unittest.TestCase):
         mod_instance['Name'] = 'Boron'
 
         try:
-            self.conn.ModifyInstance(mod_instance)
+            self.conn.ModifyInstance(mod_instance, PropertyList=propertylist)
         except pywbem.CIMError, arg:
             self.fail(arg)
 

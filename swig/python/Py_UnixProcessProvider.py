@@ -7,8 +7,10 @@ Instruments the CIM class Py_UnixProcess
 import pywbem
 import os
 from socket import getfqdn
+from cim_provider import CIMProvider
 
-class Py_UnixProcessProvider(pywbem.CIMProvider):
+
+class Py_UnixProcessProvider(CIMProvider):
     """Instrument the CIM class Py_UnixProcess 
 
     Model a Linux Process, For use with PyWBEM Provider QuickStart Guide
@@ -24,7 +26,7 @@ class Py_UnixProcessProvider(pywbem.CIMProvider):
         # parameters, set self.filter_results to False
         # self.filter_results = False
 
-    def get_instance(self, env, model, cim_class):
+    def get_instance(self, env, model, property_list):
         """Return an instance.
 
         Keyword arguments:
@@ -59,6 +61,13 @@ class Py_UnixProcessProvider(pywbem.CIMProvider):
         #   model['OSName']
         #   model['CSCreationClassName']
         #   model['CSName']
+        
+        model['CreationClassName'] = model.path['CreationClassName']
+        model['OSCreationClassName'] = model.path['OSCreationClassName']
+        model['Handle'] = model.path['Handle']
+        model['OSName'] = model.path['OSName']
+        model['CSCreationClassName'] = model.path['CSCreationClassName']
+        model['CSName'] = model.path['CSName']
 
         #model.update_existing(Caption=<value>) # TODO (type = unicode) 
         #model.update_existing(CreationDate=<value>) # TODO (type = pywbem.CIMDateTime) 
@@ -93,7 +102,7 @@ class Py_UnixProcessProvider(pywbem.CIMProvider):
         #model.update_existing(WorkingSetSize=<value>) # TODO (type = pywbem.Uint64) 
         return model
 
-    def enum_instances(self, env, model, cim_class, keys_only):
+    def enum_instances(self, env, model, property_list, keys_only):
         """Enumerate instances.
 
         The WBEM operations EnumerateInstances and EnumerateInstanceNames
@@ -122,19 +131,25 @@ class Py_UnixProcessProvider(pywbem.CIMProvider):
                 % self.__class__.__name__)
 
         model['CreationClassName'] = 'Py_UnixProcess'    
+        model.path['CreationClassName'] = 'Py_UnixProcess'    
         model['OSCreationClassName'] = 'CIM_UnitaryComputerSystem'
+        model.path['OSCreationClassName'] = 'CIM_UnitaryComputerSystem'
         model['OSName'] = 'Linux'
+        model.path['OSName'] = 'Linux'
         model['CSCreationClassName'] = 'CIM_ComputerSystem'
+        model.path['CSCreationClassName'] = 'CIM_ComputerSystem'
         model['CSName'] = getfqdn()
+        model.path['CSName'] = getfqdn()
         for file in os.listdir('/proc'):
             if not file.isdigit():
                 continue
             model['Handle'] = file
+            model.path['Handle'] = file
             if keys_only:
                 yield model
             else:
                 try:
-                    yield self.get_instance(env, model, cim_class)
+                    yield self.get_instance(env, model, property_list)
                 except pywbem.CIMError, (num, msg):
                     if num not in (pywbem.CIM_ERR_NOT_FOUND, 
                                    pywbem.CIM_ERR_ACCESS_DENIED):

@@ -10,12 +10,15 @@ Instruments:
 import pywbem
 import pwd
 import grp
+from cim_provider import CIMProvider
 
 def get_user_instance(uid, model, keys_only):
     try:
         pwinfo = pwd.getpwuid(uid)
         #model['UserID'] = pywbem.Uint32(uid)
         model['UserID'] = str(uid)
+        if hasattr(model, 'path'):
+            model.path['UserID'] = str(uid)
         if keys_only:
             return model
         model['UserName'] = pwinfo[0]
@@ -30,6 +33,8 @@ def get_group_instance(gid, model, keys_only):
         grinfo = grp.getgrgid(gid)
         #model['GroupID'] = pywbem.Uint32(gid)
         model['GroupID'] = str(gid)
+        if hasattr(model, 'path'):
+            model.path['GroupID'] = str(gid)
         if keys_only:
             return model
         model['GroupName'] = grinfo[0]
@@ -51,8 +56,8 @@ def get_assoc_instance(uid, gid, model, keys_only):
         isPrimary = is_primary_user(uid, gid)
         if not isPrimary and not is_user_in_group(uid, gid):
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
-        model['Dependent'] = get_user_instance(uid, model['Dependent'], keys_only)
-        model['Antecedent'] = get_group_instance(gid, model['Antecedent'], keys_only)
+        model['Dependent'] = get_user_instance(uid, model.path['Dependent'], keys_only)
+        model['Antecedent'] = get_group_instance(gid, model.path['Antecedent'], keys_only)
         if keys_only:
             return model
         model['isPrimaryGroup'] = isPrimary
@@ -60,25 +65,25 @@ def get_assoc_instance(uid, gid, model, keys_only):
     except KeyError:
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
 
-class TestAssoc_User(pywbem.CIMProvider):
+class TestAssoc_User(CIMProvider):
     
     def __init__(self, env):
         self._logger = env.get_logger()
         
-    def get_instance(self, env, model, cim_class, inst=None):
+    def get_instance(self, env, model, property_list, inst=None):
         try:
-            uid = model['UserID']
+            uid = model.path['UserID']
             uid = int(uid)
             return get_user_instance(uid, model, False)
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def enum_instances(self, env, model, cim_class, keys_only):
+    def enum_instances(self, env, model, property_list, keys_only):
         self._logger.log_debug("%s:  enum_instances called for class %s" % (self.__class__.__name__.upper(), model.classname))
         for pwent in pwd.getpwall():
             yield get_user_instance(pwent[2], model, keys_only)
         
-    def set_instance(self, env, instance, previous_instance, cim_class):
+    def set_instance(self, env, instance, previous_instance, property_list):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
@@ -86,46 +91,46 @@ class TestAssoc_User(pywbem.CIMProvider):
         
     
     
-class TestAssoc_Group(pywbem.CIMProvider):
+class TestAssoc_Group(CIMProvider):
     
     def __init__(self, env):
         self._logger = env.get_logger()
         
-    def get_instance(self, env, model, cim_class, inst=None):
+    def get_instance(self, env, model, property_list, inst=None):
         try:
-            gid = model['GroupID']
+            gid = model.path['GroupID']
             gid = int(gid)
             return get_group_instance(gid, model, False)
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def enum_instances(self, env, model, cim_class, keys_only):
+    def enum_instances(self, env, model, property_list, keys_only):
         for grent in grp.getgrall():
             yield get_group_instance(grent[2], model, keys_only)
         
-    def set_instance(self, env, instance, previous_instance, cim_class):
+    def set_instance(self, env, instance, previous_instance, property_list):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     
-class TestAssoc_MemberOfGroup(pywbem.CIMProvider):
+class TestAssoc_MemberOfGroup(CIMProvider):
     
     def __init__(self, env):
         self._logger = env.get_logger()
         
-    def get_instance(self, env, model, cim_class, inst=None):
+    def get_instance(self, env, model, property_list, inst=None):
         try:
-            uid = model['Dependent']['UserID']
+            uid = model.path['Dependent']['UserID']
             uid = int(uid)
-            gid = model['Antecedent']['GroupID']
+            gid = model.path['Antecedent']['GroupID']
             gid = int(gid)
             return get_assoc_instance(uid, gid, model, False)
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def enum_instances(self, env, model, cim_class, keys_only):
+    def enum_instances(self, env, model, property_list, keys_only):
         self._logger.log_debug("\n%s:  enum_instances called for class %s" % (self.__class__.__name__.upper(), model.classname))
         for pwent in pwd.getpwall():
             user_cin = pywbem.CIMInstanceName('TestAssoc_User',
@@ -133,43 +138,41 @@ class TestAssoc_MemberOfGroup(pywbem.CIMProvider):
             group_cin = pywbem.CIMInstanceName('TestAssoc_Group',
                     namespace=model.path.namespace)
             model['Dependent'] = get_user_instance(pwent[2], user_cin, True)
+            model.path['Dependent'] = get_user_instance(pwent[2], 
+                    user_cin, True)
             model['Antecedent'] = get_group_instance(pwent[3], group_cin, True)
+            model.path['Antecedent'] = get_group_instance(pwent[3], 
+                    group_cin, True)
             if not keys_only:
                 model['isPrimaryGroup'] = True
             yield model
             for grent in grp.getgrall():
                 if pwent[0] in grent[3]:
-                    model['Antecedent'] = get_group_instance(grent[2], group_cin, True)
+                    model['Antecedent'] = get_group_instance(grent[2], 
+                            group_cin, True)
+                    model.path['Antecedent'] = get_group_instance(grent[2], 
+                            group_cin, True)
                     if not keys_only:
                         model['isPrimaryGroup'] = False
                     yield model
         
-    def set_instance(self, env, instance, previous_instance, cim_class):
+    def set_instance(self, env, instance, previous_instance, property_list):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
 
-    def xxx_hello(self):
-        pass
-        
-    def references(self, env, object_name, model, assoc_class,
+    def references(self, env, object_name, model, assoc_class_name,
             result_class_name, role, result_role, keys_only):
         print '!!!!!!! in TestAssoc_MemberOfGroup.references()' 
         self._logger.log_debug("\n%s:  References called for class %s" % (self.__class__.__name__.upper(), object_name))
-        ch = env.get_cimom_handle()
-        if pywbem.is_subclass(ch,
-                object_name.namespace,
-                sub=object_name.classname,
-                super='TestAssoc_User'):
+        if object_name.classname.lower() == 'testassoc_user':
             if role and role.lower() == 'antecedent':
                 return
             if result_role and result_role.lower() == 'dependent':
                 return
-            if result_class_name and not pywbem.is_subclass(ch,
-                    object_name.namespace,
-                    sub = 'TestAssoc_Group',
-                    super = result_class_name):
+            if result_class_name and \
+                    result_class_name.lower() != 'testassoc_group':
                 return
             model['Dependent'] = object_name
             cn = pywbem.CIMInstanceName('TestAssoc_Group',
@@ -187,18 +190,13 @@ class TestAssoc_MemberOfGroup(pywbem.CIMProvider):
                     if not keys_only:
                         model['isPrimaryGroup'] = False
                     yield model
-        elif pywbem.is_subclass(ch,
-                object_name.namespace,
-                sub=object_name.classname,
-                super='TestAssoc_Group'):
+        if object_name.classname.lower() == 'testassoc_group':
             if role and role.lower() == 'dependent':
                 return
             if result_role and result_role.lower() == 'antecedent':
                 return
-            if result_class_name and not pywbem.is_subclass(ch,
-                    object_name.namespace,
-                    sub = 'TestAssoc_User',
-                    super = result_class_name):
+            if result_class_name and \
+                    result_class_name.lower() != 'testassoc_user':
                 return
             model['Antecedent'] = object_name
             cn = pywbem.CIMInstanceName('TestAssoc_User',

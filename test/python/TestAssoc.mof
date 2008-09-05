@@ -27,10 +27,10 @@ class TestAssoc_Group
 [ Association, Description("Association that shows relationship of users and groups")]
 class TestAssoc_MemberOfGroup
 {
-	[Key, Override("Antecedent"), Description ("The group")]
+	[Key, Description ("The group")]
 	TestAssoc_Group REF Antecedent;
 
-	[Key, Override("Dependent"), Description("The user")]
+	[Key, Description("The user")]
 	TestAssoc_User REF Dependent;
 
 	[Required, Description("Indicates whether the associated group is the primary group for the associated user")]

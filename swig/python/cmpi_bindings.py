@@ -33,9 +33,10 @@
 
 import cmpi
 
+
+from cim_provider import ProviderProxy
 import pywbem
 
-from pywbem.cim_provider import ProviderProxy
 
 def SFCBUDSConnection():
     return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
@@ -98,15 +99,6 @@ class ProviderEnvironment(object):
 _classcache = {}
 _conn = SFCBUDSConnection()
 
-def _get_class(ns, cname):
-    key = ns + ':' + cname.lower()
-    try:
-        return _classcache[key]
-    except KeyError:
-        cc = _conn.GetClass(cname, namespace=ns, IncludeQualifiers=True, 
-                IncludeClassOrigin=False, LocalOnly=False)
-        _classcache[key] = cc
-        return cc
 
 class CMPIProvider(object):
 
@@ -131,10 +123,8 @@ class CMPIProvider(object):
         
         op = cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
-        cc = _get_class(op.namespace, op.classname)
         try:
-            for i in self.proxy.MI_enumInstanceNames(self.env, 
-                    op.namespace, cc):
+            for i in self.proxy.MI_enumInstanceNames(self.env, op):
                 cop = pywbem2cmpi_instname(i)
                 rslt.return_objectpath(cop)
         except pywbem.CIMError, args:
@@ -148,10 +138,8 @@ class CMPIProvider(object):
 
         op = cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
-        cc = _get_class(op.namespace, op.classname)
         try:
-            for i in self.proxy.MI_enumInstances(self.env, op.namespace, 
-                    plist, cc, cc):
+            for i in self.proxy.MI_enumInstances(self.env, op, plist):
                 cinst = pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
         except pywbem.CIMError, args:
@@ -164,9 +152,8 @@ class CMPIProvider(object):
         print 'provider.py: In get_instance()' 
         op = cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
-        cc = _get_class(op.namespace, op.classname)
         try:
-            pinst = self.proxy.MI_getInstance(self.env, op, plist, cc)
+            pinst = self.proxy.MI_getInstance(self.env, op, plist)
         except pywbem.CIMError, args:
             return args[:2]
         cinst = pywbem2cmpi_inst(pinst)
@@ -189,9 +176,9 @@ class CMPIProvider(object):
 
     def set_instance(self, ctx, rslt, objname, newinst, plist):
         pinst = cmpi2pywbem_inst(newinst)
-        cc = _get_class(objname.namespace(), objname.classname())
+        pinst.path = cmpi2pywbem_instname(objname)
         try:
-            self.proxy.MI_modifyInstance(self.env, pinst, True, plist, cc)
+            self.proxy.MI_modifyInstance(self.env, pinst, plist)
         except pywbem.CIMError, args:
             return args[:2]
         return (0, '')
@@ -270,12 +257,10 @@ class CMPIProvider(object):
     def invoke_method(self, ctx, rslt, objName, method, inargs, outargs):
         print '*** in invoke_method'
         op = cmpi2pywbem_instname(objName)
-        cc = _get_class(op.namespace, op.classname)
-        mm = cc.methods[method]
         pinargs = cmpi2pywbem_args(inargs)
         try:
             ((_type, rv), poutargs) = self.proxy.MI_invokeMethod(self.env, 
-                    op, mm, pinargs)
+                    op, method, pinargs)
         except pywbem.CIMError, args:
             return args[:2]
 

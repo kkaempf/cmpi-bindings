@@ -19,3 +19,4 @@ toplevel function which raised the execption ?]
 
 Wrap CMPIEnumeration and CMPIArray in typemaps. 
 
+Check timestamp on provider modules and reload if modified. 
