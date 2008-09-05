@@ -20,13 +20,26 @@ Setup
    # ln -s `pwd`/*.py /usr/lib/python/site-packages/pywbem/
   ]
   
+
+- Create symlinks for cmpi-bindings
+
+  cd build/swig/python
+  sudo ln -s `pwd`/libpyCmpiProvider.so /usr/lib/cmpi
+  sudo ln -s `pwd`/cmpi.py /usr/lib/python2.5/site-packages
+  cd ../../..
+  cd swig/python
+  sudo ln -s `pwd`/pycmpi_provider.py /usr/lib/python2.5/site-packages
+
+
 - Create symlinks for sfcb mof/reg
 
   sudo ./setup.sh
   
   This also runs "sfcbrepos -f"
-  
+
+
 - Restart sfcbd
+
 
 - now run TestMethod_Test.py, TestAtomProvider_Test.py as root.
   (they only need to run as root because they use the passwordless local unix connection).
