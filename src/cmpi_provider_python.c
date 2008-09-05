@@ -65,7 +65,8 @@ void _logstderr(char *fmt,...)
 /* Global handle to the CIM broker. This is initialized by the CIMOM when the provider is loaded */
 static const CMPIBroker * _BROKER = NULL;
 static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER; 
-static int _CMPI_INIT = 0; 
+static int _PY_INIT = 0; // acts as a boolean - is Python Initialized
+static int _MI_COUNT = 0; 
 static PyThreadState* cmpiMainPyThreadState = NULL; 
 //static char* _MINAME = NULL; 
 PyObject* _PYPROVMOD = NULL; 
@@ -354,49 +355,57 @@ static CMPIStatus Cleanup(
 		const CMPIContext * context,
 		CMPIBoolean terminating)	
 {
-  CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations. */
+    CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations. */
   
-  _SBLIM_TRACE(1,("<%d/%d> Cleanup() called", getpid(), pthread_self()));
-
-  SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-  Py_DecRef(_PYPROVMOD); 
-  SWIG_PYTHON_THREAD_END_BLOCK; 
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+    Py_DecRef(_PYPROVMOD); 
+    SWIG_PYTHON_THREAD_END_BLOCK; 
   
-  if (miHdl != NULL) 
+    if (miHdl != NULL) 
     { 
-      _SBLIM_TRACE(1,("\n<%d/%d> >>>>> Cleanup(Python) called, freeing PyProviderMIHandle (%s)\n", getpid(), pthread_self(), miHdl->miName));
-      free(miHdl->miName); 
-      
-      /* Isn't this been done by the broker ?! */
-      free(miHdl);
-      miHdl = NULL; 
+        free(miHdl->miName); 
+     
+        // we must free the miHdl - it is our PyProviderMIHandle.
+        // it is pointed to by the CMPI<type>MI * that the broker holds onto...
+        // the broker is responsible for freeing the CMPI<type>MI*  
+        free(miHdl);
+        miHdl = NULL; 
     }
   
-  /* De-reference _CMPI_INIT, protected by _CMPI_INIT_MUTEX
-   * call Py_Finalize when _CMPI_INIT drops to zero
-   */
-  if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
+    /* Decrement _MI_COUNT, protected by _CMPI_INIT_MUTEX
+     * call Py_Finalize when _MI_COUNT drops to zero
+     */
+    if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
     {
-      perror("Can't lock _CMPI_INIT_MUTEX");
-      abort();
+        perror("Can't lock _CMPI_INIT_MUTEX");
+        abort();
     }
-  if (--_CMPI_INIT > 0) 
+    if (--_MI_COUNT > 0) 
     {
-      pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
-      return status;
+        pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+        return status;
     }
-  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+    pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   
-  PyEval_AcquireLock(); 
-  PyThreadState_Swap(cmpiMainPyThreadState); 
-  Py_Finalize();
+    PyEval_AcquireLock(); 
+    PyThreadState_Swap(cmpiMainPyThreadState); 
+    if (_PY_INIT)  // if PY is initialized and _MI_COUNT == 0, call Py_Finalize
+    {
+        _SBLIM_TRACE(1,("Calling Py_Finalize()"));
+        Py_Finalize();
+        if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
+        {
+            perror("Can't lock _CMPI_INIT_MUTEX");
+            abort();
+        }
+        _PY_INIT=0; // false
+        pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+    }
   
-  _SBLIM_TRACE(1,("<%d/%d> Cleanup(Python) called", getpid(), pthread_self()));
-  
-   /* Finished. */
+    /* Finished. */
 exit:
-   _SBLIM_TRACE(1,("<%d/%d> Cleanup() %s", getpid(), pthread_self(), (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    _SBLIM_TRACE(1,("Cleanup() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 static CMPIStatus InstCleanup(
@@ -404,6 +413,7 @@ static CMPIStatus InstCleanup(
 		const CMPIContext * context,
 		CMPIBoolean terminating)
 {
+    _SBLIM_TRACE(1,("Cleanup(Python) called for Instance provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
 	return Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
 }
 
@@ -412,6 +422,7 @@ static CMPIStatus AssocCleanup(
 		const CMPIContext * context,
 		CMPIBoolean terminating)
 {
+    _SBLIM_TRACE(1,("Cleanup(Python) called for Association provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
 	return Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
 }
 
@@ -420,6 +431,7 @@ static CMPIStatus MethodCleanup(
 		const CMPIContext * context,
 		CMPIBoolean terminating)
 {
+    _SBLIM_TRACE(1,("Cleanup(Python) called for Method provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
 	return Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
 }
 
@@ -428,6 +440,7 @@ static CMPIStatus IndicationCleanup(
 		const CMPIContext * context,
 		CMPIBoolean terminating)
 {
+    _SBLIM_TRACE(1,("Cleanup(Python) called for Indication provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
 	return Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
 }
 
@@ -441,9 +454,9 @@ static CMPIStatus EnumInstanceNames(
 		const CMPIResult * result,	/* [in] Contains the CIM namespace and classname */
 		const CMPIObjectPath * reference)	/* [in] Contains the CIM namespace and classname */
 {
-   CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
+    CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
 
-   _SBLIM_TRACE(1,("EnumInstanceNames() called"));
+    _SBLIM_TRACE(1,("EnumInstanceNames() called"));
 
     _SBLIM_TRACE(1,("EnumInstancesNames(Python) called, context %p, result %p, reference %p", context, result, reference));
 
@@ -691,9 +704,9 @@ static int PyGlobalInitialize(CMPIStatus* st)
 {
   int rc = 0; 
 
-  _SBLIM_TRACE(1,("<%d/%d> PyGlobalInitialize() called", getpid(), pthread_self()));
+  _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() called", getpid(), pthread_self()));
   
-  /* Do a reference count on _CMPI_INIT, protected by _CMPI_INIT_MUTEX
+  /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
    * so we call Py_Finalize() only once.
    */
   if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
@@ -701,16 +714,17 @@ static int PyGlobalInitialize(CMPIStatus* st)
       perror("Can't lock _CMPI_INIT_MUTEX");
       abort();
     }
-  if (_CMPI_INIT++)
+  if (_PY_INIT)
 	{
 	  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
-	  _SBLIM_TRACE(1,("<%d/%d> PyGlobalInitialize() returning: already initialized", getpid(), pthread_self()));
+	  _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() returning: already initialized", getpid(), pthread_self()));
 	  return 0; 
 	}
+  _PY_INIT=1;//true
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   
   SWIGEXPORT void SWIG_init(void);
-  _SBLIM_TRACE(1,("<%d/%d> Python: Loading", getpid(), pthread_self()));
+  _SBLIM_TRACE(1,("<%d/0x%x> Python: Loading", getpid(), pthread_self()));
   
   Py_SetProgramName("cmpi_swig");
   Py_Initialize();
@@ -724,14 +738,14 @@ static int PyGlobalInitialize(CMPIStatus* st)
   if (_PYPROVMOD == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      _SBLIM_TRACE(1,("<%d/%d> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
+      _SBLIM_TRACE(1,("<%d/0x%x> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
       PY_CMPI_SETFAIL(get_exc_trace()); 
       return -1; 
     }
-  _SBLIM_TRACE(1,("<%d/%d> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
+  _SBLIM_TRACE(1,("<%d/0x%x> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
   
   SWIG_PYTHON_THREAD_END_BLOCK; 
-  _SBLIM_TRACE(1,("<%d/%d> PyGlobalInitialize() succeeded", getpid(), pthread_self())); 
+  _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() succeeded", getpid(), pthread_self())); 
   return 0; 
 }
 
@@ -745,7 +759,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
       return rc; 
     }
 
-  _SBLIM_TRACE(1,("<%d/%d> PyInitialize() called", getpid(), pthread_self()));
+  _SBLIM_TRACE(1,("<%d/0x%x> PyInitialize() called", getpid(), pthread_self()));
   
   SWIG_PYTHON_THREAD_BEGIN_BLOCK;
   PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
@@ -758,7 +772,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
     }
   PyObject* broker = SWIG_NewPointerObj((void*) _BROKER, SWIGTYPE_p__CMPIBroker, 0);
   PyObject* args = PyTuple_New(2); 
-  _SBLIM_TRACE(1,("\n<%d/%d> >>>>> PyInitialize(Python) called, MINAME=%s\n", getpid(), pthread_self(), hdl->miName));
+  _SBLIM_TRACE(1,("\n<%d/0x%x> >>>>> PyInitialize(Python) called, MINAME=%s\n", getpid(), pthread_self(), hdl->miName));
   PyTuple_SetItem(args, 0, string2py(hdl->miName)); 
   PyTuple_SetItem(args, 1, broker); 
   PyObject* provinst = PyObject_CallObject(provclass, args); 
@@ -774,7 +788,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   hdl->pyMod = provinst; 
   
   SWIG_PYTHON_THREAD_END_BLOCK; 
-  _SBLIM_TRACE(1,("<%d/%d> PyInitialize() succeeded", getpid(), pthread_self())); 
+  _SBLIM_TRACE(1,("<%d/0x%x> PyInitialize() succeeded", getpid(), pthread_self())); 
   return 0; 
 }
 
@@ -1290,6 +1304,7 @@ static void createInit(const CMPIBroker* broker,
 CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
 		const CMPIContext* context, const char* miname, CMPIStatus* st)\
 { \
+    /*_SBLIM_TRACE(1, ("\n>>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname));*/ \
     PyProviderMIHandle *hdl = (PyProviderMIHandle*)malloc(sizeof(PyProviderMIHandle)); \
     if (hdl) { \
         hdl->pyMod = NULL; \
@@ -1301,6 +1316,8 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
 		mi->ft = &ptype##MIFT__; \
 	} \
 	createInit(broker, context, miname, st); \
+    /*_SBLIM_TRACE(1, ("\n>>>>>     returning mi=0x%08x  mi->hdl=0x%08x   mi->ft=0x%08x", mi, mi->hdl, mi->ft));*/ \
+    ++_MI_COUNT; \
 	return mi; \
 }
 
