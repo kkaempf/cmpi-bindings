@@ -56,7 +56,7 @@ class TestAtomProvider(CIMProvider):
             #logger.log_debug("**** GET_INSTANCE model[name]: %s ****" % model['Name'])
             #print "**** GET_INSTANCE model[name]: %s ****" % str(model['Name'])
             #if model['Name'] in self.storage.keys():
-            inst = self.storage[model.path['Name']]
+            inst = self.storage[model['Name']]
             #else:
                 #print "This is not working.... ******* FIX ME"
 
