@@ -199,6 +199,8 @@ __all__ = ['CIMProvider',
            'is_subclass',
            'codegen']
 
+class _NotImplemented(Exception):
+    pass
 
 def _path_equals_ignore_host(lhs, rhs):
     """If one object path doesn't inlcude a host, don't include the hosts
@@ -433,7 +435,7 @@ class CIMProvider(object):
         CIM_ERR_FAILED (some other unspecified error occurred)
 
         """
-        pass
+        raise _NotImplemented()
 
     def _set_filter_results(self, value):
         self._filter_results = value
@@ -575,6 +577,7 @@ class CIMProvider(object):
         '''
         model = pywbem.CIMInstance(classname=instanceName.classname, 
                                    path=instanceName)
+        model.update(model.path.keybindings)
         '''
         for k, v in instanceName.keybindings.items():
             type = cimClass.properties[k].type
@@ -925,9 +928,11 @@ class CIMProvider(object):
             new_inputs = dict([('param_%s' % k.lower(), v) \
                             for k, v in inputParams.items()])
             (rval, outs) = method(env=env, object_name=objectName, 
-                                  method=methodName, **new_inputs)
+                                  **new_inputs)
 
             def add_type(v):
+                if isinstance(v, pywbem.CIMParameter):
+                    return (v.type, v.value)
                 lv = v
                 if type(v) == list and len(v) > 0:
                     lv = v[0]
@@ -938,17 +943,16 @@ class CIMProvider(object):
                 elif isinstance(lv, pywbem.CIMInstanceName):
                     tp = 'reference'
                 elif v is None or (type(v) == list and len(v) == 0):
-                    assert(None == 'TODO')
+                    assert(None == 'This should not happen')
                 else:
                     tp = pywbem.cimtype(v)
                 return (tp, v)
 
-            for k, v in outs.items():
-                if hasattr(v, 'namespace') and v.namespace is None:
-                    v.namespace = objectName.namespace
-                outs[k] = add_type(v)
+            louts = {}
+            for op in outs:
+                louts[op.name] = (op.type, op.value)
             rval = add_type(rval)
-            rval = (rval, outs)
+            rval = (rval, louts)
         else:
             raise pywbem.CIMError(pywbem.CIM_ERR_METHOD_NOT_FOUND, 
                               "%s:%s"%(objectName.classname, methodName))
@@ -1566,7 +1570,7 @@ class ProviderProxy(object):
         if hasattr(self.provmod, 'get_providers'):
             self.provregs = pywbem.NocaseDict(self.provmod.get_providers(env))
 
-    def _get_callable (self, classname, cname):
+    def _get_callable (self, classname, cname, is_assoc = False):
         """Return a function or method object appropriate to fulfill a request
 
         classname -- The CIM class name associated with the request. 
@@ -1579,9 +1583,9 @@ class ProviderProxy(object):
             provClass = self.provregs[classname]
             if hasattr(provClass, cname):
                 callable = getattr(provClass, cname)
-        elif hasattr(self.provmod, cname):
+        elif not is_assoc and hasattr(self.provmod, cname):
             callable = getattr(self.provmod, cname)
-        if callable is None:
+        if callable is None and not is_assoc:
             raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                     "No callable for %s:%s on provider %s"%(classname,
                                                             cname, 
@@ -1688,11 +1692,41 @@ class ProviderProxy(object):
         #       and propertyList
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_associators called. assocClass: %s' % (assocClassName))
+
         cname = assocClassName
-        for i in self._get_callable(cname, 'MI_associators')  \
-                (env, objectName, assocClassName, resultClassName, 
-                        role, resultRole, propertyList):
-            yield i 
+        if not cname and hasattr(self.provmod, 'MI_associators'):
+            for i in self.provmod.MI_associators(
+                       env, 
+                       objectName, 
+                       assocClassName, 
+                       resultClassName, 
+                       role, 
+                       resultRole, 
+                       propertyList):
+                yield i
+            return
+
+        lcnames = []
+        is_assoc = not cname
+        if cname:
+            lcnames = [cname]
+        else:
+            lcnames = self.provregs.keys()
+
+        for lcname in lcnames:
+            fn = self._get_callable(lcname, 'MI_associators', is_assoc)
+            if fn is not None:
+                try:
+                    for i in fn(env, 
+                               objectName, 
+                               lcname, 
+                               resultClassName, 
+                               role, 
+                               resultRole, 
+                               propertyList):
+                        yield i
+                except _NotImplemented:
+                    continue
         logger.log_debug('CIMProvider MI_associators returning')
 
 ##############################################################################
@@ -1708,10 +1742,38 @@ class ProviderProxy(object):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_associatorNames called. assocClass: %s' % (assocClassName))
         cname = assocClassName
-        for i in self._get_callable(cname, 'MI_associatorNames')  \
-                (env, objectName, assocClassName, resultClassName, 
-                        role, resultRole):
-            yield i 
+        if not cname and hasattr(self.provmod, 'MI_associatorNames'):
+            for i in self.provmod.MI_associatorNames(
+                       env, 
+                       objectName, 
+                       assocClassName, 
+                       resultClassName, 
+                       role, 
+                       resultRole):
+                yield i
+            return
+
+        lcnames = []
+        is_assoc = not cname
+        if cname:
+            lcnames = [cname]
+        else:
+            lcnames = self.provregs.keys()
+
+        for lcname in lcnames:
+            fn = self._get_callable(lcname, 'MI_associatorNames', is_assoc)
+            if fn is not None:
+                try:
+                    for i in fn(env, 
+                               objectName, 
+                               lcname, 
+                               resultClassName, 
+                               role, 
+                               resultRole):
+                        yield i
+                except _NotImplemented:
+                    continue
+
         logger.log_debug('CIMProvider MI_associatorNames returning')
 
 ##############################################################################
@@ -1726,15 +1788,32 @@ class ProviderProxy(object):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_references called. resultClass: %s' % (resultClassName))
         cname = resultClassName
-        if not cname:
+        if not cname and hasattr(self.provmod, 'MI_references'):
+            for i in self.provmod.MI_references(env, objectName, 
+                    resultClassName, role, propertyList):
+                yield i
             return
-        for i in self._get_callable(cname, 'MI_references')  \
-                           (env, 
-                            objectName, 
-                            resultClassName, 
-                            role, 
-                            propertyList):
-            yield i 
+
+        lcnames = []
+        is_assoc = not cname
+        if cname:
+            lcnames = [cname]
+        else:
+            lcnames = self.provregs.keys()
+
+        for lcname in lcnames:
+            fn = self._get_callable(lcname, 'MI_references', is_assoc)
+            if fn is not None:
+                try:
+                    for i in fn(env, 
+                                objectName, 
+                                lcname, 
+                                role, 
+                                propertyList):
+                        yield i
+                except _NotImplemented:
+                    continue
+
         logger.log_debug('CIMProvider MI_references returning')
 
 ##############################################################################
@@ -1747,15 +1826,33 @@ class ProviderProxy(object):
                           role):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_referenceNames <1> called. resultClass: %s' % (resultClassName))
+
         cname = resultClassName
-        if not cname:
+        if not cname and hasattr(self.provmod, 'MI_referenceNames'):
+            for i in self.provmod.MI_referenceNames(env, objectName, 
+                    resultClassName, role):
+                yield i
             return
-        for i in self._get_callable(cname, 'MI_referenceNames')  \
-               (env, 
-                objectName, 
-                resultClassName, 
-                role):
-            yield i 
+
+        lcnames = []
+        is_assoc = not cname
+        if cname:
+            lcnames = [cname]
+        else:
+            lcnames = self.provregs.keys()
+
+        for lcname in lcnames:
+            fn = self._get_callable(lcname, 'MI_referenceNames', is_assoc)
+            if fn is not None:
+                try:
+                    for i in fn(env, 
+                                objectName, 
+                                lcname, 
+                                role):
+                        yield i
+                except _NotImplemented:
+                    continue
+
         logger.log_debug('CIMProvider MI_referenceNames returning')
 
 ##############################################################################
