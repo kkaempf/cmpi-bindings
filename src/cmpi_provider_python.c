@@ -154,7 +154,6 @@ get_exc_trace()
 	CMPIString* rv = NULL; 
 
 	PyObject *type, *value, *traceback;
-	_SBLIM_TRACE(1, ("PyErr_Occurred() %d", PyErr_Occurred())); 
 	SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
 	PyErr_Fetch(&type, &value, &traceback);
     _SBLIM_TRACE(1,("** type %p, value %p, traceback %p", type, value, traceback)); 
