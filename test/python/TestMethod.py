@@ -33,9 +33,11 @@ class TestMethodProvider(CIMProvider):
 
         try:
             inst = g_insts[model['id']]
+            #inst = g_insts[model.path['id']]
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
+        #model['id'] = model.path['id']
         model['p_sint32']=inst[1]
         model['p_str']=inst[0]
         return model
@@ -89,7 +91,7 @@ class TestMethodProvider(CIMProvider):
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def cim_method_mkunichar(self, env, object_name, method,
+    def cim_method_mkunichar(self, env, object_name, 
                              param_c):
 
         logger = env.get_logger()
@@ -102,7 +104,7 @@ class TestMethodProvider(CIMProvider):
         rval = None # TODO (type pywbem.Char16)
         return (rval, out_params)
         
-    def cim_method_mkunistr_char16(self, env, object_name, method,
+    def cim_method_mkunistr_char16(self, env, object_name, 
                                    param_carr):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_mkunistr_char16()' \
@@ -114,7 +116,7 @@ class TestMethodProvider(CIMProvider):
         rval = None # TODO (type unicode)
         return (rval, out_params)
         
-    def cim_method_strsplit(self, env, object_name, method,
+    def cim_method_strsplit(self, env, object_name, 
                             param_str,
                             param_sep):
         logger = env.get_logger()
@@ -122,13 +124,14 @@ class TestMethodProvider(CIMProvider):
                 % self.__class__.__name__)
 
         elems = param_str.split(param_sep)
-        out_params = {}
-        out_params['nelems'] = pywbem.Sint32(len(elems))
-        out_params['elems'] = elems
+        out_params = [
+                pywbem.CIMParameter('nelems', 'sint32', 
+                    value=pywbem.Sint32(len(elems))), 
+                pywbem.CIMParameter('elems', 'string', value=elems) ]
         rval = True
         return (rval, out_params)
         
-    def cim_method_strcat(self, env, object_name, method,
+    def cim_method_strcat(self, env, object_name,
                           param_strs,
                           param_sep):
         logger = env.get_logger()
@@ -139,7 +142,7 @@ class TestMethodProvider(CIMProvider):
         rval = param_sep.join(param_strs)
         return (rval, out_params)
         
-    def cim_method_mkunichararray(self, env, object_name, method,
+    def cim_method_mkunichararray(self, env, object_name, 
                                   param_inarr):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_mkunichararray()' \
@@ -152,7 +155,7 @@ class TestMethodProvider(CIMProvider):
         rval = None # TODO (type bool)
         return (rval, out_params)
         
-    def cim_method_mkunistr_sint8(self, env, object_name, method,
+    def cim_method_mkunistr_sint8(self, env, object_name,
                                   param_carr):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_mkunistr_sint8()' \
@@ -164,104 +167,111 @@ class TestMethodProvider(CIMProvider):
         out_params = {}
         return (rval, out_params)
 
-    def minmedmax(self, dt, env, object_name, method, param_numlist):
+    def minmedmax(self, dt, env, object_name,  param_numlist):
         l = param_numlist
         l.sort()
-        out_params = {}
-        out_params['max'] = l[-1]
-        out_params['min'] = l[0]
+
+        lmin = l[0]
+        lmax = l[-1]
         ln = len(l)
         if ln % 2 == 0:
-            out_params['med'] = dt((l[(ln / 2) - 1] + l[(ln / 2)]) / 2)
+            lmed = dt((l[(ln / 2) - 1] + l[(ln / 2)]) / 2)
         else:
-            out_params['med'] = dt(l[ln / 2])
+            lmed = dt(l[ln / 2])
+
+        out_params = [
+                pywbem.CIMParameter('max', lmax.cimtype, value=lmax),
+                pywbem.CIMParameter('min', lmin.cimtype, value=lmin),
+                pywbem.CIMParameter('med', lmed.cimtype, value=lmed)
+                ]
+
         rval = True
         return (rval, out_params)
         
-    def cim_method_minmedmax_real64(self, env, object_name, method,
+    def cim_method_minmedmax_real64(self, env, object_name,
                                     param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_real64()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Real64, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Real64, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_real32(self, env, object_name, method,
+    def cim_method_minmedmax_real32(self, env, object_name,
                                     param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_real32()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Real32, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Real32, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_uint8(self, env, object_name, method,
+    def cim_method_minmedmax_uint8(self, env, object_name,
                                    param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_uint8()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Uint8, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Uint8, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_sint64(self, env, object_name, method,
+    def cim_method_minmedmax_sint64(self, env, object_name,
                                     param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_sint64()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Sint64, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Sint64, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_sint16(self, env, object_name, method,
+    def cim_method_minmedmax_sint16(self, env, object_name,
                                     param_numlist):
 
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_sint16()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Sint16, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Sint16, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_uint16(self, env, object_name, method,
+    def cim_method_minmedmax_uint16(self, env, object_name,
                                     param_numlist):
 
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_uint16()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Uint16, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Uint16, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_uint64(self, env, object_name, method,
+    def cim_method_minmedmax_uint64(self, env, object_name,
                                     param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_uint64()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Uint64, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Uint64, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_sint8(self, env, object_name, method,
+    def cim_method_minmedmax_sint8(self, env, object_name, 
                                    param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_sint8()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Sint8, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Sint8, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_sint32(self, env, object_name, method,
+    def cim_method_minmedmax_sint32(self, env, object_name, 
                                     param_numlist):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_sint32()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Sint32, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Sint32, env, object_name,  param_numlist)
         
-    def cim_method_minmedmax_uint32(self, env, object_name, method,
+    def cim_method_minmedmax_uint32(self, env, object_name, 
                                     param_numlist):
 
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_minmedmax_uint32()' \
                 % self.__class__.__name__)
 
-        return self.minmedmax(pywbem.Uint32, env, object_name, method, param_numlist)
+        return self.minmedmax(pywbem.Uint32, env, object_name,  param_numlist)
         
-    def cim_method_getdate(self, env, object_name, method,
+    def cim_method_getdate(self, env, object_name, 
                            param_datestr):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_getdate()' \
@@ -271,7 +281,7 @@ class TestMethodProvider(CIMProvider):
         rval = pywbem.CIMDateTime(param_datestr)
         return (rval, out_params)
         
-    def cim_method_getdates(self, env, object_name, method,
+    def cim_method_getdates(self, env, object_name, 
                             param_datestrs):
 
         logger = env.get_logger()
@@ -280,12 +290,15 @@ class TestMethodProvider(CIMProvider):
 
         out_params = {}
         elems = [pywbem.CIMDateTime(s) for s in param_datestrs]
-        out_params['nelems'] = pywbem.Sint32(len(elems))
-        out_params['elems'] = elems
+        out_params = [
+                pywbem.CIMParameter('nelems', 'sint32', 
+                    value=pywbem.Sint32(len(elems))),
+                pywbem.CIMParameter('elems','datetime', value=elems)
+                ]
         rval = True
         return (rval, out_params)
         
-    def cim_method_getintprop(self, env, object_name, method):
+    def cim_method_getintprop(self, env, object_name):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_getintprop()' \
                 % self.__class__.__name__)
@@ -300,7 +313,7 @@ class TestMethodProvider(CIMProvider):
         rval = inst[1]
         return (rval, out_params)
         
-    def cim_method_getstrprop(self, env, object_name, method):
+    def cim_method_getstrprop(self, env, object_name):
 
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_getstrprop()' \
@@ -316,7 +329,7 @@ class TestMethodProvider(CIMProvider):
         rval = inst[0]
         return (rval, out_params)
         
-    def cim_method_setstrprop(self, env, object_name, method,
+    def cim_method_setstrprop(self, env, object_name,
                               param_value):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_setstrprop()' \
@@ -334,7 +347,7 @@ class TestMethodProvider(CIMProvider):
         out_params = {}
         return (rval, out_params)
         
-    def cim_method_setintprop(self, env, object_name, method,
+    def cim_method_setintprop(self, env, object_name,
                               param_value):
 
         logger = env.get_logger()
@@ -353,7 +366,7 @@ class TestMethodProvider(CIMProvider):
         out_params = {}
         return (rval, out_params)
 
-    def genrandlist_i(self, dt, env, object_name, method, param_nelems, 
+    def genrandlist_i(self, dt, env, object_name,  param_nelems, 
                                 param_lo, param_hi):
         cnt = 0
         l = []
@@ -364,96 +377,99 @@ class TestMethodProvider(CIMProvider):
             except ValueError:
                 # Range was probably zero
                 l.append(dt(param_lo))
-        out_params = {}
-        out_params['lo'] = param_lo
-        out_params['hi'] = param_hi
-        out_params['nlist'] = l
+        out_params = []
+        out_params.append(pywbem.CIMParameter('lo', param_lo.cimtype, 
+            value=param_lo))
+        out_params.append(pywbem.CIMParameter('hi', param_hi.cimtype, 
+            value=param_hi))
+        tmpt = dt(0)
+        out_params.append(pywbem.CIMParameter('nlist', tmpt.cimtype, value=l))
         rval = True
         return (rval, out_params)
         
-    def cim_method_genrandlist_sint64(self, env, object_name, method,
+    def cim_method_genrandlist_sint64(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_sint64()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Sint64, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Sint64, env, object_name,  
                                     param_nelems, param_lo, param_hi)
 
         
-    def cim_method_genrandlist_uint16(self, env, object_name, method,
+    def cim_method_genrandlist_uint16(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_uint16()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Uint16, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Uint16, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
         
-    def cim_method_genrandlist_uint32(self, env, object_name, method,
+    def cim_method_genrandlist_uint32(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_uint32()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Uint32, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Uint32, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
-    def cim_method_genrandlist_sint8(self, env, object_name, method,
+    def cim_method_genrandlist_sint8(self, env, object_name,
                                      param_nelems,
                                      param_lo,
                                      param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_sint8()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Sint8, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Sint8, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
-    def cim_method_genrandlist_uint8(self, env, object_name, method,
+    def cim_method_genrandlist_uint8(self, env, object_name,
                                      param_nelems,
                                      param_lo,
                                      param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_uint8()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Uint8, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Uint8, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
-    def cim_method_genrandlist_uint64(self, env, object_name, method,
+    def cim_method_genrandlist_uint64(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_uint64()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Uint64, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Uint64, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
-    def cim_method_genrandlist_sint32(self, env, object_name, method,
+    def cim_method_genrandlist_sint32(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_sint32()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Sint32, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Sint32, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
-    def cim_method_genrandlist_sint16(self, env, object_name, method,
+    def cim_method_genrandlist_sint16(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_sint16()' \
                 % self.__class__.__name__)
-        return self.genrandlist_i(pywbem.Sint16, env, object_name, method, 
+        return self.genrandlist_i(pywbem.Sint16, env, object_name, 
                                     param_nelems, param_lo, param_hi)
 
-    def genrandlist_r(self, dt, env, object_name, method, param_nelems, 
+    def genrandlist_r(self, dt, env, object_name, param_nelems, 
                             param_lo, param_hi):
         cnt = 0
         l = []
@@ -461,14 +477,18 @@ class TestMethodProvider(CIMProvider):
         while cnt < param_nelems:
             cnt+= 1
             l.append(dt(random.random() * range + param_lo))
-        out_params = {}
-        out_params['lo'] = param_lo
-        out_params['hi'] = param_hi
-        out_params['nlist'] = l
+        out_params = []
+        out_params.append(pywbem.CIMParameter('lo', param_lo.cimtype, 
+            value=param_lo))
+        out_params.append(pywbem.CIMParameter('hi', param_hi.cimtype, 
+            value=param_hi))
+        tmpt = dt(0)
+        out_params.append(pywbem.CIMParameter('nlist', tmpt.cimtype, 
+            value=l))
         rval = True
         return (rval, out_params)
 
-    def cim_method_genrandlist_real64(self, env, object_name, method,
+    def cim_method_genrandlist_real64(self, env, object_name,
                                       param_nelems,
                                       param_lo,
                                       param_hi):
@@ -476,31 +496,31 @@ class TestMethodProvider(CIMProvider):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_real64()' \
                 % self.__class__.__name__)
-        return self.genrandlist_r(pywbem.Real64, env, object_name, method, 
+        return self.genrandlist_r(pywbem.Real64, env, object_name,  
                                     param_nelems, param_lo, param_hi)
 
         
-    def cim_method_genrandlist_real32(self, env, object_name, method,
+    def cim_method_genrandlist_real32(self, env, object_name, 
                                       param_nelems,
                                       param_lo,
                                       param_hi):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrandlist_real32()' \
                 % self.__class__.__name__)
-        return self.genrandlist_r(pywbem.Real32, env, object_name, method, 
+        return self.genrandlist_r(pywbem.Real32, env, object_name,  
                                     param_nelems, param_lo, param_hi)
 
-    def genrand_i(self, dt, env, object_name, method,
+    def genrand_i(self, dt, env, object_name, 
                                   param_max,
                                   param_min):
         out_params = {}
-        out_params['success'] = True
-	rval = param_min
-	if param_min < param_max:
+        out_params = [pywbem.CIMParameter('success', 'boolean', value=True)]
+        rval = param_min
+        if param_min < param_max:
         	rval = dt(random.randint(param_min, param_max))
         return (rval, out_params)
 
-    def cim_method_genrand_uint64(self, env, object_name, method,
+    def cim_method_genrand_uint64(self, env, object_name, 
                                   param_max,
                                   param_min):
 
@@ -508,100 +528,99 @@ class TestMethodProvider(CIMProvider):
         logger.log_debug('Entering %s.cim_method_genrand_uint64()' \
                 % self.__class__.__name__)
 
-        return self.genrand_i(pywbem.Uint64, env, object_name, method, 
+        return self.genrand_i(pywbem.Uint64, env, object_name,  
                 param_max, param_min)
         
-    def cim_method_genrand_sint8(self, env, object_name, method,
+    def cim_method_genrand_sint8(self, env, object_name, 
                                  param_max,
                                  param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_sint8()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Sint8, env, object_name, method, 
+        return self.genrand_i(pywbem.Sint8, env, object_name,  
                 param_max, param_min)
 
-    def cim_method_genrand_sint32(self, env, object_name, method,
+    def cim_method_genrand_sint32(self, env, object_name, 
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_sint32()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Sint32, env, object_name, method, 
+        return self.genrand_i(pywbem.Sint32, env, object_name,  
                 param_max, param_min)
 
-    def cim_method_genrand_uint32(self, env, object_name, method,
+    def cim_method_genrand_uint32(self, env, object_name, 
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_uint32()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Uint32, env, object_name, method, 
+        return self.genrand_i(pywbem.Uint32, env, object_name,  
                 param_max, param_min)
         
-    def cim_method_genrand_sint16(self, env, object_name, method,
+    def cim_method_genrand_sint16(self, env, object_name, 
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_sint16()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Sint16, env, object_name, method, 
+        return self.genrand_i(pywbem.Sint16, env, object_name,  
                 param_max, param_min)
 
-    def cim_method_genrand_uint16(self, env, object_name, method,
+    def cim_method_genrand_uint16(self, env, object_name,
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_uint16()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Uint16, env, object_name, method, 
+        return self.genrand_i(pywbem.Uint16, env, object_name,  
                 param_max, param_min)
 
-    def cim_method_genrand_uint8(self, env, object_name, method,
+    def cim_method_genrand_uint8(self, env, object_name, 
                                  param_max,
                                  param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_uint8()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Uint8, env, object_name, method, 
+        return self.genrand_i(pywbem.Uint8, env, object_name,  
                 param_max, param_min)
         
-    def cim_method_genrand_sint64(self, env, object_name, method,
+    def cim_method_genrand_sint64(self, env, object_name, 
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_sint64()' \
                 % self.__class__.__name__)
-        return self.genrand_i(pywbem.Sint64, env, object_name, method, 
+        return self.genrand_i(pywbem.Sint64, env, object_name,  
                 param_max, param_min)
 
-    def genrand_r(self, dt, env, object_name, method,
+    def genrand_r(self, dt, env, object_name, 
                                   param_max,
                                   param_min):
-        out_params = {}
-        out_params['success'] = True
+        out_params = [pywbem.CIMParameter('success', 'boolean', value=True)]
         range = param_max - param_min
         rval = dt(random.random() * range + param_min)
         return (rval, out_params)
 
-    def cim_method_genrand_real32(self, env, object_name, method,
+    def cim_method_genrand_real32(self, env, object_name, 
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_real32()' \
                 % self.__class__.__name__)
-        return self.genrand_r(pywbem.Real32, env, object_name, method, 
+        return self.genrand_r(pywbem.Real32, env, object_name,  
                 param_max, param_min)
 
-    def cim_method_genrand_real64(self, env, object_name, method,
+    def cim_method_genrand_real64(self, env, object_name, 
                                   param_max,
                                   param_min):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_genrand_real64()' \
                 % self.__class__.__name__)
-        return self.genrand_r(pywbem.Real64, env, object_name, method, 
+        return self.genrand_r(pywbem.Real64, env, object_name,  
                 param_max, param_min)
 
-    def cim_method_delobject(self, env, object_name, method,
+    def cim_method_delobject(self, env, object_name, 
                              param_path):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_delobject()' \
@@ -615,7 +634,7 @@ class TestMethodProvider(CIMProvider):
             rval = pywbem.Sint32(0)
         return (rval, {})
 
-    def cim_method_delobjects(self, env, object_name, method,
+    def cim_method_delobjects(self, env, object_name, 
                               param_paths):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_delobjects()' \
@@ -629,7 +648,7 @@ class TestMethodProvider(CIMProvider):
                 del g_insts[id]
         return (rval, {})
         
-    def cim_method_getobjectpath(self, env, object_name, method):
+    def cim_method_getobjectpath(self, env, object_name):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_getobjectpath()' \
                 % self.__class__.__name__)
@@ -642,11 +661,10 @@ class TestMethodProvider(CIMProvider):
                     namespace=object_name.namespace,
                     keybindings={'id':g_insts.keys()[0]})
             rval = pywbem.Sint32(0)
-        out_params = {}
-        out_params['path'] = path
+        out_params = [pywbem.CIMParameter('path', 'reference', value=path)]
         return (rval, out_params)
 
-    def cim_method_getobjectpaths(self, env, object_name, method):
+    def cim_method_getobjectpaths(self, env, object_name):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_getobjectpaths()' \
                 % self.__class__.__name__)
@@ -657,11 +675,11 @@ class TestMethodProvider(CIMProvider):
                     namespace=object_name.namespace,
                     keybindings={'id':key}))
         out_params = {}
-        out_params['paths'] = paths
+        out_params = [pywbem.CIMParameter('paths', 'reference', value=paths)]
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 
-    def cim_method_createobject(self, env, object_name, method, inst):
+    def cim_method_createobject(self, env, object_name,inst):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_createobject()' \
                 % self.__class__.__name__)
@@ -672,7 +690,7 @@ class TestMethodProvider(CIMProvider):
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 
-    def cim_method_createobjects(self, env, object_name, method, insts):
+    def cim_method_createobjects(self, env, object_name,insts):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_createobject()' \
                 % self.__class__.__name__)
