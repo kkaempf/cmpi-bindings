@@ -1549,7 +1549,7 @@ class ProviderProxy(object):
             self.filename = provid.__file__
         else:
             logger = env.get_logger()
-            logger.log_debug('Loading python provider at ', provid)
+            logger.log_debug('Loading python provider at %s' %provid)
             self._load_provider_source(provid)
         self._init_provider(env)
 
@@ -1606,7 +1606,7 @@ class ProviderProxy(object):
         changed since load, then reload the provider module.
         """
         if (self.provmod_timestamp != os.path.getmtime(self.provid)):
-            print "Need to reload provider at ", self.provid
+            print "Need to reload provider at %s" %self.provid
 
             #first unload the module
             if hasattr(self.provmod, "shutdown"):
