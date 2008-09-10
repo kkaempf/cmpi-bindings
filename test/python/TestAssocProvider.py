@@ -164,7 +164,6 @@ class TestAssoc_MemberOfGroup(CIMProvider):
 
     def references(self, env, object_name, model, assoc_class_name,
             result_class_name, role, result_role, keys_only):
-        print '!!!!!!! in TestAssoc_MemberOfGroup.references()' 
         self._logger.log_debug("\n%s:  References called for class %s" % (self.__class__.__name__.upper(), object_name))
         model.path.keybindings['antecedent'] = None
         model.path.keybindings['dependent'] = None

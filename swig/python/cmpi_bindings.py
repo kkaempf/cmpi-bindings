@@ -110,9 +110,9 @@ class CMPIProvider(object):
         self.env = ProviderEnvironment(self.broker)
         self.proxy = ProviderProxy(self.env, 
                 '/usr/lib/pycim/'+miname+'.py')
-        print '*** broker.name()', broker.name()
-        print '*** broker.capabilities()', broker.capabilities()
-        print '*** broker.version()', broker.version()
+        #print '*** broker.name()', broker.name()
+        #print '*** broker.capabilities()', broker.capabilities()
+        #print '*** broker.version()', broker.version()
         broker.LogMessage(1, 'LogID', 
                 '** This should go through broker.LogMessage()')
 
@@ -358,8 +358,7 @@ def cmpi2pywbem_instname(cmpiobjpath):
     return rv
 
 def pywbem2cmpi_instname(iname):
-    cop = cmpi.CMPIObjectPath(iname.namespace)
-    cop.set_classname(str(iname.classname))
+    cop = cmpi.CMPIObjectPath(iname.namespace, str(iname.classname))
     for name, val in iname.keybindings.items():
         data, _type = pywbem2cmpi_value(val)
         cop.add_key(str(name), data, _pywbem2cmpi_typemap[_type])

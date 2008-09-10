@@ -300,8 +300,8 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 
 %extend _CMPIObjectPath {
   /* nm: namespace */
-  CMPIObjectPath( const char *nm ) {
-    CMPIObjectPath *path = CMNewObjectPath(_BROKER, nm, _CLASSNAME, NULL);
+  CMPIObjectPath( const char *nm, const char* classname ) {
+    CMPIObjectPath *path = CMNewObjectPath(_BROKER, nm, classname, NULL);
 /*    fprintf( stderr, "CMNewObjectPath: %p\n", path ); */
     return path;
   }
