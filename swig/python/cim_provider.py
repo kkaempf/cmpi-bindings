@@ -20,8 +20,8 @@
 #         Jon Carey
 ####
 
-
-r"""Python CIM Providers (aka "nirvana")
+import os
+"""Python CIM Providers (aka "nirvana")
 
 This module is an abstraction and utility layer between a CIMOM and 
 Python providers.  The CIMOM uses this module to load Python providers, 
@@ -1548,27 +1548,36 @@ class ProviderProxy(object):
             self.provid = provid.__name__
             self.filename = provid.__file__
         else:
-            self.provid = provid
-            # odd chars in a module name tend to break things
-            provider_name = 'pyprovider_'
-            for ch in provid:
-                provider_name+= ch.isalnum() and ch or '_'
-            # let providers import other providers in the same directory
-            provdir = dirname(provid)
-            if provdir not in sys.path:
-                sys.path.append(provdir)
-            # use full path in module name for uniqueness. 
-            try: 
-                self.provmod = load_source(provider_name, provid)
-            except IOError, arg:
-                raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
-                        "Error loading provider %s: %s" % (provid, arg))
-            self.filename = self.provmod.__file__
+            logger = env.get_logger()
+            logger.log_debug('Loading python provider at ', provid)
+            self._load_provider_source(provid)
+        self._init_provider(env)
+
+    def _init_provider (self, env):
         self.provregs = {}
         if hasattr(self.provmod, 'init'):
             self.provmod.init(env)
         if hasattr(self.provmod, 'get_providers'):
             self.provregs = pywbem.NocaseDict(self.provmod.get_providers(env))
+
+    def _load_provider_source (self, provid):
+        self.provid = provid
+        # odd chars in a module name tend to break things
+        provider_name = 'pyprovider_'
+        for ch in provid:
+            provider_name+= ch.isalnum() and ch or '_'
+        # let providers import other providers in the same directory
+        provdir = dirname(provid)
+        if provdir not in sys.path:
+            sys.path.append(provdir)
+        # use full path in module name for uniqueness. 
+        try: 
+            self.provmod = load_source(provider_name, provid)
+            self.provmod_timestamp = os.path.getmtime(provid)
+        except IOError, arg:
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    "Error loading provider %s: %s" % (provid, arg))
+        self.filename = self.provmod.__file__
 
     def _get_callable (self, classname, cname, is_assoc = False):
         """Return a function or method object appropriate to fulfill a request
@@ -1592,6 +1601,25 @@ class ProviderProxy(object):
                                                             self.provid))
         return callable
 
+    def _reload_if_necessary (self, env):
+        """Check timestamp of loaded python provider module, and if it has
+        changed since load, then reload the provider module.
+        """
+        if (self.provmod_timestamp != os.path.getmtime(self.provid)):
+            print "Need to reload provider at ", self.provid
+
+            #first unload the module
+            if hasattr(self.provmod, "shutdown"):
+                self.provmod.shutdown(env)
+            #now reload and reinit module
+            try: 
+                self._load_provider_source(self.provid)
+                self._init_provider(env)
+            except IOError, arg:
+                raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                        "Error loading provider %s: %s" % (provid, arg))
+
+
 ##############################################################################
 # enumInstanceNames
 ##############################################################################
@@ -1600,6 +1628,7 @@ class ProviderProxy(object):
                               objPath):
         logger = env.get_logger()
         logger.log_debug('ProviderProxy MI_enumInstanceNames called...')
+        self._reload_if_necessary(env)
         for i in self._get_callable(objPath.classname, 
                                     'MI_enumInstanceNames') \
                                             (env, objPath):
@@ -1615,6 +1644,7 @@ class ProviderProxy(object):
                          propertyList):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_enumInstances called...')
+        self._reload_if_necessary(env)
         for i in self._get_callable(objPath.classname, 'MI_enumInstances') \
                            (env, 
                             objPath, 
@@ -1631,6 +1661,7 @@ class ProviderProxy(object):
                        propertyList):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_getInstance called...')
+        self._reload_if_necessary(env)
         rval = self._get_callable(instanceName.classname, 'MI_getInstance')  \
                (env, 
                 instanceName, 
@@ -1646,6 +1677,7 @@ class ProviderProxy(object):
                           instance):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_createInstance called...')
+        self._reload_if_necessary(env)
         rval = self._get_callable(instance.classname, 'MI_createInstance')  \
                 (env, instance)
         logger.log_debug('CIMProvider MI_createInstance returning')
@@ -1660,6 +1692,7 @@ class ProviderProxy(object):
                           propertyList):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_modifyInstance called...')
+        self._reload_if_necessary(env)
         self._get_callable(modifiedInstance.classname, 'MI_modifyInstance')  \
                 (env, modifiedInstance, propertyList)
         logger.log_debug('CIMProvider MI_modifyInstance returning')
@@ -1672,6 +1705,7 @@ class ProviderProxy(object):
                           instanceName):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_deleteInstance called...')
+        self._reload_if_necessary(env)
         self._get_callable(instanceName.classname, 'MI_deleteInstance')  \
                 (env, instanceName)
         logger.log_debug('CIMProvider MI_deleteInstance returning')
@@ -1692,6 +1726,7 @@ class ProviderProxy(object):
         #       and propertyList
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_associators called. assocClass: %s' % (assocClassName))
+        self._reload_if_necessary(env)
 
         cname = assocClassName
         if not cname and hasattr(self.provmod, 'MI_associators'):
@@ -1741,6 +1776,7 @@ class ProviderProxy(object):
                            resultRole):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_associatorNames called. assocClass: %s' % (assocClassName))
+        self._reload_if_necessary(env)
         cname = assocClassName
         if not cname and hasattr(self.provmod, 'MI_associatorNames'):
             for i in self.provmod.MI_associatorNames(
@@ -1787,6 +1823,7 @@ class ProviderProxy(object):
                       propertyList):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_references called. resultClass: %s' % (resultClassName))
+        self._reload_if_necessary(env)
         cname = resultClassName
         if not cname and hasattr(self.provmod, 'MI_references'):
             for i in self.provmod.MI_references(env, objectName, 
@@ -1826,6 +1863,7 @@ class ProviderProxy(object):
                           role):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_referenceNames <1> called. resultClass: %s' % (resultClassName))
+        self._reload_if_necessary(env)
 
         cname = resultClassName
         if not cname and hasattr(self.provmod, 'MI_referenceNames'):
@@ -1871,6 +1909,7 @@ class ProviderProxy(object):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_invokeMethod called. method: %s:%s' \
                 % (objectName.classname,methodName))
+        self._reload_if_necessary(env)
         rval = self._get_callable(objectName.classname, 'MI_invokeMethod')  \
                 (env, objectName, methodName, inputParams)
         logger.log_debug('CIMProvider MI_invokeMethod returning')
@@ -1880,6 +1919,7 @@ class ProviderProxy(object):
     def MI_poll (self, env):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_poll called')
+        self._reload_if_necessary(env)
         if hasattr(self.provmod, 'poll'):
             rval = self.provmod.poll(env)
         elif hasattr(self.provmod, 'MI_poll'):
@@ -1894,6 +1934,7 @@ class ProviderProxy(object):
     def MI_getInitialPollingInterval (self, env):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_poll called')
+        self._reload_if_necessary(env)
         if hasattr(self.provmod, 'get_initial_polling_interval'):
             rval = self.provmod.get_initial_polling_interval(env)
         elif hasattr(self.provmod, 'MI_getInitialPollingInterval'):
@@ -1913,6 +1954,7 @@ class ProviderProxy(object):
                            firstActivation):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_activateFilter called')
+        self._reload_if_necessary(env)
         if hasattr(self.provmod, 'activate_filter'):
             self.provmod.activate_filter(env, filter, namespace,
                     classes, firstActivation)
@@ -1934,6 +1976,7 @@ class ProviderProxy(object):
                             lastActivation):
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_deActivateFilter called')
+        self._reload_if_necessary(env)
         if hasattr(self.provmod, 'deactivate_filter'):
             self.provmod.deactivate_filter(env, filter, namespace, classes,
                     lastActivation)
@@ -1971,6 +2014,7 @@ class ProviderProxy(object):
 
         logger = env.get_logger()
         logger.log_debug('ProviderProxy MI_consumeIndication called')
+        self._reload_if_necessary(env)
         if hasattr(self.provmod, 'consume_indication'):
             self.provmod.consume_indication(env, destinationPath, 
                     indicationInstance)
@@ -1993,6 +2037,7 @@ class ProviderProxy(object):
 
         logger = env.get_logger()
         logger.log_debug('ProviderProxy MI_handleIndication called')
+        self._reload_if_necessary(env)
         if hasattr(self.provmod, 'handle_indication'):
             self.provmod.handle_indication(env, ns, handlerInstance,
                     indicationInstance)
