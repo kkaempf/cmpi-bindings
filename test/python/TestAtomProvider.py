@@ -115,7 +115,7 @@ class TestAtomProvider(CIMProvider):
                                pywbem.CIM_ERR_ACCESS_DENIED):
                     raise
 
-    def set_instance(self, env, instance, previous_instance, property_list):
+    def set_instance(self, env, instance, modify_existing, property_list):
         """Return a newly created or modified instance.
 
         Keyword arguments:
@@ -148,7 +148,7 @@ class TestAtomProvider(CIMProvider):
         logger.log_debug('Entering %s.set_instance()' \
                 % self.__class__.__name__)
 
-        if previous_instance:
+        if modify_existing:
             if instance['Name'] not in self.storage:
                 raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
             inst = self.storage[instance.path['Name']] 

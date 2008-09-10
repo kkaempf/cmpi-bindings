@@ -83,7 +83,7 @@ class TestAssoc_User(CIMProvider):
         for pwent in pwd.getpwall():
             yield get_user_instance(pwent[2], model, keys_only)
         
-    def set_instance(self, env, instance, previous_instance, property_list):
+    def set_instance(self, env, instance, modify_existing, property_list):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
@@ -108,7 +108,7 @@ class TestAssoc_Group(CIMProvider):
         for grent in grp.getgrall():
             yield get_group_instance(grent[2], model, keys_only)
         
-    def set_instance(self, env, instance, previous_instance, property_list):
+    def set_instance(self, env, instance, modify_existing, property_list):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
@@ -156,7 +156,7 @@ class TestAssoc_MemberOfGroup(CIMProvider):
                         model['isPrimaryGroup'] = False
                     yield model
         
-    def set_instance(self, env, instance, previous_instance, property_list):
+    def set_instance(self, env, instance, modify_existing, property_list):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
