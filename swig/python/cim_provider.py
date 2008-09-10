@@ -285,7 +285,7 @@ class CIMProvider(object):
             request.  Only properties present in the model need to be
             given values.  If you prefer, you can set all of the 
             values, and the instance will be filtered for you. 
-        cim_class -- The pywbem.CIMClass
+        property_list -- The PropertyList from the request. 
 
         Possible Errors:
         CIM_ERR_ACCESS_DENIED
@@ -313,7 +313,7 @@ class CIMProvider(object):
             the model need to be given values.  If you prefer, you can 
             always set all of the values, and the instance will be filtered 
             for you. 
-        cim_class -- The pywbem.CIMClass
+        property_list -- The PropertyList from the request. 
         keys_only -- A boolean.  True if only the key properties should be
             set on the generated instances.
 
@@ -323,7 +323,7 @@ class CIMProvider(object):
         """
         pass
 
-    def set_instance(self, env, instance, previous_instance, property_list):
+    def set_instance(self, env, instance, modify_existing, property_list):
         """Return a newly created or modified instance.
 
         Keyword arguments:
@@ -331,9 +331,8 @@ class CIMProvider(object):
         instance -- The new pywbem.CIMInstance.  If modifying an existing 
             instance, the properties on this instance have been filtered by 
             the PropertyList from the request.
-        previous_instance -- The previous pywbem.CIMInstance if modifying 
-            an existing instance.  None if creating a new instance. 
-        cim_class -- The pywbem.CIMClass
+        modify_existing -- True if ModifyInstance, False if CreateInstance
+        property_list -- The PropertyList from the request. 
 
         Return the new instance.  The keys must be set on the new instance. 
 
@@ -343,10 +342,10 @@ class CIMProvider(object):
         CIM_ERR_INVALID_PARAMETER (including missing, duplicate, unrecognized 
             or otherwise incorrect parameters)
         CIM_ERR_ALREADY_EXISTS (the CIM Instance already exists -- only 
-            valid if previous_instance is None, indicating that the operation
+            valid if modify_existing is False, indicating that the operation
             was CreateInstance)
         CIM_ERR_NOT_FOUND (the CIM Instance does not exist -- only valid 
-            if previous_instance is not None, indicating that the operation
+            if modify_existing is True, indicating that the operation
             was ModifyInstance)
         CIM_ERR_FAILED (some other unspecified error occurred)
 
@@ -623,7 +622,7 @@ class CIMProvider(object):
         # props with default values, if values not supplied by client. 
         rval = self.set_instance(env=env,
                               instance=instance,
-                              previous_instance=None,
+                              modify_existing=False,
                               property_list=None)
         logger.log_debug('CIMProvider MI_createInstance returning')
         return rval.path
@@ -649,7 +648,7 @@ class CIMProvider(object):
             modifiedInstance.update(modifiedInstance.path)
         self.set_instance(env=env,
                               instance=modifiedInstance,
-                              previous_instance=True,
+                              modify_existing=True,
                               property_list=plist)
         logger.log_debug('CIMProvider MI_modifyInstance returning')
     
@@ -1231,8 +1230,9 @@ Instruments the CIM class %(classname)s
 """
 
 import pywbem
+from cim_provider import CIMProvider
 
-class %(classname)sProvider(pywbem.CIMProvider):
+class %(classname)sProvider(CIMProvider):
     """Instrument the CIM class %(classname)s \n''' % mappings
     code+= format_desc(cc, 4)
     code+= '''
@@ -1262,7 +1262,6 @@ class %(classname)sProvider(pywbem.CIMProvider):
     keyProps = [p for p in cc.properties.values() \
                 if 'key' in p.qualifiers]
     code+= '''
-        ux = model.update_existing
 
         # TODO fetch system resource matching the following keys:'''
     for kp in keyProps:
@@ -1274,9 +1273,7 @@ class %(classname)sProvider(pywbem.CIMProvider):
     for prop in props:
         if 'key' in prop.qualifiers:
             continue
-        #line = "#ux(%s=%s) # TODO (type = %s) %s" % \
-        #        (prop.name, type_hint(prop), type_str(prop), is_required(prop))
-        line = "#ux(%s=%s) # TODO %s" % \
+        line = "#model['%s'] = %s # TODO %s" % \
                 (prop.name, type_hint(prop), is_required(prop))
         code+= '''
         %s''' % line
@@ -1292,16 +1289,25 @@ class %(classname)sProvider(pywbem.CIMProvider):
         logger = env.get_logger()
         logger.log_debug('Entering %%s.enum_instances()' \\
                 %% self.__class__.__name__)
+                '''  % (args, CIMProvider.enum_instances.__doc__)
+    kd = dict([(kp.name, None) for kp in keyProps])
+    code+= '''
+        # Prime model.path with knowledge of the keys, so key values on
+        # the CIMInstanceName (model.path) will automatically be set when
+        # we set property values on the model. 
+        model.path.update(%s)
+        ''' % str(kd)
 
+    code+= '''
         while False: # TODO more instances?
             # TODO fetch system resource
-            # Key properties''' % (args, CIMProvider.enum_instances.__doc__)
+            # Key properties''' 
     for kp in keyProps:
         if kp.name == 'CreationClassName':
             line = "model['%s'] = '%s'" % (kp.name, cc.classname)
         else:
-            line = "#model['%s'] = # TODO (type = %s)" % \
-                    (kp.name, type_str(kp))
+            line = "#model['%s'] = %s # TODO (type = %s)" % \
+                    (kp.name, type_hint(kp), type_str(kp))
         code+='''    
             %s''' % line
     code+='''
@@ -1309,7 +1315,7 @@ class %(classname)sProvider(pywbem.CIMProvider):
                 yield model
             else:
                 try:
-                    yield self.get_instance(env, model, cim_class)
+                    yield self.get_instance(env, model, property_list)
                 except pywbem.CIMError, (num, msg):
                     if num not in (pywbem.CIM_ERR_NOT_FOUND, 
                                    pywbem.CIM_ERR_ACCESS_DENIED):
@@ -1349,7 +1355,7 @@ class %(classname)sProvider(pywbem.CIMProvider):
         outParms = [ p for p in method.parameters.values() if \
                     'out' in p.qualifiers and p.qualifiers['out'].value ]
         code+= '''
-    def cim_method_%s(self, env, object_name, method''' % method.name.lower()
+    def cim_method_%s(self, env, object_name''' % method.name.lower()
         for p in inParms:
             code+= ''',\n%sparam_%s''' % (''.rjust(len(method.name)+20),
                                                     p.name.lower())
@@ -1362,8 +1368,7 @@ class %(classname)sProvider(pywbem.CIMProvider):
         env -- Provider Environment (pycimmb.ProviderEnvironment)
         object_name -- A pywbem.CIMInstanceName or pywbem.CIMCLassName 
             specifying the object on which the method %s() 
-            should be invoked.
-        method -- A pywbem.CIMMethod representing the method meta-data'''\
+            should be invoked.'''\
                 % method.name
 
         for p in inParms:
@@ -1376,7 +1381,7 @@ class %(classname)sProvider(pywbem.CIMProvider):
         code+='''
 
         Returns a two-tuple containing the return value (type %s)
-        and a dictionary with the out-parameters
+        and a list of CIMParameter objects representing the output parameters
 
         Output parameters:''' % type_str(method)
 
@@ -1409,15 +1414,16 @@ class %(classname)sProvider(pywbem.CIMProvider):
 
         # TODO do something
         raise pywbem.CIMError(pywbem.CIM_ERR_METHOD_NOT_AVAILABLE) # Remove to implemented
-        out_params = {}''' % method.name.lower()
+        out_params = []''' % method.name.lower()
 
         for p in outParms:
             code+='''
-        #out_params['%s'] = %s # TODO''' % (p.name.lower(), 
+        #out_params+= [pywbem.CIMParameter('%s', type='%s', 
+        #                   value=%s)] # TODO''' % (p.name.lower(), p.type,
                 type_hint(p, method.name))
 
         code+='''
-        rval = None # TODO (type %s)
+        #rval = # TODO (type %s)
         return (rval, out_params)
         ''' % type_str(method)
 
@@ -1485,17 +1491,20 @@ def get_providers(env):
 
     owtypes = ['1', 'Instance']
     pegtypes = ['2', 'Instance']
+    sfcbtypes = 'instance'
     if isAssoc:
         owtypes[0]+= ',3'
         owtypes[1]+= ', Associator'
         pegtypes[0]+= ',3'
         pegtypes[1]+= ', Associator'
+        sfcbtypes+= ' association'
     if cc.methods:
         owtypes[0]+= ',6'
         owtypes[1]+= ', Method'
         pegtypes[0]+= ',5'
         pegtypes[1]+= ', Method'
-    mof ='''
+        sfcbtypes+= ' method'
+    omitted = '''
 // OpenWBEM Provider registration for %(classname)s
 instance of OpenWBEM_PyProviderRegistration
 {
@@ -1505,6 +1514,15 @@ instance of OpenWBEM_PyProviderRegistration
     ProviderTypes = {%(owtypeNums)s};  // %(owtypeStrs)s
     ModulePath = "/usr/lib/pycim/%(classname)sProvider.py";  // TODO
 }; 
+    '''
+
+    mof ='''
+// SFCB Provider registration for %(classname)s
+[%(classname)s]
+   provider: %(classname)sProvider
+   location: pyCmpiProvider
+   type: %(sfcbtypes)s
+   namespace: root/cimv2 // TODO
 
 // Pegasus Provider registration for %(classname)s
 instance of PG_ProviderModule
@@ -1534,7 +1552,8 @@ instance of PG_ProviderCapabilities
             'owtypeNums': owtypes[0], 
             'owtypeStrs': owtypes[1],
             'pegtypeNum': pegtypes[0], 
-            'pegtypeStr': pegtypes[1]}
+            'pegtypeStr': pegtypes[1],
+            'sfcbtypes' : sfcbtypes}
 
                 
     return code, mof
