@@ -53,6 +53,8 @@ TARGET_LINK_LIBRARIES( ${NAME} util )
 INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 # .py: swig generated
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmpi.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
+#!! needs symlink ${PYTHON_LIB_DIR}/site-packages/_cmpi.so -> ${CMPI_LIBRARY_DIR}/lib${NAME}.so
+
 
 #
 # cmpi_bindings.py: provider implementation
