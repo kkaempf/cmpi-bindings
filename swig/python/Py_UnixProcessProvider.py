@@ -5,10 +5,10 @@ Instruments the CIM class Py_UnixProcess
 """
 
 import pywbem
-import os
-from socket import getfqdn
 from cim_provider import CIMProvider
 
+import os
+from socket import getfqdn
 
 class Py_UnixProcessProvider(CIMProvider):
     """Instrument the CIM class Py_UnixProcess 
@@ -38,7 +38,7 @@ class Py_UnixProcessProvider(CIMProvider):
             request.  Only properties present in the model need to be
             given values.  If you prefer, you can set all of the 
             values, and the instance will be filtered for you. 
-        cim_class -- The pywbem.CIMClass
+        property_list -- The PropertyList from the request. 
 
         Possible Errors:
         CIM_ERR_ACCESS_DENIED
@@ -54,52 +54,66 @@ class Py_UnixProcessProvider(CIMProvider):
         logger.log_debug('Entering %s.get_instance()' \
                 % self.__class__.__name__)
         
+
         # TODO fetch system resource matching the following keys:
         #   model['CreationClassName']
         #   model['OSCreationClassName']
         #   model['Handle']
-        #   model['OSName']
         #   model['CSCreationClassName']
+        #   model['OSName']
         #   model['CSName']
-        
-        model['CreationClassName'] = model.path['CreationClassName']
-        model['OSCreationClassName'] = model.path['OSCreationClassName']
-        model['Handle'] = model.path['Handle']
-        model['OSName'] = model.path['OSName']
-        model['CSCreationClassName'] = model.path['CSCreationClassName']
-        model['CSName'] = model.path['CSName']
+        #
 
-        #model.update_existing(Caption=<value>) # TODO (type = unicode) 
-        #model.update_existing(CreationDate=<value>) # TODO (type = pywbem.CIMDateTime) 
-        #model.update_existing(Description=<value>) # TODO (type = unicode) 
-        #model.update_existing(ElementName=<value>) # TODO (type = unicode) 
-        #model.update_existing(EnabledDefault=<value>) # TODO (type = pywbem.Uint16 self.Values.EnabledDefault) (default=2L)
-        #model.update_existing(EnabledState=<value>) # TODO (type = pywbem.Uint16 self.Values.EnabledState) (default=5L)
-        #model.update_existing(ExecutionState=<value>) # TODO (type = pywbem.Uint16 self.Values.ExecutionState) 
-        #model.update_existing(HealthState=<value>) # TODO (type = pywbem.Uint16 self.Values.HealthState) 
-        #model.update_existing(InstallDate=<value>) # TODO (type = pywbem.CIMDateTime) 
-        #model.update_existing(KernelModeTime=<value>) # TODO (type = pywbem.Uint64) 
-        #model.update_existing(ModulePath=<value>) # TODO (type = unicode) 
-        #model.update_existing(Name=<value>) # TODO (type = unicode) 
-        #model.update_existing(OperationalStatus=<value>) # TODO (type = [pywbem.Uint16,] self.Values.OperationalStatus) 
-        #model.update_existing(OtherEnabledState=<value>) # TODO (type = unicode) 
-        #model.update_existing(OtherExecutionDescription=<value>) # TODO (type = unicode) 
-        #model.update_existing(Parameters=<value>) # TODO (type = [unicode,]) 
-        #model.update_existing(ParentProcessID=<value>) # TODO (type = unicode) (Required)
-        #model.update_existing(Priority=<value>) # TODO (type = pywbem.Uint32) 
-        #model.update_existing(ProcessGroupID=<value>) # TODO (type = pywbem.Uint64) (Required)
-        #model.update_existing(ProcessNiceValue=<value>) # TODO (type = pywbem.Uint32) 
-        #model.update_existing(ProcessSessionID=<value>) # TODO (type = pywbem.Uint64) 
-        #model.update_existing(ProcessTTY=<value>) # TODO (type = unicode) 
-        #model.update_existing(ProcessWaitingForEvent=<value>) # TODO (type = unicode) 
-        #model.update_existing(RealUserID=<value>) # TODO (type = pywbem.Uint64) (Required)
-        #model.update_existing(RequestedState=<value>) # TODO (type = pywbem.Uint16 self.Values.RequestedState) (default=12L)
-        #model.update_existing(Status=<value>) # TODO (type = unicode self.Values.Status) 
-        #model.update_existing(StatusDescriptions=<value>) # TODO (type = [unicode,]) 
-        #model.update_existing(TerminationDate=<value>) # TODO (type = pywbem.CIMDateTime) 
-        #model.update_existing(TimeOfLastStateChange=<value>) # TODO (type = pywbem.CIMDateTime) 
-        #model.update_existing(UserModeTime=<value>) # TODO (type = pywbem.Uint64) 
-        #model.update_existing(WorkingSetSize=<value>) # TODO (type = pywbem.Uint64) 
+        pid = model['handle']
+        if not os.path.exists('/proc/' + pid):
+            raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
+
+        fo = open('/proc/'+pid+'/stat', 'r')
+        st = fo.read()
+        fo.close()
+        head, sep, tail = st.partition('(')
+        name, sep, tail = tail.partition(')')
+        model['Name'] = name
+
+        #model['AvailableRequestedStates'] = [self.Values.AvailableRequestedStates.<VAL>,] # TODO 
+        #model['Caption'] = '' # TODO 
+        #model['CommunicationStatus'] = self.Values.CommunicationStatus.<VAL> # TODO 
+        #model['CreationDate'] = pywbem.CIMDateTime() # TODO 
+        #model['Description'] = '' # TODO 
+        #model['DetailedStatus'] = self.Values.DetailedStatus.<VAL> # TODO 
+        #model['ElementName'] = '' # TODO 
+        #model['EnabledDefault'] = self.Values.EnabledDefault.Enabled # TODO 
+        #model['EnabledState'] = self.Values.EnabledState.Not_Applicable # TODO 
+        #model['ExecutionState'] = self.Values.ExecutionState.<VAL> # TODO 
+        #model['Generation'] = pywbem.Uint64() # TODO 
+        #model['HealthState'] = self.Values.HealthState.<VAL> # TODO 
+        #model['InstallDate'] = pywbem.CIMDateTime() # TODO 
+        #model['InstanceID'] = '' # TODO 
+        #model['KernelModeTime'] = pywbem.Uint64() # TODO 
+        #model['ModulePath'] = '' # TODO 
+        #model['OperatingStatus'] = self.Values.OperatingStatus.<VAL> # TODO 
+        #model['OperationalStatus'] = [self.Values.OperationalStatus.<VAL>,] # TODO 
+        #model['OtherEnabledState'] = '' # TODO 
+        #model['OtherExecutionDescription'] = '' # TODO 
+        #model['Parameters'] = ['',] # TODO 
+        #model['ParentProcessID'] = '' # TODO (Required)
+        #model['PrimaryStatus'] = self.Values.PrimaryStatus.<VAL> # TODO 
+        #model['Priority'] = pywbem.Uint32(0) # TODO 
+        #model['ProcessGroupID'] = pywbem.Uint64() # TODO (Required)
+        #model['ProcessNiceValue'] = pywbem.Uint32() # TODO 
+        #model['ProcessSessionID'] = pywbem.Uint64() # TODO 
+        #model['ProcessTTY'] = '' # TODO 
+        #model['ProcessWaitingForEvent'] = '' # TODO 
+        #model['RealUserID'] = pywbem.Uint64() # TODO (Required)
+        #model['RequestedState'] = self.Values.RequestedState.Not_Applicable # TODO 
+        #model['Status'] = self.Values.Status.<VAL> # TODO 
+        #model['StatusDescriptions'] = ['',] # TODO 
+        #model['TerminationDate'] = pywbem.CIMDateTime() # TODO 
+        #model['TimeOfLastStateChange'] = pywbem.CIMDateTime() # TODO 
+        #model['TransitioningToState'] = self.Values.TransitioningToState.Not_Applicable # TODO 
+        #model['UnixPriority'] = pywbem.Sint32() # TODO 
+        #model['UserModeTime'] = pywbem.Uint64() # TODO 
+        #model['WorkingSetSize'] = pywbem.Uint64() # TODO 
         return model
 
     def enum_instances(self, env, model, property_list, keys_only):
@@ -117,7 +131,7 @@ class Py_UnixProcessProvider(CIMProvider):
             the model need to be given values.  If you prefer, you can 
             always set all of the values, and the instance will be filtered 
             for you. 
-        cim_class -- The pywbem.CIMClass
+        property_list -- The PropertyList from the request. 
         keys_only -- A boolean.  True if only the key properties should be
             set on the generated instances.
 
@@ -129,22 +143,21 @@ class Py_UnixProcessProvider(CIMProvider):
         logger = env.get_logger()
         logger.log_debug('Entering %s.enum_instances()' \
                 % self.__class__.__name__)
-
+                
+        # Prime model.path with knowledge of the keys, so key values on
+        # the CIMInstanceName (model.path) will automatically be set when
+        # we set property values on the model. 
+        model.path.update({u'Handle': None, u'CSName': None, u'OSName': None, u'CSCreationClassName': None, u'OSCreationClassName': None, u'CreationClassName': None})
+        
         model['CreationClassName'] = 'Py_UnixProcess'    
-        model.path['CreationClassName'] = 'Py_UnixProcess'    
-        model['OSCreationClassName'] = 'CIM_UnitaryComputerSystem'
-        model.path['OSCreationClassName'] = 'CIM_UnitaryComputerSystem'
-        model['OSName'] = 'Linux'
-        model.path['OSName'] = 'Linux'
+        model['OSCreationClassName'] = 'CIM_OperatingSystem'
         model['CSCreationClassName'] = 'CIM_ComputerSystem'
-        model.path['CSCreationClassName'] = 'CIM_ComputerSystem'
+        model['OSName'] = 'Linux'
         model['CSName'] = getfqdn()
-        model.path['CSName'] = getfqdn()
         for file in os.listdir('/proc'):
             if not file.isdigit():
                 continue
             model['Handle'] = file
-            model.path['Handle'] = file
             if keys_only:
                 yield model
             else:
@@ -155,7 +168,7 @@ class Py_UnixProcessProvider(CIMProvider):
                                    pywbem.CIM_ERR_ACCESS_DENIED):
                         raise
 
-    def set_instance(self, env, instance, previous_instance, cim_class):
+    def set_instance(self, env, instance, modify_existing, property_list):
         """Return a newly created or modified instance.
 
         Keyword arguments:
@@ -163,9 +176,8 @@ class Py_UnixProcessProvider(CIMProvider):
         instance -- The new pywbem.CIMInstance.  If modifying an existing 
             instance, the properties on this instance have been filtered by 
             the PropertyList from the request.
-        previous_instance -- The previous pywbem.CIMInstance if modifying 
-            an existing instance.  None if creating a new instance. 
-        cim_class -- The pywbem.CIMClass
+        modify_existing -- True if ModifyInstance, False if CreateInstance
+        property_list -- The PropertyList from the request. 
 
         Return the new instance.  The keys must be set on the new instance. 
 
@@ -175,10 +187,10 @@ class Py_UnixProcessProvider(CIMProvider):
         CIM_ERR_INVALID_PARAMETER (including missing, duplicate, unrecognized 
             or otherwise incorrect parameters)
         CIM_ERR_ALREADY_EXISTS (the CIM Instance already exists -- only 
-            valid if previous_instance is None, indicating that the operation
+            valid if modify_existing is False, indicating that the operation
             was CreateInstance)
         CIM_ERR_NOT_FOUND (the CIM Instance does not exist -- only valid 
-            if previous_instance is not None, indicating that the operation
+            if modify_existing is True, indicating that the operation
             was ModifyInstance)
         CIM_ERR_FAILED (some other unspecified error occurred)
 
@@ -220,7 +232,7 @@ class Py_UnixProcessProvider(CIMProvider):
         # TODO delete the resource
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED) # Remove to implement
         
-    def cim_method_requeststatechange(self, env, object_name, method,
+    def cim_method_requeststatechange(self, env, object_name,
                                       param_requestedstate,
                                       param_timeoutperiod):
         """Implements Py_UnixProcess.RequestStateChange()
@@ -230,45 +242,47 @@ class Py_UnixProcessProvider(CIMProvider):
         state change takes place, the EnabledState and RequestedState of
         the element will be the same. Invoking the RequestStateChange
         method multiple times could result in earlier requests being
-        overwritten or lost.  If 0 is returned, then the task completed
-        successfully and the use of ConcreteJob was not required. If 4096
-        (0x1000) is returned, then the task will take some time to
-        complete, ConcreteJob will be created, and its reference returned
-        in the output parameter Job. Any other return code indicates an
-        error condition.
+        overwritten or lost. \nA return code of 0 shall indicate the state
+        change was successfully initiated. \nA return code of 3 shall
+        indicate that the state transition cannot complete within the
+        interval specified by the TimeoutPeriod parameter. \nA return code
+        of 4096 (0x1000) shall indicate the state change was successfully
+        initiated, a ConcreteJob has been created, and its reference
+        returned in the output parameter Job. Any other return code
+        indicates an error condition.
         
         Keyword arguments:
         env -- Provider Environment (pycimmb.ProviderEnvironment)
         object_name -- A pywbem.CIMInstanceName or pywbem.CIMCLassName 
             specifying the object on which the method RequestStateChange() 
             should be invoked.
-        method -- A pywbem.CIMMethod representing the method meta-data
         param_requestedstate --  The input parameter RequestedState (type pywbem.Uint16 self.Values.RequestStateChange.RequestedState) 
             The state requested for the element. This information will be
             placed into the RequestedState property of the instance if the
-            return code of the RequestStateChange method is 0 ('Completed
-            with No Error'), 3 ('Timeout'), or 4096 (0x1000) ('Job
-            Started'). Refer to the description of the EnabledState and
-            RequestedState properties for the detailed explanations of the
-            RequestedState values.
+            return code of the RequestStateChange method is 0 (\'Completed
+            with No Error\'), or 4096 (0x1000) (\'Job Started\'). Refer to
+            the description of the EnabledState and RequestedState
+            properties for the detailed explanations of the RequestedState
+            values.
             
         param_timeoutperiod --  The input parameter TimeoutPeriod (type pywbem.CIMDateTime) 
             A timeout period that specifies the maximum amount of time that
             the client expects the transition to the new state to take.
             The interval format must be used to specify the TimeoutPeriod.
             A value of 0 or a null parameter indicates that the client has
-            no time requirements for the transition.  If this property
+            no time requirements for the transition. \nIf this property
             does not contain 0 or null and the implementation does not
-            support this parameter, a return code of 'Use Of Timeout
-            Parameter Not Supported' must be returned.
+            support this parameter, a return code of \'Use Of Timeout
+            Parameter Not Supported\' shall be returned.
             
 
         Returns a two-tuple containing the return value (type pywbem.Uint32 self.Values.RequestStateChange)
-        and a dictionary with the out-parameters
+        and a list of CIMParameter objects representing the output parameters
 
         Output parameters:
         Job -- (type REF (pywbem.CIMInstanceName(classname='CIM_ConcreteJob', ...)) 
-            Reference to the job (can be null if the task is completed).
+            May contain a reference to the ConcreteJob created to track the
+            state transition initiated by the method invocation.
             
 
         Possible Errors:
@@ -289,12 +303,13 @@ class Py_UnixProcessProvider(CIMProvider):
 
         # TODO do something
         raise pywbem.CIMError(pywbem.CIM_ERR_METHOD_NOT_AVAILABLE) # Remove to implemented
-        out_params = {}
-        #out_params['job'] = # TODO (type REF (pywbem.CIMInstanceName(classname='CIM_ConcreteJob', ...))
-        rval = None # TODO (type pywbem.Uint32 self.Values.RequestStateChange)
+        out_params = []
+        #out_params+= [pywbem.CIMParameter('job', type='reference', 
+        #                   value=pywbem.CIMInstanceName(classname='CIM_ConcreteJob', ...))] # TODO
+        #rval = # TODO (type pywbem.Uint32 self.Values.RequestStateChange)
         return (rval, out_params)
         
-    def cim_method_kill(self, env, object_name, method,
+    def cim_method_kill(self, env, object_name,
                         param_signal):
         """Implements Py_UnixProcess.kill()
 
@@ -305,13 +320,12 @@ class Py_UnixProcessProvider(CIMProvider):
         object_name -- A pywbem.CIMInstanceName or pywbem.CIMCLassName 
             specifying the object on which the method kill() 
             should be invoked.
-        method -- A pywbem.CIMMethod representing the method meta-data
         param_signal --  The input parameter signal (type pywbem.Uint16 self.Values.kill.signal) 
             The signal to send the process
             
 
         Returns a two-tuple containing the return value (type pywbem.Sint32)
-        and a dictionary with the out-parameters
+        and a list of CIMParameter objects representing the output parameters
 
         Output parameters: none
 
@@ -331,7 +345,6 @@ class Py_UnixProcessProvider(CIMProvider):
         logger.log_debug('Entering %s.cim_method_kill()' \
                 % self.__class__.__name__)
 
-
         pid = object_name['handle']
         if not os.path.isdir('/proc/' + pid):
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND,
@@ -341,27 +354,23 @@ class Py_UnixProcessProvider(CIMProvider):
             os.kill(int(pid), param_signal)
         except OSError, arg:
             rval = pwbem.Sint32(arg.errno)
-        out_params = {} # kill() has not output parameters
+        out_params = []
         return (rval, out_params)
 
         
     class Values(object):
-        class Status(object):
-            OK = 'OK'
-            Error = 'Error'
-            Degraded = 'Degraded'
-            Unknown = 'Unknown'
-            Pred_Fail = 'Pred Fail'
-            Starting = 'Starting'
-            Stopping = 'Stopping'
-            Service = 'Service'
-            Stressed = 'Stressed'
-            NonRecover = 'NonRecover'
-            No_Contact = 'No Contact'
-            Lost_Comm = 'Lost Comm'
-            Stopped = 'Stopped'
+        class DetailedStatus(object):
+            Not_Available = pywbem.Uint16(0)
+            No_Additional_Information = pywbem.Uint16(1)
+            Stressed = pywbem.Uint16(2)
+            Predictive_Failure = pywbem.Uint16(3)
+            Non_Recoverable_Error = pywbem.Uint16(4)
+            Supporting_Entity_in_Error = pywbem.Uint16(5)
+            # DMTF_Reserved = ..
+            # Vendor_Reserved = 0x8000..
 
         class RequestedState(object):
+            Unknown = pywbem.Uint16(0)
             Enabled = pywbem.Uint16(2)
             Disabled = pywbem.Uint16(3)
             Shut_Down = pywbem.Uint16(4)
@@ -386,19 +395,19 @@ class Py_UnixProcessProvider(CIMProvider):
             Non_recoverable_error = pywbem.Uint16(30)
             # DMTF_Reserved = ..
 
-        class ExecutionState(object):
+        class TransitioningToState(object):
             Unknown = pywbem.Uint16(0)
-            Other = pywbem.Uint16(1)
-            Ready = pywbem.Uint16(2)
-            Running = pywbem.Uint16(3)
-            Blocked = pywbem.Uint16(4)
-            Suspended_Blocked = pywbem.Uint16(5)
-            Suspended_Ready = pywbem.Uint16(6)
-            Terminated = pywbem.Uint16(7)
-            Stopped = pywbem.Uint16(8)
-            Growing = pywbem.Uint16(9)
-            Ready_But_Relinquished_Processor = pywbem.Uint16(10)
-            Hung = pywbem.Uint16(11)
+            Enabled = pywbem.Uint16(2)
+            Disabled = pywbem.Uint16(3)
+            Shut_Down = pywbem.Uint16(4)
+            No_Change = pywbem.Uint16(5)
+            Offline = pywbem.Uint16(6)
+            Test = pywbem.Uint16(7)
+            Defer = pywbem.Uint16(8)
+            Quiesce = pywbem.Uint16(9)
+            Reboot = pywbem.Uint16(10)
+            Reset = pywbem.Uint16(11)
+            Not_Applicable = pywbem.Uint16(12)
 
         class EnabledDefault(object):
             Enabled = pywbem.Uint16(2)
@@ -406,7 +415,8 @@ class Py_UnixProcessProvider(CIMProvider):
             Not_Applicable = pywbem.Uint16(5)
             Enabled_but_Offline = pywbem.Uint16(6)
             No_Default = pywbem.Uint16(7)
-            # DMTF_Reserved = 8..32767
+            Quiesce = pywbem.Uint16(9)
+            # DMTF_Reserved = ..
             # Vendor_Reserved = 32768..65535
 
         class EnabledState(object):
@@ -423,6 +433,55 @@ class Py_UnixProcessProvider(CIMProvider):
             Starting = pywbem.Uint16(10)
             # DMTF_Reserved = 11..32767
             # Vendor_Reserved = 32768..65535
+
+        class ExecutionState(object):
+            Unknown = pywbem.Uint16(0)
+            Other = pywbem.Uint16(1)
+            Ready = pywbem.Uint16(2)
+            Running = pywbem.Uint16(3)
+            Blocked = pywbem.Uint16(4)
+            Suspended_Blocked = pywbem.Uint16(5)
+            Suspended_Ready = pywbem.Uint16(6)
+            Terminated = pywbem.Uint16(7)
+            Stopped = pywbem.Uint16(8)
+            Growing = pywbem.Uint16(9)
+            Ready_But_Relinquished_Processor = pywbem.Uint16(10)
+            Hung = pywbem.Uint16(11)
+
+        class AvailableRequestedStates(object):
+            Enabled = pywbem.Uint16(2)
+            Disabled = pywbem.Uint16(3)
+            Shut_Down = pywbem.Uint16(4)
+            Offline = pywbem.Uint16(6)
+            Test = pywbem.Uint16(7)
+            Defer = pywbem.Uint16(8)
+            Quiesce = pywbem.Uint16(9)
+            Reboot = pywbem.Uint16(10)
+            Reset = pywbem.Uint16(11)
+
+        class Status(object):
+            OK = 'OK'
+            Error = 'Error'
+            Degraded = 'Degraded'
+            Unknown = 'Unknown'
+            Pred_Fail = 'Pred Fail'
+            Starting = 'Starting'
+            Stopping = 'Stopping'
+            Service = 'Service'
+            Stressed = 'Stressed'
+            NonRecover = 'NonRecover'
+            No_Contact = 'No Contact'
+            Lost_Comm = 'Lost Comm'
+            Stopped = 'Stopped'
+
+        class CommunicationStatus(object):
+            Unknown = pywbem.Uint16(0)
+            Not_Available = pywbem.Uint16(1)
+            Communication_OK = pywbem.Uint16(2)
+            Lost_Communication = pywbem.Uint16(3)
+            No_Contact = pywbem.Uint16(4)
+            # DMTF_Reserved = ..
+            # Vendor_Reserved = 0x8000..
 
         class OperationalStatus(object):
             Unknown = pywbem.Uint16(0)
@@ -447,11 +506,26 @@ class Py_UnixProcessProvider(CIMProvider):
             # DMTF_Reserved = ..
             # Vendor_Reserved = 0x8000..
 
-        class kill(object):
-            class signal(object):
-                SIGHUP = pywbem.Uint16(1)
-                SIGKILL = pywbem.Uint16(9)
-                SIGTERM = pywbem.Uint16(15)
+        class OperatingStatus(object):
+            Unknown = pywbem.Uint16(0)
+            Not_Available = pywbem.Uint16(1)
+            Servicing = pywbem.Uint16(2)
+            Starting = pywbem.Uint16(3)
+            Stopping = pywbem.Uint16(4)
+            Stopped = pywbem.Uint16(5)
+            Aborted = pywbem.Uint16(6)
+            Dormant = pywbem.Uint16(7)
+            Completed = pywbem.Uint16(8)
+            Migrating = pywbem.Uint16(9)
+            Emigrating = pywbem.Uint16(10)
+            Immigrating = pywbem.Uint16(11)
+            Snapshotting = pywbem.Uint16(12)
+            Shutting_Down = pywbem.Uint16(13)
+            In_Test = pywbem.Uint16(14)
+            Transitioning = pywbem.Uint16(15)
+            In_Service = pywbem.Uint16(16)
+            # DMTF_Reserved = ..
+            # Vendor_Reserved = 0x8000..
 
         class RequestStateChange(object):
             Completed_with_No_Error = pywbem.Uint32(0)
@@ -480,6 +554,20 @@ class Py_UnixProcessProvider(CIMProvider):
                 Reset = pywbem.Uint16(11)
                 # DMTF_Reserved = ..
                 # Vendor_Reserved = 32768..65535
+
+        class kill(object):
+            class signal(object):
+                SIGHUP = pywbem.Uint16(1)
+                SIGKILL = pywbem.Uint16(9)
+                SIGTERM = pywbem.Uint16(15)
+
+        class PrimaryStatus(object):
+            Unknown = pywbem.Uint16(0)
+            OK = pywbem.Uint16(1)
+            Degraded = pywbem.Uint16(2)
+            Error = pywbem.Uint16(3)
+            # DMTF_Reserved = ..
+            # Vendor_Reserved = 0x8000..
 
 ## end of class Py_UnixProcessProvider
 
