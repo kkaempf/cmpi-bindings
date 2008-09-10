@@ -16,6 +16,55 @@
 
 %include "cmpidt.h"
 
+#-----------------------------------------------------
+#
+# Conversion from list of python strings to null terminated char** array.
+#
+
+%typemap(in) char ** 
+{
+  int size;
+  int i;
+
+  if ($input == Py_None)
+  {
+    $1 = NULL;
+  }
+  else
+  {
+      if (!PyList_Check($input))
+      {
+        PyErr_SetString(PyExc_TypeError, "expected list argument");
+        return NULL;
+      }
+
+      size = PyList_Size($input);
+
+      $1 = (char**)malloc(size + 1);
+
+      for (i = 0; i < size; i++) 
+      {
+        PyObject* obj = PyList_GetItem($input, i);
+
+        if (PyString_Check(obj))
+          $1[i] = PyString_AsString(PyList_GetItem($input,i));
+        else 
+        {
+          PyErr_SetString(PyExc_TypeError,"list contains non-string");
+          free($1);
+          return NULL;
+        }
+      }
+
+      $1[i] = 0;
+    }
+}
+
+%typemap(freearg) char ** 
+{
+  if ($1)
+    free($1);
+}
 
 #-----------------------------------------------------
 #

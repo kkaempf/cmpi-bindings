@@ -41,16 +41,59 @@ import pywbem
 def SFCBUDSConnection():
     return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
 
+class CIMInstanceNameIterator:
+    def __init__(self, enumeration):
+        self.enumeration = enumeration
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if not self.enumeration.hasNext():
+            raise StopIteration
+        val = getattr(self.enumeration.next().value, 'ref')
+        if val is None:
+            raise StopIteration
+        return cmpi2pywbem_instname(val)
+
+class CIMInstanceIterator:
+    def __init__(self, enumeration):
+        self.enumeration = enumeration
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if not self.enumeration.hasNext():
+            raise StopIteration
+        val = getattr(self.enumeration.next().value, 'inst')
+        if val is None:
+            raise StopIteration
+        return cmpi2pywbem_inst(val)
+
+
 class BrokerCIMOMHandle(object):
-    def __init__(self, broker, ns):
+    def __init__(self, broker, ctx):
         self.broker = broker
-        self.default_namespace = ns
-    def EnumerateInstanceNames(self):
-        pass
-    def EnumerateInstances(self):
-        pass
-    def GetInstance(self):
-        pass
+        self.ctx = ctx
+
+    def EnumerateInstanceNames(self, ns, cn):
+        cop = cmpi.CMPIObjectPath(ns, cn)
+        e = self.broker.enumInstanceNames(self.ctx, cop)
+        return CIMInstanceNameIterator(e)
+
+    def EnumerateInstances(self, ns, cn, props = None):
+        cop = cmpi.CMPIObjectPath(ns, cn)
+        e = self.broker.enumInstances(self.ctx, cop, props)
+        return CIMInstanceIterator(e)
+
+    def GetInstance(self, path, props = None):
+        cop = pywbem2cmpi_instname(path)
+        ci = self.broker.getInstance(self.ctx, cop, props)
+        if ci is None:
+            return None
+        return cmpi2pywbem_inst(ci)
+
     def Associators(self):
         pass
     def AssociatorNames(self):
@@ -85,10 +128,13 @@ class Logger(object):
 class ProviderEnvironment(object):
     def __init__(self, broker):
         self.broker = broker
+        self.ctx = None
     def get_logger(self):
         return Logger(self.broker)
     def get_cimom_handle(self):
         return SFCBUDSConnection()
+    def get_cimom_handle2(self):
+        return BrokerCIMOMHandle(self.broker, self.ctx)
     def get_user_name(self):
         pass
     def get_context_value(self, key):
@@ -119,8 +165,7 @@ class CMPIProvider(object):
     def enum_instance_names(self, ctx, rslt, objname):
         print 'provider.py: In enum_instance_names()' 
         #test_conversions()
-
-        
+        self.env.ctx = ctx
         op = cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
         try:
@@ -131,11 +176,10 @@ class CMPIProvider(object):
             return args[:2]
         rslt.done()
         return (0, '')
-             
 
     def enum_instances(self, ctx, rslt, objname, plist):
         print 'provider.py: In enum_instances()' 
-
+        self.env.ctx = ctx
         op = cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
         try:
@@ -147,9 +191,9 @@ class CMPIProvider(object):
         rslt.done()
         return (0, '')
 
-
     def get_instance(self, ctx, rslt, objname, plist):
         print 'provider.py: In get_instance()' 
+        self.env.ctx = ctx
         op = cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
         try:
@@ -163,6 +207,7 @@ class CMPIProvider(object):
 
 
     def create_instance(self, ctx, rslt, objname, newinst):
+        self.env.ctx = ctx
         pinst = cmpi2pywbem_inst(newinst)
         try:
             piname = self.proxy.MI_createInstance(self.env, pinst)
@@ -175,6 +220,7 @@ class CMPIProvider(object):
 
 
     def set_instance(self, ctx, rslt, objname, newinst, plist):
+        self.env.ctx = ctx
         pinst = cmpi2pywbem_inst(newinst)
         pinst.path = cmpi2pywbem_instname(objname)
         try:
@@ -198,6 +244,7 @@ class CMPIProvider(object):
 
     def associator_names(self, ctx, rslt, objName, assocClass, resultClass,
             role, resultRole):
+        self.env.ctx = ctx
         piname = cmpi2pywbem_instname(objName)
 
         try:
@@ -212,6 +259,7 @@ class CMPIProvider(object):
 
     def associators(self, ctx, rslt, objName, assocClass, resultClass,
             role, resultRole, props):
+        self.env.ctx = ctx
         piname = cmpi2pywbem_instname(objName)
 
         try:
@@ -227,6 +275,7 @@ class CMPIProvider(object):
 
     def reference_names(self, ctx, rslt, objName, resultClass, role):
         print 'pycmpi_provider.py: In reference_names()' 
+        self.env.ctx = ctx
         piname = cmpi2pywbem_instname(objName)
 
         try:
@@ -241,6 +290,7 @@ class CMPIProvider(object):
 
 
     def references(self, ctx, rslt, objName, resultClass, role, props):
+        self.env.ctx = ctx
         piname = cmpi2pywbem_instname(objName)
 
         try:
@@ -256,6 +306,7 @@ class CMPIProvider(object):
 
     def invoke_method(self, ctx, rslt, objName, method, inargs, outargs):
         print '*** in invoke_method'
+        self.env.ctx = ctx
         op = cmpi2pywbem_instname(objName)
         pinargs = cmpi2pywbem_args(inargs)
         try:
@@ -274,15 +325,18 @@ class CMPIProvider(object):
 
 
     def authorize_filter(self, ctx, filter, className, classPath, owner):
+        self.env.ctx = ctx
         pass
 
     def activate_filter(self, ctx, filter, className, classPath, 
             firstActivation):
+        self.env.ctx = ctx
         pass
 
 
     def deactivate_filter(self, ctx, filter, className, classPath, 
             lastActivation):
+        self.env.ctx = ctx
         pass
 
 
@@ -290,13 +344,16 @@ class CMPIProvider(object):
     #def must_poll(self, ctx, rslt, filter, className, classPath):
     # NOTE: sfcb signature for this doesn't have the rslt. 
     def must_poll(self, ctx, filter, className, classPath):
+        self.env.ctx = ctx
         pass
 
 
     def enable_indications(self, ctx):
+        self.env.ctx = ctx
         pass
 
     def disable_indications(self, ctx):
+        self.env.ctx = ctx
         pass
 
 

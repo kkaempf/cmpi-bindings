@@ -47,6 +47,23 @@ class TestMethodProvider(CIMProvider):
         logger.log_debug('Entering %s.enum_instances()' \
                 % self.__class__.__name__)
 
+        '''
+        ch = env.get_cimom_handle2()
+        keys = {
+            'CreationClassName':'Linux_EthernetPort',
+            'DeviceID':'0011D8378654',
+            'SystemCreationClassName':'Linux_ComputerSystem',
+            'SystemName':'redbird.austin.rr.com' }
+
+        path = pywbem.CIMInstanceName(
+            'Linux_EthernetPort', 
+            namespace='root/cimv2', 
+            keybindings=keys);
+
+        inst = ch.GetInstance(path);
+        print inst 
+        '''
+
         for key in g_insts.keys():
             model['id'] = key
             model.path['id'] = key
