@@ -560,32 +560,10 @@ class CIMProvider(object):
         plist = None
         if propertyList is not None:
             plist = [s.lower() for s in propertyList]
-        '''
-        keyNames = get_keys_from_class(cimClass)
-        plist = None
-        if propertyList is not None:
-            lkns = [kn.lower() for kn in keyNames]
-            props = pywbem.NocaseDict()
-            plist = [s.lower() for s in propertyList]
-            pklist = plist + lkns
-            [props.__setitem__(p.name, p) for p in cimClass.properties.values() 
-                    if p.name.lower() in pklist]
-        else:
-            props = cimClass.properties
-        _strip_quals(props)
-        '''
+            plist+= [s.lower() for s in instanceName.keybindings.keys()]
         model = pywbem.CIMInstance(classname=instanceName.classname, 
-                                   path=instanceName)
+                                   path=instanceName, property_list=plist)
         model.update(model.path.keybindings)
-        '''
-        for k, v in instanceName.keybindings.items():
-            type = cimClass.properties[k].type
-
-            if type != 'reference':
-                v = val = pywbem.tocimobj(type, v)
-            model.__setitem__(k, pywbem.CIMProperty(name=k, type=type, 
-                                    value=v))
-                                    '''
 
         rval = self.get_instance(env=env,
                                        model=model,
@@ -643,8 +621,10 @@ class CIMProvider(object):
         logger.log_debug('CIMProvider MI_modifyInstance called...')
         plist = None
         if propertyList is not None:
-            plist = [p.lower() for p in propertyList]
+            plist = [s.lower() for s in propertyList]
+            plist+= [s.lower() for s in modifiedInstance.path.keybindings.keys()]
             filter_instance(modifiedInstance, plist)
+            modifiedInstance.property_list = plist
             modifiedInstance.update(modifiedInstance.path)
         self.set_instance(env=env,
                               instance=modifiedInstance,
@@ -969,7 +949,9 @@ def filter_instance(inst, plist):
 
     if plist is not None:
         for pname in inst.properties.keys():
-            if pname.lower() not in plist:
+            if pname.lower() not in plist and pname:
+                if inst.path is not None and pname in inst.path.keybindings:
+                    continue
                 del inst.properties[pname]
 
 def get_keys_from_class(cc):
