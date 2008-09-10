@@ -60,12 +60,12 @@ class TestMethodProvider(CIMProvider):
                                    pywbem.CIM_ERR_ACCESS_DENIED):
                         raise
 
-    def set_instance(self, env, instance, previous_instance, property_list):
+    def set_instance(self, env, instance, modify_existing, property_list):
         logger = env.get_logger()
         logger.log_debug('Entering %s.set_instance()' \
                 % self.__class__.__name__)
 
-        if previous_instance:
+        if modify_existing:
             if instance['id'] not in g_insts:
                 raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         else:
