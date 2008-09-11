@@ -162,7 +162,7 @@ class TestAssoc_MemberOfGroup(CIMProvider):
     def delete_instance(self, env, instance_name):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
 
-    def references(self, env, object_name, model, assoc_class_name,
+    def references(self, env, object_name, model, 
             result_class_name, role, result_role, keys_only):
         self._logger.log_debug("\n%s:  References called for class %s" % (self.__class__.__name__.upper(), object_name))
         model.path.keybindings['antecedent'] = None

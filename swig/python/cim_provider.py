@@ -375,7 +375,7 @@ class CIMProvider(object):
         """ 
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED, "")
 
-    def references(self, env, object_name, model, assoc_class_name, 
+    def references(self, env, object_name, model, 
                    result_class_name, role, result_role, keys_only):
         """Instrument Associations.
 
@@ -390,7 +390,6 @@ class CIMProvider(object):
         model -- A template pywbem.CIMInstance to serve as a model
             of the objects to be returned.  Only properties present on this
             model need to be set. 
-        assoc_class_name -- The name of the association class. 
         result_class_name -- If not empty, this string acts as a filter on 
             the returned set of Instances by mandating that each returned 
             Instances MUST represent an association between object_name 
@@ -657,7 +656,6 @@ class CIMProvider(object):
         for inst in self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
-                                    assoc_class_name=assocClassName,
                                     result_class_name=resultClassName, 
                                     role=role, 
                                     result_role=None,
@@ -715,7 +713,6 @@ class CIMProvider(object):
         for inst in self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
-                                    assoc_class_name=assocClassName,
                                     result_class_name=resultClassName, 
                                     role=role, 
                                     result_role=None,
@@ -772,7 +769,6 @@ class CIMProvider(object):
         for inst in self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
-                                    assoc_class_name=resultClassName,
                                     result_class_name='', 
                                     role=role, 
                                     result_role=None,
@@ -817,7 +813,6 @@ class CIMProvider(object):
         for inst in self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
-                                    assoc_class_name=resultClassName,
                                     result_class_name='', 
                                     role=role, 
                                     result_role=None,
