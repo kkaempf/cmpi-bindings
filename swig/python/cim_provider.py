@@ -1388,7 +1388,9 @@ class %(classname)sProvider(CIMProvider):
         for refprop in refprops:
             code+= '''
         if (not role or role.lower() == '%(refpropnamel)s') and \\
-           object_name.classname.lower() == '%(rolecnamel)s':
+           ch.is_subclass(object_name.namespace, 
+                       sub=object_name.classname, 
+                       super='%(rolecname)s'):
             model['%(refpropname)s'] = object_name
             yield model # TODO: Add other REF properties. 
                         # Yield association instances where 
@@ -1397,8 +1399,7 @@ class %(classname)sProvider(CIMProvider):
                         # is '%(rolecname)s' or a subclass.\n''' \
                                % {'refpropname':refprop[0],
                                   'refpropnamel':refprop[0].lower(),
-                                  'rolecname':refprop[1],
-                                  'rolecnamel':refprop[1].lower()}
+                                  'rolecname':refprop[1]}
 
     if valuemaps:
         code+= '''
