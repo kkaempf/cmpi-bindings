@@ -235,8 +235,9 @@ static int PyGlobalInitialize(CMPIStatus* st)
   if (_PYPROVMOD == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      _SBLIM_TRACE(1,("<%d/0x%x> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
+      _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_bindings failed", getpid(), pthread_self()));
       PY_CMPI_SETFAIL(get_exc_trace()); 
+      abort();
       return -1; 
     }
   _SBLIM_TRACE(1,("<%d/0x%x> Python: _PYPROVMOD at %p", getpid(), pthread_self(), _PYPROVMOD));
