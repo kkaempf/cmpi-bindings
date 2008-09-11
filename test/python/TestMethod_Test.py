@@ -490,24 +490,35 @@ class TestMethods(unittest.TestCase):
             self.assertEquals(outs['med'], 5)
 
 
-    def xtest_xembeddedinst(self):
+    def test_xembeddedinst(self):
         iname = pywbem.CIMInstanceName('Test_Method', namespace='root/cimv2',
                 keybindings = {'id':'one'})
         inst = pywbem.CIMInstance('Test_Method', path=None, 
                 properties={'p_str':'str1', 'p_sint32':pywbem.Sint32(1)})
-        self.conn.debug = True
-        try:
-            rv, outs = self.conn.InvokeMethod('createObject', 'Test_Method', 
+        inst.update(iname)
+        rv, outs = self.conn.InvokeMethod('createObject', 'Test_Method', 
                     inst=inst)
-        except:
-            print self.conn.last_request
-            print self.conn.last_reply
-            raise
         insts = self.conn.EnumerateInstances('Test_Method')
         self.assertEquals(len(insts), 1)
-        ninsts = self.conn.GetInstance(iname)
-        self.assertEquals(ninsts[0]['p_str'], 'str1')
-        self.assertEquals(ninsts[0]['p_sint32'], 1)
+        ninst = self.conn.GetInstance(iname)
+        self.assertEquals(ninst['p_str'], 'str1')
+        self.assertEquals(ninst['p_sint32'], 1)
+
+        iname2 = pywbem.CIMInstanceName('Test_Method', namespace='root/cimv2',
+                keybindings = {'id':'two'})
+        inst2 = pywbem.CIMInstance('Test_Method', path=None, 
+                properties={'p_str':'str2', 'p_sint32':pywbem.Sint32(2)})
+        inst2.update(iname2)
+
+        self.conn.DeleteInstance(iname)
+        rv, outs = self.conn.InvokeMethod('createObjects', 'Test_Method', 
+                    insts=[inst, inst2])
+        insts = self.conn.EnumerateInstances('Test_Method')
+        self.assertEquals(len(insts), 2)
+        ninst = self.conn.GetInstance(iname2)
+        self.assertEquals(ninst['p_str'], 'str2')
+        self.assertEquals(ninst['p_sint32'], 2)
+        
 
 def get_unit_test():
     return TestMethods

@@ -696,26 +696,27 @@ class TestMethodProvider(CIMProvider):
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 
-    def cim_method_createobject(self, env, object_name,inst):
+    def cim_method_createobject(self, env, object_name, param_inst):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_createobject()' \
                 % self.__class__.__name__)
 
-        g_insts[inst['id']] = [inst['p_str'], inst['p_sint32']]
+        g_insts[param_inst['id']] = [param_inst['p_str'], 
+                                     param_inst['p_sint32']]
 
-        out_params = {}
+        out_params = []
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 
-    def cim_method_createobjects(self, env, object_name,insts):
+    def cim_method_createobjects(self, env, object_name, param_insts):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_createobject()' \
                 % self.__class__.__name__)
 
-        for inst in insts:
+        for inst in param_insts:
             g_insts[inst['id']] = [inst['p_str'], inst['p_sint32']]
 
-        out_params = {}
+        out_params = []
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 

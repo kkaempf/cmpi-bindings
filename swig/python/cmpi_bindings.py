@@ -522,6 +522,8 @@ def cmpi2pywbem_data(cdata, _type=None, is_array=None):
         attr = 'dateTime'
     if attr == 'reference':
         attr = 'ref'
+    if attr == 'instance':
+        attr = 'inst'
     val = getattr(cdata.value, attr)
     if val is None:
         return None
@@ -533,6 +535,9 @@ def cmpi2pywbem_data(cdata, _type=None, is_array=None):
         val = cmpi2pywbem_datetime(val)
     if _type == 'reference':
         val = cmpi2pywbem_instname(val)
+    if _type == 'instance':
+        val = cmpi2pywbem_inst(val)
+        return val
     return pywbem.tocimobj(_type, val)
 
 def cmpi2pywbem_datetime(dt):
@@ -574,10 +579,10 @@ _cmpi2pywbem_typemap = {
         cmpi.CMPI_ref         : 'reference', 
         cmpi.CMPI_string      : 'string', 
         cmpi.CMPI_dateTime    : 'datetime', 
+        cmpi.CMPI_instance    : 'instance', 
 
         #cmpi.CMPI_null        : None,
         #cmpi.CMPI_args        : 'args', 
-        #cmpi.CMPI_instance    : 'instance', 
         #cmpi.CMPI_class       : 'class ', 
         #cmpi.CMPI_filter      : 'filter', 
         #cmpi.CMPI_ptr         : 'ptr', 
