@@ -110,6 +110,12 @@ class BrokerCIMOMHandle(object):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
     def EnumerateClasses(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    ### Not sure whether this should be on BrokerCIMOMHandle or
+    ### on ProviderEnvironment
+    ### We may want to move it ?
+    def is_subclass(self, ns, super, sub):
+        subObjPath=cmpi.CMPIObjectPath(ns, sub)
+        return bool(self.broker.classPathIsA(subObjPath,super))
 
 
 class Logger(object):

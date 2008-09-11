@@ -22,6 +22,9 @@ typedef struct _CMPIBroker {} CMPIBroker;
   const char *name() {
     return CBBrokerName($self);
   }
+  CMPIBoolean classPathIsA(const CMPIObjectPath *op, const char *parent_class) {
+    return CMClassPathIsA($self, op, parent_class, NULL);
+  }
   CMPIStatus deliverIndication(const CMPIContext * ctx, const char * ns, const CMPIInstance * ind) {
     return CBDeliverIndication($self, ctx, ns, ind);
   }

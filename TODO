@@ -19,6 +19,3 @@ toplevel function which raised the execption ?]
 
 Wrap CMPIEnumeration and CMPIArray in typemaps. 
 
-Wrap CMPIBrokerEncFT.classPathIsA()
-
-
