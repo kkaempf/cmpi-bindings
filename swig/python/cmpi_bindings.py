@@ -397,7 +397,10 @@ def pywbem2cmpi_args(pargs, cargs=None):
 
 
 def pywbem2cmpi_inst(pinst):
-    cop = pywbem2cmpi_instname(pinst.path)
+    pcop = pinst.path
+    if pcop is None:
+        pcop = pywbem.CIMInstanceName(pinst.classname)
+    cop = pywbem2cmpi_instname(pcop)
     cinst = cmpi.CMPIInstance(cop)
     for prop in pinst.properties.values():
         data, _type = pywbem2cmpi_value(prop.value, _type=prop.type)
@@ -433,7 +436,9 @@ def pywbem2cmpi_value(pdata, _type=None, cval=None):
         return None, _type
     is_array = isinstance(pdata, list)
     if _type is None:
-        if isinstance(pdata, pywbem.CIMInstanceName):
+        if isinstance(pdata, pywbem.CIMInstance):
+            _type = 'instance'
+        elif isinstance(pdata, pywbem.CIMInstanceName):
             _type = 'reference'
         else:
             _type = pywbem.cimtype(pdata)
@@ -457,6 +462,9 @@ def pywbem2cmpi_value(pdata, _type=None, cval=None):
     elif _type == 'datetime':
         attr = 'dateTime'
         pdata = pywbem2cmpi_datetime(pdata)
+    elif _type == 'instance':
+        attr = 'inst'
+        pdata = pywbem2cmpi_inst(pdata)
     setattr(cval, attr, pdata)
     return cval, _type
 
@@ -561,6 +569,7 @@ _pywbem2cmpi_typemap = {
         'reference'     : cmpi.CMPI_ref,
         'string'        : cmpi.CMPI_string,
         'datetime'      : cmpi.CMPI_dateTime,
+        'instance'      : cmpi.CMPI_instance,
         }
 
 _cmpi2pywbem_typemap = {
