@@ -39,10 +39,16 @@ SET(CMAKE_VERBOSE_MAKEFILE TRUE)
 SET( PACKAGE "cmpi-bindings" )
 SET( VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" )
 
+
+####################################################################
+# CPACK                                                            #
+####################################################################
+
+
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Language Bindings for CMPI")
 SET(CPACK_PACKAGE_VENDOR "Novell Inc.")
-#SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
-#SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/doc/README")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.BSD")
 SET(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
@@ -58,11 +64,14 @@ SET (CPACK_SOURCE_IGNORE_FILES
 "/CVS/;/.svn/;/.libs/;/.deps/;.swp$;.#;/#;/build/"
 "~$"
 "\\\\.cvsignore$"
-"/package"
 "Makefile\\\\.in$"
 )
 
 INCLUDE(CPack)
+
+####################################################################
+# Find SWIG                                                        #
+####################################################################
 
 #FIND_PACKAGE(SWIG REQUIRED)
 MESSAGE(STATUS "Looking modules in ${CMAKE_MODULE_PATH}")
@@ -76,6 +85,11 @@ IF ( NOT SWIG_EXECUTABLE )
 ELSE ( NOT SWIG_EXECUTABLE )
   MESSAGE( STATUS "SWIG found at ${SWIG_EXECUTABLE}" )
 ENDIF ( NOT SWIG_EXECUTABLE )
+
+
+####################################################################
+# Directories                                                      #
+####################################################################
 
 # don't build standalone provider, its included in the swig code
 #ADD_SUBDIRECTORY(src)
