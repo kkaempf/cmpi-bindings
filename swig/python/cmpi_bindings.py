@@ -215,7 +215,7 @@ class CMPIProvider(object):
             return args[:2]
         ciname = pywbem2cmpi_instname(piname)
         rslt.return_objectpath(ciname)
-        rslt.done
+        rslt.done()
         return (0, '')
 
 
@@ -320,7 +320,7 @@ class CMPIProvider(object):
 
         data, _type = pywbem2cmpi_value(rv, _type=_type)
         rslt.return_data(data, _pywbem2cmpi_typemap[_type])
-        rslt.done
+        rslt.done()
         return (0, '')
 
 
