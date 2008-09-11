@@ -471,15 +471,6 @@ class CIMProvider(object):
 
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_enumInstanceNames called...')
-        '''
-        keys = pywbem.NocaseDict()
-        [keys.__setitem__(p.name, p) for p in cimClass.properties.values()\
-                if 'key' in p.qualifiers]
-        
-        _strip_quals(keys)
-        path = pywbem.CIMInstanceName(classname=cimClass.classname, 
-                                            namespace=ns)
-                                            '''
         model = pywbem.CIMInstance(classname=objPath.classname, 
                                    path=objPath)
         gen = self.enum_instances(env=env,
@@ -510,20 +501,7 @@ class CIMProvider(object):
         """
         logger = env.get_logger()
         logger.log_debug('CIMProvider MI_enumInstances called...')
-        '''
-        keyNames = get_keys_from_class(cimClass)
-        plist = None
-        if propertyList is not None:
-            lkns = [kn.lower() for kn in keyNames]
-            props = pywbem.NocaseDict()
-            plist = [s.lower() for s in propertyList]
-            pklist = plist + lkns
-            [props.__setitem__(p.name, p) for p in cimClass.properties.values() 
-                    if p.name.lower() in pklist]
-        else:
-            props = cimClass.properties
-        _strip_quals(props)
-        '''
+
         model = pywbem.CIMInstance(classname=objPath.classname,
                                    path=objPath)
         gen = self.enum_instances(env=env,
@@ -672,16 +650,7 @@ class CIMProvider(object):
         if not assocClassName:
             raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                     "Empty assocClassName passed to Associators")
-        '''
-        assocClass = ch.GetClass(assocClassName, objectName.namespace, 
-                                 LocalOnly=False, 
-                                 IncludeQualifiers=True)
-        plist = pywbem.NocaseDict()
-        [plist.__setitem__(p.name, p) for p in assocClass.properties.values() 
-                if 'key' in p.qualifiers or p.type == 'reference']
-        _strip_quals(plist)
-        '''
-        ch = env.get_cimom_handle()
+        ch = env.get_cimom_handle2()
         model = pywbem.CIMInstance(classname=assocClassName)
         model.path = pywbem.CIMInstanceName(classname=assocClassName, 
                                             namespace=objectName.namespace)
@@ -709,11 +678,7 @@ class CIMProvider(object):
                 try:
                     if prop.value.namespace is None:
                         prop.value.namespace = objectName.namespace
-                    args = {'IncludeQualifiers':True,
-                            'IncludeClassOrigin':True}
-                    if propertyList is not None:
-                        args['PropertyList'] = propertyList
-                    inst = ch.GetInstance(prop.value, **args)
+                    inst = ch.GetInstance(prop.value, propertyList)
                 except pywbem.CIMError, (num, msg):
                     if num == pywbem.CIM_ERR_NOT_FOUND:
                         continue
@@ -798,9 +763,6 @@ class CIMProvider(object):
         model = pywbem.CIMInstance(classname=resultClassName)
         model.path = pywbem.CIMInstanceName(classname=resultClassName, 
                                             namespace=objectName.namespace)
-        #if role is None:
-        #    raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
-        #                          "** this shouldn't happen")
         if role:
             if role not in model.properties:
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
@@ -847,9 +809,6 @@ class CIMProvider(object):
         model = pywbem.CIMInstance(classname=resultClassName)
         model.path = pywbem.CIMInstanceName(classname=resultClassName, 
                                             namespace=objectName.namespace)
-        #if role is None:
-        #    raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
-        #                          "** this shouldn't happen")
         if role:
             if role not in model.properties:
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
