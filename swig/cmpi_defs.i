@@ -18,7 +18,7 @@
 
 #-----------------------------------------------------
 
-#ifdef (SWIGPYTHON)
+#if defined(SWIGPYTHON)
 #
 # Conversion from list of python strings to null terminated char** array.
 #
@@ -67,7 +67,7 @@
   if ($1)
     free($1);
 }
-#endif /* SWIGPYTHON */
+#endif /* defined(SWIGPYTHON) */
 
 #-----------------------------------------------------
 #
