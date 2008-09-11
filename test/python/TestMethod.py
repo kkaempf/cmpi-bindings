@@ -720,6 +720,20 @@ class TestMethodProvider(CIMProvider):
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 
+    def cim_method_getobjects(self, env, object_name):
+        logger = env.get_logger()
+        logger.log_debug('Entering %s.cim_method_getobjects()' \
+                % self.__class__.__name__)
+
+        insts = []
+        for kn, val in g_insts.items():
+            inst = pywbem.CIMInstance('TestMethod', 
+                    properties={'id':kn, 'p_str':val[0], 'p_sint32':val[1]})
+            insts.append(inst)
+
+        out_params = [pywbem.CIMParameter('insts', 'instance', value=insts)]
+        rval = pywbem.Sint32(0)
+        return (rval, out_params)
         
 ## end of class TestMethodProvider
 

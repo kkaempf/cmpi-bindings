@@ -14,10 +14,12 @@ import pwd
 import grp
 
 from lib import ProviderSanityTest as PST
+from lib import wbem_connection
 from socket import getfqdn
 
 _globalVerbose = False
 
+conn = None
    
 def isObjPathMatch( op1, op2 ):
     op1.host = None
@@ -47,27 +49,6 @@ def isObjPathMatch( op1, op2 ):
     return _local_op1_str == _local_op2_str
     
 
-class WBEMConn:
-
-    # Borgness
-    _shared_state = {}
-    conn = None
-
-    def __init__(self, options=None):
-        # Borgness
-        self.__dict__ = WBEMConn._shared_state
-        
-        if options:
-            proto = 'http'
-            if options.secure:
-                proto = 'https'
-            url = '%s://%s' % (proto, options.host)
-            self.conn = pywbem.WBEMConnection(
-                    url,
-                    (options.user, options.password),
-                    default_namespace = options.namespace)
-            self.conn = pywbem.PegasusUDSConnection()
-            self.conn = pywbem.SFCBUDSConnection()
         
 
 class TestAssociations(unittest.TestCase):
@@ -81,8 +62,8 @@ class TestAssociations(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self._conn = WBEMConn().conn
         self._verbose = _globalVerbose
+        self._conn = conn
         self._dbgPrint()
         
     def tearDown(self):
@@ -1177,6 +1158,7 @@ class TestAssociations(unittest.TestCase):
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
+    wbem_connection.getWBEMConnParserOptions(parser)
     parser.add_option('--level',
             '-l',
             action='store',
@@ -1184,22 +1166,12 @@ if __name__ == '__main__':
             dest='dbglevel',
             help='Indicate the level of debugging statements to display (default=2)',
             default=2)
-    parser.add_option('', '--host', default='localhost', 
-            help='Specify the hosting machine of the CIMOM (default=localhost)')
-    parser.add_option('-s', '--secure', action='store_true', default=False, 
-            help='Use the HTTPS protocol. Default is HTTP')
-    parser.add_option('-n', '--namespace', default='root/cimv2', 
-            help='Specify the namespace the test runs against (default=root/cimv2)')
-    parser.add_option('', '--user', default='', 
-            help='Specify the user name used when connection to the CIMOM')
-    parser.add_option('', '--password', default='', 
-            help='Specify the password for the user')
     parser.add_option('--verbose', '', action='store_true', default=False,
             help='Show verbose output')
     options, arguments = parser.parse_args()
     
     _globalVerbose = options.verbose
 
-    wconn = WBEMConn(options)
+    conn = wbem_connection.WBEMConnFromOptions(parser)
     suite = unittest.makeSuite(TestAssociations)
     unittest.TextTestRunner(verbosity=options.dbglevel).run(suite)

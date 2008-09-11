@@ -15,6 +15,10 @@ import subprocess
 import unittest
 import math
 from lib import wbem_connection
+from optparse import OptionParser
+conn = None
+
+globalParser = None
 
 _tolerance = .04
 
@@ -200,17 +204,17 @@ class TestAtomProvider(unittest.TestCase):
     time = pywbem.CIMDateTime.now()
 
     def setUp(self):
+        global conn
         self.inst_paths = []
         self.instance = None
-        #wconn = wbem_connection.wbem_connection()
-        self.conn = pywbem.PegasusUDSConnection()
-        self.conn = pywbem.SFCBUDSConnection()
+        if conn is None:
+            conn = wbem_connection.WBEMConnFromOptions(globalParser)
         unittest.TestCase.setUp(self)
 
     def tearDown(self):
         for ipath in self.inst_paths:
             try:
-                self.conn.DeleteInstance(ipath)
+                conn.DeleteInstance(ipath)
             except pywbem.CIMError,arg:
                 pass
         unittest.TestCase.tearDown(self)
@@ -231,7 +235,7 @@ class TestAtomProvider(unittest.TestCase):
     #               namespace='Interop')) 
     #        
     #    try:
-    #        self.conn.CreateInstance(reginst)
+    #        conn.CreateInstance(reginst)
     #    except pywbem.CIMError, arg:
     #        self.fail("Could not REGISTER %s:%s" % (reginst.classname, str(arg)))
     #    restart_gmond()
@@ -241,19 +245,19 @@ class TestAtomProvider(unittest.TestCase):
 
     #def test_7_deregister(self):
     #    """ Test Deregister Provider """
-    #    self.conn.default_namespace = 'Interop'
-    #    reglist = self.conn.EnumerateInstanceNames('OpenWBEM_PyProviderRegistration')
+    #    conn.default_namespace = 'Interop'
+    #    reglist = conn.EnumerateInstanceNames('OpenWBEM_PyProviderRegistration')
     #    for inst_name in reglist:
     #        if inst_name['InstanceID'] == 'TestAtomProvider':
     #            try:
-    #                self.conn.DeleteInstance(inst_name)
+    #                conn.DeleteInstance(inst_name)
     #            except pywbem.CIMError, arg:
     #                self.fail("Could not DEREGISTER Class")
 
     #    restart_gmond()
 
     #    try:
-    #        self.conn.GetInstance(inst_name)
+    #        conn.GetInstance(inst_name)
     #    except pywbem.CIMError, arg:
     #        self.failUnlessEqual(arg[0], pywbem.CIM_ERR_NOT_FOUND,
     #             'Unexpected exception on GetInstance: %s' % str(arg))
@@ -314,7 +318,7 @@ class TestAtomProvider(unittest.TestCase):
                                         pywbem.Uint8(number)]
 
         try:
-            cipath = self.conn.CreateInstance(new_instance)
+            cipath = conn.CreateInstance(new_instance)
             new_instance.path = cipath
             self.inst_paths.append(cipath)
 
@@ -332,12 +336,12 @@ class TestAtomProvider(unittest.TestCase):
                 self.fail('%s: CreateInstance Failed.' % str(msg))
                 continue
             try:
-                ci = self.conn.GetInstance(rval.path)
+                ci = conn.GetInstance(rval.path)
             except pywbem.CIMError,arg:
                 self.fail('GetInstance failed for instance just created')
                 continue
 
-            _compare_values(self.conn, ci, self.time)
+            _compare_values(conn, ci, self.time)
 
 
     def test_3_enum_instances(self):
@@ -349,20 +353,20 @@ class TestAtomProvider(unittest.TestCase):
                 self.fail('%s: CreateInstance Failed.' % str(msg))
                 continue
             try:
-                ci = self.conn.GetInstance(rval.path)
+                ci = conn.GetInstance(rval.path)
                 insts.append(ci)
             except pywbem.CIMError,arg:
                 self.fail('GetInstance failed for instance just created')
                 continue
         
         try: 
-            ta_list = self.conn.EnumerateInstances('Test_Atom')
+            ta_list = conn.EnumerateInstances('Test_Atom')
         except pywbem.CIMError, arg:
             self.fail('EnumerateInstances Failed: %s' % str(arg))
             raise
 
         try:
-            paths = self.conn.EnumerateInstanceNames('Test_Atom')
+            paths = conn.EnumerateInstanceNames('Test_Atom')
         except pywbem.CIMError, arg:
             self.fail('EnumerateInstanceNames Failed: %s' % str(arg))
 
@@ -374,7 +378,7 @@ class TestAtomProvider(unittest.TestCase):
             for rci in ta_list:
                 rci.path.host = None
                 if rci.path == ci.path:
-                    _compare_values(self.conn, rci, self.time)
+                    _compare_values(conn, rci, self.time)
                     break
             else:
                 self.fail('Did not get a created instance back from EnumerateInstance')
@@ -390,20 +394,20 @@ class TestAtomProvider(unittest.TestCase):
                 self.fail('%s: CreateInstance Failed.' % str(msg))
                 continue
             try:
-                ci = self.conn.GetInstance(rval.path)
+                ci = conn.GetInstance(rval.path)
                 insts.append(ci)
             except pywbem.CIMError,arg:
                 self.fail('GetInstance failed for instance just created')
                 continue
         
         try: 
-            ta_list = self.conn.EnumerateInstanceNames('Test_Atom')
+            ta_list = conn.EnumerateInstanceNames('Test_Atom')
         except pywbem.CIMError, arg:
             self.fail('EnumerateInstanceNames Failed: %s' % str(arg))
             raise
 
         try: 
-            instances = self.conn.EnumerateInstances('Test_Atom')
+            instances = conn.EnumerateInstances('Test_Atom')
         except pywbem.CIMError, arg:
             self.fail('EnumerateInstances Failed: %s' % str(arg))
 
@@ -428,7 +432,7 @@ class TestAtomProvider(unittest.TestCase):
                         'sint32Propa', 'sint32Prop']
         keybindings = {'Name': 'Carbon'}
         try:
-            inst = get_instance(self.conn, keybindings, propertylist)
+            inst = get_instance(conn, keybindings, propertylist)
         except pywbem.CIMError, arg:
             raise arg
 
@@ -449,7 +453,7 @@ class TestAtomProvider(unittest.TestCase):
                         'sint64Propa', 'sint64prop', 'boolProp']
         keybindings = {'Name': 'Boron'}
 
-        mod_instance = get_instance(self.conn, keybindings, propertylist)
+        mod_instance = get_instance(conn, keybindings, propertylist)
 
         weight = _atomic_weights['Boron']
         new_time = pywbem.CIMDateTime.now()
@@ -468,11 +472,11 @@ class TestAtomProvider(unittest.TestCase):
         mod_instance['Name'] = 'Boron'
 
         try:
-            self.conn.ModifyInstance(mod_instance, PropertyList=propertylist)
+            conn.ModifyInstance(mod_instance, PropertyList=propertylist)
         except pywbem.CIMError, arg:
             self.fail(arg)
 
-        mod_instance = get_instance(self.conn, keybindings, propertylist)
+        mod_instance = get_instance(conn, keybindings, propertylist)
         for prop in mod_instance.properties.keys():
             if prop == 'uint64Prop' or prop == 'sint64Prop':
                 self.assertEqual(mod_instance[prop],2,"Values NOT EQUAL")
@@ -504,23 +508,23 @@ class TestAtomProvider(unittest.TestCase):
                 self.fail('%s: CreateInstance Failed.' % str(msg))
                 continue
             try:
-                ci = self.conn.GetInstance(rval.path)
+                ci = conn.GetInstance(rval.path)
                 insts.append(ci)
             except pywbem.CIMError,arg:
                 self.fail('GetInstance failed for instance just created')
                 continue
 
-        del_instances = get_instance_names(self.conn)
+        del_instances = get_instance_names(conn)
         for inst in del_instances:
             try:
-                self.conn.DeleteInstance(inst)
+                conn.DeleteInstance(inst)
             except pywbem.CIMError, arg:
                 self.fail('DeleteInstance Failed: %s' % str(arg))
                 break
         else:
             for inst in del_instances:
                 try:
-                    self.conn.DeleteInstance(inst)
+                    conn.DeleteInstance(inst)
                 except pywbem.CIMError, arg:
                     self.failUnlessEqual(arg[0], pywbem.CIM_ERR_NOT_FOUND,
                          'Unexpected exception on delete: %s' % str(arg))
@@ -531,5 +535,11 @@ def get_unit_test():
     return TestAtomProvider
 
 if __name__ == "__main__":
+    p = OptionParser()
+    wbem_connection.getWBEMConnParserOptions(p)
+    options, arguments = p.parse_args()
+    globalParser = p
+
     suite = unittest.makeSuite(TestAtomProvider)
     unittest.TextTestRunner(verbosity=2).run(suite)
+

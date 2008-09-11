@@ -15,6 +15,7 @@ import random
 import sys
 
 real_tolerance = 0.01
+conn = None
 
 #This test requires the usage of elementtree
 
@@ -157,11 +158,8 @@ class TestMethods(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        #wconn = wbem_connection.wbem_connection()
-        #self.conn = wconn._WBEMConnFromOptions(_g_opts)
-        self.conn = pywbem.PegasusUDSConnection()
-        self.conn = pywbem.SFCBUDSConnection()
-	self.conn.debug = True
+        self.conn = conn
+        self.conn.debug = True
         for iname in self.conn.EnumerateInstanceNames('Test_Method'):
             self.conn.DeleteInstance(iname)
         self._verbose = _g_opts.verbose
@@ -510,6 +508,7 @@ class TestMethods(unittest.TestCase):
                 properties={'p_str':'str2', 'p_sint32':pywbem.Sint32(2)})
         inst2.update(iname2)
 
+
         self.conn.DeleteInstance(iname)
         rv, outs = self.conn.InvokeMethod('createObjects', 'Test_Method', 
                     insts=[inst, inst2])
@@ -518,6 +517,14 @@ class TestMethods(unittest.TestCase):
         ninst = self.conn.GetInstance(iname2)
         self.assertEquals(ninst['p_str'], 'str2')
         self.assertEquals(ninst['p_sint32'], 2)
+
+        try:
+            rv, outs = self.conn.InvokeMethod('getObjects', 'Test_Method')
+        except:
+            raise
+        insts = outs['insts']
+        self.assertEquals(len(insts), 2)
+
         
 
 def get_unit_test():
@@ -537,6 +544,7 @@ if __name__ == '__main__':
             help='Indicate the level of debugging statements to display (default=2)',
             default=2)
     _g_opts, _g_args = parser.parse_args()
+    conn = wbem_connection.WBEMConnFromOptions(parser)
     
     suite = unittest.makeSuite(TestMethods)
     unittest.TextTestRunner(verbosity=_g_opts.dbglevel).run(suite)

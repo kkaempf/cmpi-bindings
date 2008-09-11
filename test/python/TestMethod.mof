@@ -260,5 +260,9 @@ class Test_Method
 			[in, required, EmbeddedInstance("Test_Method")] string insts[]
 	); 
 	
+    [ Description("Retrieve instances of Test_Method as an instance list output parameter") ]
+	sint32 getObjects(
+			[in(false), out, required, EmbeddedInstance("Test_Method")] string insts[]
+	); 
 };
 

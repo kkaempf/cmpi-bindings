@@ -4,10 +4,10 @@ from optparse import OptionParser
 from getpass import getpass
 
 def getWBEMConnParserOptions(parser):
-    parser.add_option('-u', '--url', default='https://localhost', help='Specify the URL to the CIMOM')
+    parser.add_option('-u', '--url', default='/tmp/sfcbHttpSocket', help='Specify the URL to the CIMOM')
     parser.add_option('-n', '--namespace', default='root/cimv2', help='Specify the namespace the test runs against')
-    parser.add_option('', '--user', default='', help='Specify the user name used when connection to the CIMOM')
-    parser.add_option('', '--password', default='', help='Specify the password for the user')
+    parser.add_option('', '--user', default=None, help='Specify the user name used when connection to the CIMOM')
+    parser.add_option('', '--password', default=None, help='Specify the password for the user')
 
 
 
@@ -19,7 +19,11 @@ def WBEMConnFromOptions(parser=None):
     pw = options.password
     if options.user and not pw:
         pw = getpass('\nEnter password for %s: ' % options.user)
-    wconn = pywbem.WBEMConnection(options.url, (options.user, pw))
+        options.password = pw
+    creds = None
+    if options.user:
+        creds = (options.user, pw)
+    wconn = pywbem.WBEMConnection(options.url, creds)
     if options.namespace:
         wconn.default_namespace = options.namespace
     return wconn
