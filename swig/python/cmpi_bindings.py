@@ -71,7 +71,6 @@ class CIMInstanceIterator:
             raise StopIteration
         return cmpi2pywbem_inst(val)
 
-
 class BrokerCIMOMHandle(object):
     def __init__(self, broker, ctx):
         self.broker = broker
@@ -94,10 +93,20 @@ class BrokerCIMOMHandle(object):
             return None
         return cmpi2pywbem_inst(ci)
 
-    def Associators(self):
-        pass
-    def AssociatorNames(self):
-        pass
+    def Associators(self, path, assocClass = None, resultClass = None, 
+        role = None, resultRole = None, props = None):
+        cop = pywbem2cmpi_instname(path)
+        e = self.broker.associators(self.ctx, cop, assocClass, resultClass,
+            role, resultRole, props)
+        return CIMInstanceIterator(e)
+
+    def AssociatorNames(self, path, assocClass = None, resultClass = None, 
+        role = None, resultRole = None, props = None):
+        cop = pywbem2cmpi_instname(path)
+        e = self.broker.associatorNames(self.ctx, cop, assocClass, resultClass,
+            role, resultRole)
+        return CIMInstanceNameIterator(e)
+
     def References(self):
         pass
     def ReferenceNames(self):
@@ -156,7 +165,6 @@ class CMPIProvider(object):
 
     def __init__(self, miname, broker):
         print 'called CMPIProvider(', miname, ',', broker, ')'
-        broker = cmpi.CMPIBroker()
         self.broker = broker
         self.miname = miname
         self.env = ProviderEnvironment(self.broker)
@@ -331,18 +339,18 @@ class CMPIProvider(object):
 
 
     def authorize_filter(self, ctx, filter, className, classPath, owner):
-        self.env.ctx = ctx
+        #self.env.ctx = ctx
         pass
 
     def activate_filter(self, ctx, filter, className, classPath, 
             firstActivation):
-        self.env.ctx = ctx
+        #self.env.ctx = ctx
         pass
 
 
     def deactivate_filter(self, ctx, filter, className, classPath, 
             lastActivation):
-        self.env.ctx = ctx
+        #self.env.ctx = ctx
         pass
 
 
@@ -350,16 +358,16 @@ class CMPIProvider(object):
     #def must_poll(self, ctx, rslt, filter, className, classPath):
     # NOTE: sfcb signature for this doesn't have the rslt. 
     def must_poll(self, ctx, filter, className, classPath):
-        self.env.ctx = ctx
+        #self.env.ctx = ctx
         pass
 
 
     def enable_indications(self, ctx):
-        self.env.ctx = ctx
+        #self.env.ctx = ctx
         pass
 
     def disable_indications(self, ctx):
-        self.env.ctx = ctx
+        #self.env.ctx = ctx
         pass
 
 
