@@ -1469,24 +1469,24 @@ instance of OpenWBEM_PyProviderRegistration
 // Pegasus Provider registration for %(classname)s
 instance of PG_ProviderModule
 {
-    Name = "/usr/lib/pycim/%(classname)sProvider.py";
-    InterfaceType = "Python";
-    InterfaceVersion = "1.0.0";
-    Location = "/usr/lib/pycim/%(classname)sProvider.py";
+    Name = "pyCmpiProvider_%(classname)s";
+    InterfaceType = "CMPI";
+    InterfaceVersion = "2.0.0";
+    Location = "pyCmpiProvider"; 
     UserContext = 2; // Requestor
     Vendor = "TODO"; // TODO
     Version = "1.0";
 }; 
 instance of PG_Provider
 {
-    Name = "%(classname)s"; 
-    ProviderModuleName = "/usr/lib/pycim/%(classname)sProvider.py"; 
+    Name = "%(classname)sProvider"; 
+    ProviderModuleName = "pyCmpiProvider_%(classname)s";
 }; 
 instance of PG_ProviderCapabilities
 {
     CapabilityID = "%(classname)s";
-    ProviderModuleName = "/usr/lib/pycim/%(classname)sProvider.py";
-    ProviderName = "%(classname)s";
+    ProviderModuleName = "pyCmpiProvider_%(classname)s";
+    ProviderName = "%(classname)sProvider";
     ClassName = "%(classname)s";
     Namespaces = {"root/cimv2"}; // TODO
     ProviderType = {%(pegtypeNum)s}; // %(pegtypeStr)s
