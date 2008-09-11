@@ -1,10 +1,10 @@
 //////// TestMethod 
 instance of PG_ProviderModule
 {
-    Name = "/usr/lib/pycim/TestMethod.py"; 
-    InterfaceType = "Python"; 
-    InterfaceVersion = "1.0.0"; 
-    Location = "/usr/lib/pycim/TestMethod.py"; 
+    Name = "TestMethod-Module"; 
+    InterfaceType = "CMPI"; 
+    InterfaceVersion = "2.0.0"; 
+    Location = "pyCmpiProvider"; 
     Vendor = "OMC"; 
     Version = "0.1.0"; 
 }; 
@@ -12,13 +12,13 @@ instance of PG_ProviderModule
 instance of PG_Provider
 {
     Name = "TestMethod"; 
-    ProviderModuleName = "/usr/lib/pycim/TestMethod.py"; 
+    ProviderModuleName = "TestMethod-Module"; 
 }; 
 
 instance of PG_ProviderCapabilities
 {
     CapabilityID = "TestMethod"; 
-    ProviderModuleName = "/usr/lib/pycim/TestMethod.py"; 
+    ProviderModuleName = "TestMethod-Module"; 
     ProviderName = "TestMethod"; 
     ClassName = "Test_Method"; 
     Namespaces = {"root/cimv2"}; 

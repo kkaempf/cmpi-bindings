@@ -2,23 +2,23 @@
 instance of PG_ProviderModule
 {
    Name = "TestAtom_Module";
-   Location = "TestAtomProvider";
+   Location = "pyCmpiProvider";
    Vendor = "Novell";
    Version = "1.0.0";
-   InterfaceType = "Python";
-   InterfaceVersion = "1.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
 };
 
 instance of PG_Provider
 {
-   Name = "TestAtom_Provider";
+   Name = "TestAtomProvider";
    ProviderModuleName = "TestAtom_Module";
 };
 
 instance of PG_ProviderCapabilities
 {
    ProviderModuleName = "TestAtom_Module";
-   ProviderName = "TestAtom_Provider";
+   ProviderName = "TestAtomProvider";
    ClassName = "Test_Atom";
    ProviderType = { 2 };
    Namespaces = {"root/cimv2"};
