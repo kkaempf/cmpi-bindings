@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Sep 11 15:29:08 CEST 2008 - kkaempf@suse.de
+
+- Support Python threads, do proper locking 
+- Bump version to 0.2.0
+
+-------------------------------------------------------------------
 Tue Sep  2 11:10:23 CEST 2008 - kkaempf@suse.de
 
 - Initial package.

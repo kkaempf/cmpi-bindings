@@ -70,7 +70,8 @@ Group:          Development/Languages/Python
 %files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/libpyCmpiProvider.so
-%{py_sitedir}/pycmpi_provider.py
+%{py_sitedir}/cmpi_bindings.py
+%{py_sitedir}/cim_provider.py
 %{py_sitedir}/cmpi.py
 
 %changelog
