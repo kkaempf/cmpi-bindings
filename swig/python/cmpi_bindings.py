@@ -42,8 +42,9 @@ def SFCBUDSConnection():
     return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
 
 class CIMInstanceNameIterator:
-    def __init__(self, enumeration):
+    def __init__(self, proxy, enumeration):
         self.enumeration = enumeration
+        self.proxy = proxy
 
     def __iter__(self):
         return self
@@ -54,11 +55,12 @@ class CIMInstanceNameIterator:
         val = getattr(self.enumeration.next().value, 'ref')
         if val is None:
             raise StopIteration
-        return cmpi2pywbem_instname(val)
+        return self.proxy.cmpi2pywbem_instname(val)
 
 class CIMInstanceIterator:
-    def __init__(self, enumeration):
+    def __init__(self, proxy, enumeration):
         self.enumeration = enumeration
+        self.proxy = proxy
 
     def __iter__(self):
         return self
@@ -69,43 +71,44 @@ class CIMInstanceIterator:
         val = getattr(self.enumeration.next().value, 'inst')
         if val is None:
             raise StopIteration
-        return cmpi2pywbem_inst(val)
+        return self.proxy.cmpi2pywbem_inst(val)
 
 class BrokerCIMOMHandle(object):
-    def __init__(self, broker, ctx):
-        self.broker = broker
+    def __init__(self, proxy, ctx):
+        self.broker = proxy.broker
+        self.proxy = proxy
         self.ctx = ctx
 
     def EnumerateInstanceNames(self, ns, cn):
-        cop = cmpi.CMPIObjectPath(ns, cn)
+        cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstanceNames(self.ctx, cop)
-        return CIMInstanceNameIterator(e)
+        return CIMInstanceNameIterator(self.proxy, e)
 
     def EnumerateInstances(self, ns, cn, props = None):
-        cop = cmpi.CMPIObjectPath(ns, cn)
+        cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstances(self.ctx, cop, props)
-        return CIMInstanceIterator(e)
+        return CIMInstanceIterator(self.proxy, e)
 
     def GetInstance(self, path, props = None):
-        cop = pywbem2cmpi_instname(path)
+        cop = self.proxy.pywbem2cmpi_instname(path)
         ci = self.broker.getInstance(self.ctx, cop, props)
         if ci is None:
             return None
-        return cmpi2pywbem_inst(ci)
+        return self.proxy.cmpi2pywbem_inst(ci)
 
     def Associators(self, path, assocClass = None, resultClass = None, 
         role = None, resultRole = None, props = None):
-        cop = pywbem2cmpi_instname(path)
+        cop = self.proxy.pywbem2cmpi_instname(path)
         e = self.broker.associators(self.ctx, cop, assocClass, resultClass,
             role, resultRole, props)
-        return CIMInstanceIterator(e)
+        return CIMInstanceIterator(self.proxy, e)
 
     def AssociatorNames(self, path, assocClass = None, resultClass = None, 
         role = None, resultRole = None, props = None):
-        cop = pywbem2cmpi_instname(path)
+        cop = self.proxy.pywbem2cmpi_instname(path)
         e = self.broker.associatorNames(self.ctx, cop, assocClass, resultClass,
             role, resultRole)
-        return CIMInstanceNameIterator(e)
+        return CIMInstanceNameIterator(self.proxy, e)
 
     def References(self):
         pass
@@ -123,7 +126,7 @@ class BrokerCIMOMHandle(object):
     ### on ProviderEnvironment
     ### We may want to move it ?
     def is_subclass(self, ns, super, sub):
-        subObjPath=cmpi.CMPIObjectPath(ns, sub)
+        subObjPath=self.broker.new_object_path(ns, sub)
         return bool(self.broker.classPathIsA(subObjPath,super))
 
 
@@ -141,15 +144,15 @@ class Logger(object):
 
 
 class ProviderEnvironment(object):
-    def __init__(self, broker):
-        self.broker = broker
+    def __init__(self, proxy):
+        self.proxy = proxy
         self.ctx = None
     def get_logger(self):
-        return Logger(self.broker)
+        return Logger(self.proxy.broker)
     def get_cimom_handle(self):
         return SFCBUDSConnection()
     def get_cimom_handle2(self):
-        return BrokerCIMOMHandle(self.broker, self.ctx)
+        return BrokerCIMOMHandle(self.proxy, self.ctx)
     def get_user_name(self):
         pass
     def get_context_value(self, key):
@@ -167,7 +170,7 @@ class CMPIProvider(object):
         print 'called CMPIProvider(', miname, ',', broker, ')'
         self.broker = broker
         self.miname = miname
-        self.env = ProviderEnvironment(self.broker)
+        self.env = ProviderEnvironment(self)
         self.proxy = ProviderProxy(self.env, 
                 '/usr/lib/pycim/'+miname+'.py')
         #print '*** broker.name()', broker.name()
@@ -180,11 +183,11 @@ class CMPIProvider(object):
         print 'provider.py: In enum_instance_names()' 
         #test_conversions()
         self.env.ctx = ctx
-        op = cmpi2pywbem_instname(objname)
+        op = self.cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
         try:
             for i in self.proxy.MI_enumInstanceNames(self.env, op):
-                cop = pywbem2cmpi_instname(i)
+                cop = self.pywbem2cmpi_instname(i)
                 rslt.return_objectpath(cop)
         except pywbem.CIMError, args:
             return args[:2]
@@ -194,11 +197,11 @@ class CMPIProvider(object):
     def enum_instances(self, ctx, rslt, objname, plist):
         print 'provider.py: In enum_instances()' 
         self.env.ctx = ctx
-        op = cmpi2pywbem_instname(objname)
+        op = self.cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
         try:
             for i in self.proxy.MI_enumInstances(self.env, op, plist):
-                cinst = pywbem2cmpi_inst(i)
+                cinst = self.pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
         except pywbem.CIMError, args:
             return args[:2]
@@ -208,13 +211,13 @@ class CMPIProvider(object):
     def get_instance(self, ctx, rslt, objname, plist):
         print 'provider.py: In get_instance()' 
         self.env.ctx = ctx
-        op = cmpi2pywbem_instname(objname)
+        op = self.cmpi2pywbem_instname(objname)
         conn = SFCBUDSConnection()
         try:
             pinst = self.proxy.MI_getInstance(self.env, op, plist)
         except pywbem.CIMError, args:
             return args[:2]
-        cinst = pywbem2cmpi_inst(pinst)
+        cinst = self.pywbem2cmpi_inst(pinst)
         rslt.return_instance(cinst)
         rslt.done()
         return (0, '')
@@ -222,12 +225,12 @@ class CMPIProvider(object):
 
     def create_instance(self, ctx, rslt, objname, newinst):
         self.env.ctx = ctx
-        pinst = cmpi2pywbem_inst(newinst)
+        pinst = self.cmpi2pywbem_inst(newinst)
         try:
             piname = self.proxy.MI_createInstance(self.env, pinst)
         except pywbem.CIMError, args:
             return args[:2]
-        ciname = pywbem2cmpi_instname(piname)
+        ciname = self.pywbem2cmpi_instname(piname)
         rslt.return_objectpath(ciname)
         rslt.done()
         return (0, '')
@@ -235,8 +238,8 @@ class CMPIProvider(object):
 
     def set_instance(self, ctx, rslt, objname, newinst, plist):
         self.env.ctx = ctx
-        pinst = cmpi2pywbem_inst(newinst)
-        pinst.path = cmpi2pywbem_instname(objname)
+        pinst = self.cmpi2pywbem_inst(newinst)
+        pinst.path = self.cmpi2pywbem_instname(objname)
         try:
             self.proxy.MI_modifyInstance(self.env, pinst, plist)
         except pywbem.CIMError, args:
@@ -244,7 +247,7 @@ class CMPIProvider(object):
         return (0, '')
 
     def delete_instance(self, ctx, rslt, objname):
-        piname = cmpi2pywbem_instname(objname)
+        piname = self.cmpi2pywbem_instname(objname)
         try:
             self.proxy.MI_deleteInstance(self.env, piname)
         except pywbem.CIMError, args:
@@ -259,12 +262,12 @@ class CMPIProvider(object):
     def associator_names(self, ctx, rslt, objName, assocClass, resultClass,
             role, resultRole):
         self.env.ctx = ctx
-        piname = cmpi2pywbem_instname(objName)
+        piname = self.cmpi2pywbem_instname(objName)
 
         try:
             for i in self.proxy.MI_associatorNames(self.env, piname, 
                     assocClass, resultClass, role, resultRole):
-                ciname = pywbem2cmpi_instname(i)
+                ciname = self.pywbem2cmpi_instname(i)
                 rslt.return_objectpath(ciname)
         except pywbem.CIMError, args:
             return args[:2]
@@ -274,12 +277,12 @@ class CMPIProvider(object):
     def associators(self, ctx, rslt, objName, assocClass, resultClass,
             role, resultRole, props):
         self.env.ctx = ctx
-        piname = cmpi2pywbem_instname(objName)
+        piname = self.cmpi2pywbem_instname(objName)
 
         try:
             for i in self.proxy.MI_associators(self.env, piname, 
                     assocClass, resultClass, role, resultRole, props):
-                cinst = pywbem2cmpi_inst(i)
+                cinst = self.pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
         except pywbem.CIMError, args:
             return args[:2]
@@ -290,12 +293,12 @@ class CMPIProvider(object):
     def reference_names(self, ctx, rslt, objName, resultClass, role):
         print 'pycmpi_provider.py: In reference_names()' 
         self.env.ctx = ctx
-        piname = cmpi2pywbem_instname(objName)
+        piname = self.cmpi2pywbem_instname(objName)
 
         try:
             for i in self.proxy.MI_referenceNames(self.env, piname, 
                     resultClass, role):
-                ciname = pywbem2cmpi_instname(i)
+                ciname = self.pywbem2cmpi_instname(i)
                 rslt.return_objectpath(ciname)
         except pywbem.CIMError, args:
             return args[:2]
@@ -305,12 +308,12 @@ class CMPIProvider(object):
 
     def references(self, ctx, rslt, objName, resultClass, role, props):
         self.env.ctx = ctx
-        piname = cmpi2pywbem_instname(objName)
+        piname = self.cmpi2pywbem_instname(objName)
 
         try:
             for i in self.proxy.MI_references(self.env, piname, 
                     resultClass, role, props):
-                cinst = pywbem2cmpi_inst(i)
+                cinst = self.pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
         except pywbem.CIMError, args:
             return args[:2]
@@ -321,18 +324,18 @@ class CMPIProvider(object):
     def invoke_method(self, ctx, rslt, objName, method, inargs, outargs):
         print '*** in invoke_method'
         self.env.ctx = ctx
-        op = cmpi2pywbem_instname(objName)
-        pinargs = cmpi2pywbem_args(inargs)
+        op = self.cmpi2pywbem_instname(objName)
+        pinargs = self.cmpi2pywbem_args(inargs)
         try:
             ((_type, rv), poutargs) = self.proxy.MI_invokeMethod(self.env, 
                     op, method, pinargs)
         except pywbem.CIMError, args:
             return args[:2]
 
-        pywbem2cmpi_args(poutargs, outargs)
+        self.pywbem2cmpi_args(poutargs, outargs)
 
 
-        data, _type = pywbem2cmpi_value(rv, _type=_type)
+        data, _type = self.pywbem2cmpi_value(rv, _type=_type)
         rslt.return_data(data, _pywbem2cmpi_typemap[_type])
         rslt.done()
         return (0, '')
@@ -371,196 +374,197 @@ class CMPIProvider(object):
         pass
 
 
-def cmpi2pywbem_inst(cmpiinst):
-    cop = cmpi2pywbem_instname(cmpiinst.objectpath())
-    props = {}
-    for i in xrange(0, cmpiinst.property_count()):
-        data, name = cmpiinst.get_property_at(i)
-        _type, is_array = cmpi_type2string(data.type)
-        pval = cmpi2pywbem_data(data, _type, is_array)
-        prop = pywbem.CIMProperty(name, pval, _type, is_array=is_array)
-        props[name] = prop
-    inst = pywbem.CIMInstance(cop.classname, props, path=cop)
-    return inst
+    def cmpi2pywbem_inst(self, cmpiinst):
+        cop = self.cmpi2pywbem_instname(cmpiinst.objectpath())
+        props = {}
+        for i in xrange(0, cmpiinst.property_count()):
+            data, name = cmpiinst.get_property_at(i)
+            _type, is_array = _cmpi_type2string(data.type)
+            pval = self.cmpi2pywbem_data(data, _type, is_array)
+            prop = pywbem.CIMProperty(name, pval, _type, is_array=is_array)
+            props[name] = prop
+        inst = pywbem.CIMInstance(cop.classname, props, path=cop)
+        return inst
 
-def cmpi2pywbem_args(cargs):
-    r = {}
-    for i in xrange(0, cargs.arg_count()):
-        data, name = cargs.get_arg_at(i)
-        _type, is_array = cmpi_type2string(data.type)
-        pval = cmpi2pywbem_data(data, _type, is_array)
-        r[name] = pval
-    return r
+    def cmpi2pywbem_args(self, cargs):
+        r = {}
+        for i in xrange(0, cargs.arg_count()):
+            data, name = cargs.get_arg_at(i)
+            _type, is_array = _cmpi_type2string(data.type)
+            pval = self.cmpi2pywbem_data(data, _type, is_array)
+            r[name] = pval
+        return r
 
-def pywbem2cmpi_args(pargs, cargs=None):
-    if cargs is None:
-        cargs = cmpi.CMPIArgs()
-    for name, (_type, pval) in pargs.items():
-        data, _type = pywbem2cmpi_value(pval, _type)
-        ctype = _pywbem2cmpi_typemap[_type]
-        if isinstance(pval, list):
-            ctype = ctype | cmpi.CMPI_ARRAY
-        cargs.set(str(name), data, ctype)
-    return cargs
-
-
-def pywbem2cmpi_inst(pinst):
-    pcop = pinst.path
-    if pcop is None:
-        pcop = pywbem.CIMInstanceName(pinst.classname)
-    cop = pywbem2cmpi_instname(pcop)
-    cinst = cmpi.CMPIInstance(cop)
-    for prop in pinst.properties.values():
-        data, _type = pywbem2cmpi_value(prop.value, _type=prop.type)
-        ctype = _pywbem2cmpi_typemap[_type]
-        if isinstance(prop.value, list):
-            ctype = ctype | cmpi.CMPI_ARRAY
-        cinst.set_property(str(prop.name), data, ctype)
-    return cinst
+    def pywbem2cmpi_args(self, pargs, cargs=None):
+        if cargs is None:
+            cargs = self.broker.new_args()
+        for name, (_type, pval) in pargs.items():
+            data, _type = self.pywbem2cmpi_value(pval, _type)
+            ctype = _pywbem2cmpi_typemap[_type]
+            if isinstance(pval, list):
+                ctype = ctype | cmpi.CMPI_ARRAY
+            cargs.set(str(name), data, ctype)
+        return cargs
 
 
-
-def cmpi2pywbem_instname(cmpiobjpath):
-    keys = {}
-    for i in xrange(0, cmpiobjpath.key_count()):
-        data,keyname = cmpiobjpath.get_key_at(i)
-        pval = cmpi2pywbem_data(data)
-        keys[keyname] = pval
-
-    rv = pywbem.CIMInstanceName(cmpiobjpath.classname(), 
-            keys, namespace=cmpiobjpath.namespace())
-    return rv
-
-def pywbem2cmpi_instname(iname):
-    cop = cmpi.CMPIObjectPath(iname.namespace, str(iname.classname))
-    for name, val in iname.keybindings.items():
-        data, _type = pywbem2cmpi_value(val)
-        cop.add_key(str(name), data, _pywbem2cmpi_typemap[_type])
-    return cop
-    
-def pywbem2cmpi_value(pdata, _type=None, cval=None):
-    if pdata is None:
-        assert(_type is not None)
-        return None, _type
-    is_array = isinstance(pdata, list)
-    if _type is None:
-        if isinstance(pdata, pywbem.CIMInstance):
-            _type = 'instance'
-        elif isinstance(pdata, pywbem.CIMInstanceName):
-            _type = 'reference'
-        else:
-            _type = pywbem.cimtype(pdata)
-    attr = _type
-    if cval is None:
-        cval = cmpi.CMPIValue()
-    if is_array:
-        ralen = len(pdata)
-        ctype = _pywbem2cmpi_typemap[_type]
-        car = cmpi.CMPIArray(ralen, ctype)
-        for i, rael in enumerate(pdata):
-            cv, tt = pywbem2cmpi_value(rael, _type=_type)
-            car.set(i, cv, ctype)
-        cval.array = car
-        return cval, _type
-    if _type == 'reference':
-        attr = 'ref'
-        pdata = pywbem2cmpi_instname(pdata)
-    elif _type == 'string':
-        pdata = cmpi.CMPIString(str(pdata))
-    elif _type == 'datetime':
-        attr = 'dateTime'
-        pdata = pywbem2cmpi_datetime(pdata)
-    elif _type == 'instance':
-        attr = 'inst'
-        pdata = pywbem2cmpi_inst(pdata)
-    setattr(cval, attr, pdata)
-    return cval, _type
-
-def cmpi2pywbem_value(cval, _type, is_array=False):
-    ctype = _type
-    if _type == 'reference':
-        ctype = 'ref' 
-    if is_array:
-        pval = []
-        car = cval.array
-        for i in xrange(0, car.size()):
-            data = car.at(i)
-            ptype = _cmpi2pywbem_typemap[data.type]
-            rael = cmpi2pywbem_value(data.value, _type)
-            pval.append(rael)
-    else:
-        cval = getattr(cval, ctype)
-        if _type == 'string':
-            pval = cval.to_s()
-        elif ctype == 'ref':
-            pval = cmpi2pywbem_instname(cval)
-        else:
-            pval = pywbem.tocimobj(_type, cval)
-    return pval
+    def pywbem2cmpi_inst(self, pinst):
+        pcop = pinst.path
+        if pcop is None:
+            pcop = pywbem.CIMInstanceName(pinst.classname)
+        cop = self.pywbem2cmpi_instname(pcop)
+        cinst = self.broker.new_instance(cop)
+        for prop in pinst.properties.values():
+            data, _type = self.pywbem2cmpi_value(prop.value, _type=prop.type)
+            ctype = _pywbem2cmpi_typemap[_type]
+            if isinstance(prop.value, list):
+                ctype = ctype | cmpi.CMPI_ARRAY
+            cinst.set_property(str(prop.name), data, ctype)
+        return cinst
 
 
 
-def pywbem2cmpi_data(pdata, _type=None):
-    is_array = isinstance(pdata, list)
-    if _type is None:
-        _type = pywbem.cimtype(pdata)
-    # This doesn't work below.  cmpi.CMPIData() takes a CMPIData argument. ??
-    data = cmpi.CMPIData()
-    data.state = 0
-    data.type = pywbem2cmpi_typemap[_type]
-    if is_array:
-        data.type = data.type | cmpi.CMPI_ARRAY
-    if _type == 'reference':
-        _type = 'ref'
-        pdata = pywbem2cmpi_instname(pdata)
-    pywbem2cmpi_value(pdata, _type, data.value)
-    return data
+    def cmpi2pywbem_instname(self, cmpiobjpath):
+        keys = {}
+        for i in xrange(0, cmpiobjpath.key_count()):
+            data,keyname = cmpiobjpath.get_key_at(i)
+            pval = self.cmpi2pywbem_data(data)
+            keys[keyname] = pval
 
-
-
-def cmpi2pywbem_data(cdata, _type=None, is_array=None):
-    #TODO check for valid cdata.state
-    #TODO error handling
-    if _type is None:
-        _type, is_array = cmpi_type2string(cdata.type)
-    attr = _type
-    if is_array:
-        rv = []
-        car = cdata.value.array
-        if car is None:
-            return None
-        for i in xrange(0, car.size()):
-            adata = car.at(i)
-            pdata = cmpi2pywbem_data(adata, _type, is_array=False)
-            rv.append(pdata)
+        rv = pywbem.CIMInstanceName(cmpiobjpath.classname(), 
+                keys, namespace=cmpiobjpath.namespace())
         return rv
-    if attr == 'datetime':
-        attr = 'dateTime'
-    if attr == 'reference':
-        attr = 'ref'
-    if attr == 'instance':
-        attr = 'inst'
-    val = getattr(cdata.value, attr)
-    if val is None:
-        return None
-    if _type == 'string':
-        val = val.to_s()
-    if _type == 'boolean':
-        val = val == 0 and 'false' or 'true'
-    if _type == 'datetime':
-        val = cmpi2pywbem_datetime(val)
-    if _type == 'reference':
-        val = cmpi2pywbem_instname(val)
-    if _type == 'instance':
-        val = cmpi2pywbem_inst(val)
-        return val
-    return pywbem.tocimobj(_type, val)
 
-def cmpi2pywbem_datetime(dt):
-    return pywbem.CIMDateTime(dt.to_s())
+    def pywbem2cmpi_instname(self, iname):
+        cop = self.broker.new_object_path(iname.namespace, str(iname.classname))
+        for name, val in iname.keybindings.items():
+            data, _type = self.pywbem2cmpi_value(val)
+            cop.add_key(str(name), data, _pywbem2cmpi_typemap[_type])
+        return cop
+        
+    def pywbem2cmpi_value(self, pdata, _type=None, cval=None):
+        if pdata is None:
+            assert(_type is not None)
+            return None, _type
+        is_array = isinstance(pdata, list)
+        if _type is None:
+            if isinstance(pdata, pywbem.CIMInstance):
+                _type = 'instance'
+            elif isinstance(pdata, pywbem.CIMInstanceName):
+                _type = 'reference'
+            else:
+                _type = pywbem.cimtype(pdata)
+        attr = _type
+        if cval is None:
+            cval = cmpi.CMPIValue()
+        if is_array:
+            ralen = len(pdata)
+            ctype = _pywbem2cmpi_typemap[_type]
+            car = self.broker.new_array(ralen, ctype)
+            for i, rael in enumerate(pdata):
+                cv, tt = self.pywbem2cmpi_value(rael, _type=_type)
+                car.set(i, cv, ctype)
+            cval.array = car
+            return cval, _type
+        if _type == 'reference':
+            attr = 'ref'
+            pdata = self.pywbem2cmpi_instname(pdata)
+        elif _type == 'string':
+            pdata = self.broker.new_string(str(pdata))
+        elif _type == 'datetime':
+            attr = 'dateTime'
+            pdata = self.pywbem2cmpi_datetime(pdata)
+        elif _type == 'instance':
+            attr = 'inst'
+            pdata = self.pywbem2cmpi_inst(pdata)
+        setattr(cval, attr, pdata)
+        return cval, _type
 
-def pywbem2cmpi_datetime(dt):
-    return cmpi.CMPIDateTime(str(dt))
+    def cmpi2pywbem_value(self, cval, _type, is_array=False):
+        ctype = _type
+        if _type == 'reference':
+            ctype = 'ref' 
+        if is_array:
+            pval = []
+            car = cval.array
+            for i in xrange(0, car.size()):
+                data = car.at(i)
+                ptype = _cmpi2pywbem_typemap[data.type]
+                rael = self.cmpi2pywbem_value(data.value, _type)
+                pval.append(rael)
+        else:
+            cval = getattr(cval, ctype)
+            if _type == 'string':
+                pval = cval.to_s()
+            elif ctype == 'ref':
+                pval = self.cmpi2pywbem_instname(cval)
+            else:
+                pval = pywbem.tocimobj(_type, cval)
+        return pval
+
+
+
+    def pywbem2cmpi_data(self, pdata, _type=None):
+        is_array = isinstance(pdata, list)
+        if _type is None:
+            _type = pywbem.cimtype(pdata)
+        # This doesn't work below.  cmpi.CMPIData() takes a CMPIData argument. ??
+        data = cmpi.CMPIData()
+        data.state = 0
+        data.type = _pywbem2cmpi_typemap[_type]
+        if is_array:
+            data.type = data.type | cmpi.CMPI_ARRAY
+        if _type == 'reference':
+            _type = 'ref'
+            pdata = self.pywbem2cmpi_instname(pdata)
+        self.pywbem2cmpi_value(pdata, _type, data.value)
+        return data
+
+
+
+    def cmpi2pywbem_data(self, cdata, _type=None, is_array=None):
+        #TODO check for valid cdata.state
+        #TODO error handling
+        if _type is None:
+            _type, is_array = _cmpi_type2string(cdata.type)
+        attr = _type
+        if is_array:
+            rv = []
+            car = cdata.value.array
+            if car is None:
+                return None
+            for i in xrange(0, car.size()):
+                adata = car.at(i)
+                pdata = self.cmpi2pywbem_data(adata, _type, is_array=False)
+                rv.append(pdata)
+            return rv
+        if attr == 'datetime':
+            attr = 'dateTime'
+        if attr == 'reference':
+            attr = 'ref'
+        if attr == 'instance':
+            attr = 'inst'
+        val = getattr(cdata.value, attr)
+        if val is None:
+            return None
+        if _type == 'string':
+            val = val.to_s()
+        if _type == 'boolean':
+            val = val == 0 and 'false' or 'true'
+        if _type == 'datetime':
+            val = self.cmpi2pywbem_datetime(val)
+        if _type == 'reference':
+            val = self.cmpi2pywbem_instname(val)
+        if _type == 'instance':
+            val = self.cmpi2pywbem_inst(val)
+            return val
+        return pywbem.tocimobj(_type, val)
+
+    def cmpi2pywbem_datetime(self, dt):
+        return pywbem.CIMDateTime(dt.to_s())
+
+    def pywbem2cmpi_datetime(self, dt):
+        return self.broker.new_datetime_from_string(str(dt))
+
 
 _pywbem2cmpi_typemap = {
         'boolean'       : cmpi.CMPI_boolean,
@@ -609,7 +613,7 @@ _cmpi2pywbem_typemap = {
         #cmpi.CMPI_char16      : 'char16'
         }
 
-def cmpi_type2string(itype):
+def _cmpi_type2string(itype):
     """ Convert an unsigned short CMPIType to the string representation of 
     the type.
 
@@ -641,7 +645,7 @@ def traceback2string(_type, value, tb):
     '''
 
 
-def test_conversions():
+def test_conversions(proxy):
     s = 'foo'
     cs, _type = pywbem2cmpi_value(s)
     assert(cs.string.to_s() == s)
@@ -717,7 +721,7 @@ def test_conversions():
     cdt = pywbem2cmpi_datetime(pdt)
     ndt = cmpi2pywbem_datetime(cdt)
     assert(pdt == ndt)
-    cdt = cmpi.CMPIDateTime('20080623144759.823564-360')
+    cdt = proxy.broker.new_datetime_from_string('20080623144759.823564-360')
     print '** ctd.is_interval()', cdt.is_interval()
     print '** ctd.to_s()', cdt.to_s()
 

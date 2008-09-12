@@ -106,20 +106,6 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 #
 
 %extend _CMPIError {
-  /* Create a new CMPIError object.
-  * owner: Identifies the entity that owns the msg format definition.
-  * msgID: Identifies the format of the message.
-  * msg: Formatted and translated message.
-  * sev: Perceived severity of this error.
-  * pc: Probable caues of this error.
-  * cimStatusCodeStatus: Code.
-  */
-  CMPIError(const char *owner, const char* msgID, const char* msg,
-     const CMPIErrorSeverity sev, const CMPIErrorProbableCause pc,
-     const CMPIrc cimStatusCode)
-  {
-    return CMNewCMPIError(_BROKER, owner, msgID, msg, sev, pc, cimStatusCode, NULL);    
-  }
   ~CMPIError() { }
   /* Gets the type of this Error */
   CMPIErrorType type() {
@@ -256,8 +242,8 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 %extend _CMPIResult {
   /* no con-/destructor, the broker handles this */
   
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 
@@ -275,23 +261,6 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPIMsgFileHandle
-#
-
-%extend _CMPIMsgFileHandle {
-  CMPIMsgFileHandle(const char *msgFile) {
-    CMPIMsgFileHandle *handle = calloc(1, sizeof( CMPIMsgFileHandle ));
-    CMPIStatus st = CMOpenMessageFile(_BROKER, msgFile, handle);
-    if (st.rc != CMPI_RC_OK)
-      abort();
-    return handle;
-  }
-  ~CMPIMsgFileHandle() {
-    CMCloseMessageFile( _BROKER, $self );
-  }
-}
 
 #-----------------------------------------------------
 #
@@ -299,12 +268,7 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 #
 
 %extend _CMPIObjectPath {
-  /* nm: namespace */
-  CMPIObjectPath( const char *nm, const char* classname ) {
-    CMPIObjectPath *path = CMNewObjectPath(_BROKER, nm, classname, NULL);
-/*    fprintf( stderr, "CMNewObjectPath: %p\n", path ); */
-    return path;
-  }
+  /* no ctor.  use method on broker instead.  */
   ~CMPIObjectPath( ) { }
   /**
    * Create an independent copy of this ObjectPath object. The resulting
@@ -313,19 +277,8 @@ FIXME: if clone() is exposed, release() must also
   CMPIObjectPath *clone() {
     return $self->ft->clone( $self, NULL );
   }
-   */	     
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
-    return CMGetCharPtr(s);
-  }
-  
-  /* Function to determine whether the class specified by the object path is of &lt;type&gt;
-   * or any of &lt;type&gt; subclasses.
-   * type: The type to tested for.
-   */
-  int is_a(const char *type) {
-    return CMClassPathIsA(_BROKER, $self, type, NULL);
-  }
+   */     
+
   /* Adds/replaces a named key property.
    * name: Key property name.
    * value: Address of value structure.
@@ -503,21 +456,7 @@ FIXME: if clone() is exposed, release() must also
 
 %extend _CMPIInstance {
   /* path: ObjectPath containing namespace and classname. */
-  CMPIInstance(CMPIObjectPath *path) {
-    CMPIInstance *inst = CMNewInstance(_BROKER, path, NULL);
-#if 0
-fprintf(stderr, "CMNewInstance( path %p ) -> %p [%d:%s]\n", path,
-inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
-    CMPIString *s = CDToString(_BROKER, path, NULL);
-  fprintf(stderr, "path : %s\n", CMGetCharPtr(s));
-#endif	
-  return inst;
-  }
   ~CMPIInstance() { }
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
-    return CMGetCharPtr(s);
-  }
 
   /* Adds/replaces a named Property.
    * name: Entry name.
@@ -545,31 +484,31 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
     switch (TYPE(data)) {
       case T_FLOAT:
         value->Float = RFLOAT(data)->value;
-	type = CMPI_real32;
+    type = CMPI_real32;
       break;
       case T_STRING:
         value->string = CMNewString(_BROKER, StringValuePtr(data), NULL);
-	type = CMPI_string;
+    type = CMPI_string;
       break; 
       case T_FIXNUM:
         value->Int = FIX2ULONG(data);
-	type = CMPI_uint32;
+    type = CMPI_uint32;
       break;
       case T_TRUE:
         value->boolean = 1;
-	type = CMPI_boolean;
+    type = CMPI_boolean;
       break;
       case T_FALSE:
         value->boolean = 0;
-	type = CMPI_boolean;
+    type = CMPI_boolean;
       break;
       case T_SYMBOL:
         value->string = CMNewString(_BROKER, rb_id2name(SYM2ID( data )), NULL);
-	type = CMPI_string;
+    type = CMPI_string;
       break;
       default:
         value->chars = NULL;
-	type = CMPI_null;
+    type = CMPI_null;
         break;
     }
     return CMSetProperty( $self, name, value, type );
@@ -689,9 +628,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIArgs
 
 %extend _CMPIArgs {
-  CMPIArgs() {
-    return CMNewArgs(_BROKER, NULL);
-  }
   ~CMPIArgs() { }
   
   /* Adds/replaces a named argument. */
@@ -748,16 +684,10 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 %extend _CMPISelectExp {
   /* This structure encompasses queries
    *       and provides mechanism to operate on the query.
-   * query: The select expression.
-   * lang: The query language.
-   * projection [Output]: Projection specification (suppressed when NULL).
    */
-  CMPISelectExp(const char *query, const char *lang, CMPIArray **projection) {
-    return CMNewSelectExp(_BROKER, query, lang, projection, NULL);
-  }
   ~CMPISelectExp() { }
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 }
@@ -767,8 +697,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPISelectCond
 
 %extend _CMPISelectCond {
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 }
@@ -785,8 +715,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIPredicate
 
 %extend _CMPIPredicate {
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 }
@@ -822,8 +752,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
   CMPIArray *toArray() {
     return CMToArray( $self, NULL );
   }
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 }
@@ -833,14 +763,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIArray
 
 %extend _CMPIArray {
-  /* count: Maximum number of elements
-   * type: Element type
-   */
-  CMPIArray(int count, CMPIType type ) {
-    return CMNewArray( _BROKER, count, type, NULL);
-  }
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
   int size() {
@@ -872,9 +796,6 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIString
 
 %extend _CMPIString {
-  CMPIString(const char *s) {
-    return CMNewString(_BROKER, s, NULL);
-  }
   const char* to_s() {
     return CMGetCharPtr($self);
   }
@@ -885,8 +806,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIContext
 
 %extend _CMPIContext {
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 }
@@ -896,23 +817,7 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
 # CMPIDateTime
 
 %extend _CMPIDateTime {
-  /* Initialized with the time of day. */
-  CMPIDateTime(void) {
-    return CMNewDateTime(_BROKER, NULL);
-  }
   ~CMPIDateTime() { }
-  /* bintime: Date/Time definition in binary format in microsecods
-   *          starting since 00:00:00 GMT, Jan 1,1970.
-   * interval: Wenn true, defines Date/Time definition to be an interval value
-   */
-  CMPIDateTime(uint64_t bintime, int interval = 0 ) {
-    return CMNewDateTimeFromBinary(_BROKER, bintime, interval, NULL);
-  }
-  /* utc Date/Time definition in UTC format */
-  CMPIDateTime(const char *utc) {
-    return CMNewDateTimeFromChars(_BROKER, utc, NULL);
-  }
-
   const char* to_s() {
     return CMGetCharPtr( CMGetStringFormat( $self, NULL ) );
   }

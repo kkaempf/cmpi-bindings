@@ -62,84 +62,6 @@ void _logstderr(char *fmt,...)
 /*
 **==============================================================================
 **
-** _get_broker()
-**
-**==============================================================================
-*/
-
-pthread_key_t _cmpi_broker_key;
-pthread_once_t _cmpi_broker_key_once = PTHREAD_ONCE_INIT;
-
-typedef struct _CMPIBrokerElem
-{
-    const CMPIBroker* broker;
-    struct _CMPIBrokerElem* next;
-}
-CMPIBrokerElem;
-
-static void _once()
-{
-    pthread_key_create(&_cmpi_broker_key, NULL);
-}
-
-static const CMPIBroker* _get_broker()
-{
-    CMPIBrokerElem* e;
-
-    pthread_once(&_cmpi_broker_key_once, _once);
-
-    if (!(e = (CMPIBrokerElem*)pthread_getspecific(_cmpi_broker_key)))
-        return NULL;
-
-    return e->broker;
-}
-
-static void _push_broker(const CMPIBroker* broker)
-{
-    CMPIBrokerElem* e;
-
-    printf("****** PUSH(%p)\n", broker);
-
-    if (!broker)
-    {
-        assert("_push_broker() failed" == NULL);
-        return;
-    }
-
-    pthread_once(&_cmpi_broker_key_once, _once);
-    e = (CMPIBrokerElem*)malloc(sizeof(CMPIBrokerElem));
-    e->broker = broker;
-    e->next = (CMPIBrokerElem*)pthread_getspecific(_cmpi_broker_key);
-    pthread_setspecific(_cmpi_broker_key, e);
-}
-
-static const CMPIBroker* _pop_broker()
-{
-    CMPIBrokerElem* e;
-    const CMPIBroker* broker;
-    pthread_once(&_cmpi_broker_key_once, _once);
-
-    if (!(e = (CMPIBrokerElem*)pthread_getspecific(_cmpi_broker_key)))
-    {
-        assert("_pop_broker() failed" == NULL);
-        return NULL;
-    }
-
-    pthread_setspecific(_cmpi_broker_key, e->next);
-
-    broker = e->broker;
-    free(e);
-
-    printf("****** POP(%p)\n", broker);
-
-    return broker;
-}
-
-#define _BROKER _get_broker()
-
-/*
-**==============================================================================
-**
 ** Local definitions:
 **
 **==============================================================================
@@ -581,11 +503,6 @@ exit:
     return status;
 }
 
-static const CMPIBroker* _broker_of(const void* hdl)
-{
-    const PyProviderMIHandle* ptr = (const PyProviderMIHandle*)hdl;
-    return ptr->broker;
-}
 
 /*
 **==============================================================================
@@ -600,12 +517,8 @@ static CMPIStatus InstCleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
-    _push_broker(cb);
-
     _SBLIM_TRACE(1,("Cleanup(Python) called for Instance provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
     CMPIStatus st = Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
-    _pop_broker();
     return st;
 }
 
@@ -614,12 +527,8 @@ static CMPIStatus AssocCleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
-    _push_broker(cb);
-
     _SBLIM_TRACE(1,("Cleanup(Python) called for Association provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
     CMPIStatus st = Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
-    _pop_broker();
     return st;
 }
 
@@ -628,12 +537,8 @@ static CMPIStatus MethodCleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
-    _push_broker(cb);
-
     _SBLIM_TRACE(1,("Cleanup(Python) called for Method provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
     CMPIStatus st = Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
-    _pop_broker();
     return st;
 }
 
@@ -642,12 +547,8 @@ static CMPIStatus IndicationCleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
-    _push_broker(cb);
-
     _SBLIM_TRACE(1,("Cleanup(Python) called for Indication provider %s", ((PyProviderMIHandle *)self->hdl)->miName));
     CMPIStatus st = Cleanup((PyProviderMIHandle*)self->hdl, context, terminating); 
-    _pop_broker();
     return st;
 }
 
@@ -661,10 +562,7 @@ static CMPIStatus EnumInstanceNames(
         const CMPIResult * result,
         const CMPIObjectPath * reference)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_OK, NULL};
-    _push_broker(cb);
-
     _SBLIM_TRACE(1,("EnumInstanceNames() called"));
 
     _SBLIM_TRACE(1,("EnumInstancesNames(Python) called, context %p, result %p, reference %p", context, result, reference));
@@ -684,7 +582,6 @@ static CMPIStatus EnumInstanceNames(
 
 exit:
    _SBLIM_TRACE(1,("EnumInstanceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -700,10 +597,8 @@ static CMPIStatus EnumInstances(
         const CMPIObjectPath * reference,
         const char ** properties)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_OK, NULL};  /* Return status of CIM operations */
     /*   char * namespace = CMGetCharPtr(CMGetNameSpace(reference, NULL));  Our current CIM namespace */
-    _push_broker(cb);
 
     _SBLIM_TRACE(1,("EnumInstances(Python) called, context %p, result %p, reference %p, properties %p", context, result, reference, properties));
 
@@ -724,7 +619,6 @@ static CMPIStatus EnumInstances(
 
 exit:
    _SBLIM_TRACE(1,("EnumInstances() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -740,9 +634,7 @@ static CMPIStatus GetInstance(
         const CMPIObjectPath * reference,
         const char ** properties)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_OK, NULL};  /* Return status of CIM operations */
-    _push_broker(cb);
 
     _SBLIM_TRACE(1,("GetInstance(Python) called, context %p, results %p, reference %p, properties %p", context, results, reference, properties));
 
@@ -763,7 +655,6 @@ static CMPIStatus GetInstance(
 
 exit:
    _SBLIM_TRACE(1,("GetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -779,9 +670,7 @@ static CMPIStatus CreateInstance(
         const CMPIObjectPath * reference,
         const CMPIInstance * newinstance)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
    CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};   /* Return status of CIM operations. */
-    _push_broker(cb);
    
    /* Creating new instances is not supported for this class. */
   
@@ -805,7 +694,6 @@ static CMPIStatus CreateInstance(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("CreateInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -825,9 +713,7 @@ static CMPIStatus SetInstance(
         const CMPIInstance * newinstance,
         const char ** properties)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};   /* Return status of CIM operations. */
-    _push_broker(cb);
    
    /* Modifying existing instances is not supported for this class. */
  
@@ -853,7 +739,6 @@ static CMPIStatus SetInstance(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("SetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -867,9 +752,7 @@ static CMPIStatus DeleteInstance(
         const CMPIResult * results, 
         const CMPIObjectPath * reference)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_OK, NULL};  
-    _push_broker(cb);
 
     _SBLIM_TRACE(1,("DeleteInstance(Python) called, context %p, results %p, reference %p", context, results, reference));
 
@@ -889,7 +772,6 @@ static CMPIStatus DeleteInstance(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("DeleteInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -905,9 +787,7 @@ static CMPIStatus ExecQuery(
         const char * query,
         const char * language)  
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};   /* Return status of CIM operations. */
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("ExecQuery(Python) called, context %p, results %p, reference %p, query %s, language %s", context, results, reference, query, language));
 
@@ -933,7 +813,6 @@ static CMPIStatus ExecQuery(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("ExecQuery() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -953,9 +832,7 @@ CMPIStatus associatorNames(
         const char* role,
         const char* resultRole)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("associatorNames(Python) called, ctx %p, rslt %p, objName %p, assocClass %s, resultClass %s, role %s, resultRole %s", ctx, rslt, objName, assocClass, resultClass, role, resultRole));
 
@@ -1001,7 +878,6 @@ CMPIStatus associatorNames(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("associatorNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1017,9 +893,7 @@ CMPIStatus associators(
         const char* resultRole,
         const char** properties)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("associators(Python) called, ctx %p, rslt %p, objName %p, assocClass %s, resultClass %s, role %s, resultRole %s", ctx, rslt, objName, assocClass, resultClass, role, resultRole));
 
@@ -1067,7 +941,6 @@ CMPIStatus associators(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("associators() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1080,9 +953,7 @@ CMPIStatus referenceNames(
         const char* resultClass,
         const char* role)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("referenceNames(Python) called, ctx %p, rslt %p, objName %p, resultClass %s, role %s", ctx, rslt, objName, resultClass, role));
 
@@ -1116,7 +987,6 @@ CMPIStatus referenceNames(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("referenceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1131,9 +1001,7 @@ CMPIStatus references(
         const char* role,
         const char** properties)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("references(Python) called, ctx %p, rslt %p, objName %p, resultClass %s, role %s, properties %p", ctx, rslt, objName, resultClass, role, properties));
 
@@ -1167,7 +1035,6 @@ CMPIStatus references(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("references() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1181,9 +1048,7 @@ CMPIStatus invokeMethod(
         const CMPIArgs* in,
         CMPIArgs* out)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("invokeMethod(Python) called, ctx %p, rslt %p, objName %p, method %s, in %p, out %p", ctx, rslt, objName, method, in, out));
 
@@ -1209,7 +1074,6 @@ CMPIStatus invokeMethod(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("invokeMethod() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1222,9 +1086,7 @@ CMPIStatus authorizeFilter(
         const CMPIObjectPath* classPath,
         const char* owner)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("authorizeFilter(Python) called, ctx %p, filter %p, className %s, classPath %p, owner %s", ctx, filter, className, classPath, owner)); 
 
@@ -1248,7 +1110,6 @@ CMPIStatus authorizeFilter(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("authorizeFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1261,9 +1122,7 @@ CMPIStatus activateFilter(
         const CMPIObjectPath* classPath,
         CMPIBoolean firstActivation)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("activateFilter(Python) called, ctx %p, filter %p, className %s, classPath %p, firstActivation %d", ctx, filter, className, classPath, firstActivation));
 
@@ -1287,7 +1146,6 @@ CMPIStatus activateFilter(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("activateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1300,9 +1158,7 @@ CMPIStatus deActivateFilter(
         const CMPIObjectPath* classPath,
         CMPIBoolean lastActivation)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("deActivateFilter(Python) called, ctx %p, filter %p, className %s, classPath %p, lastActivation %d", ctx, filter, className, classPath, lastActivation));
 
@@ -1326,7 +1182,6 @@ CMPIStatus deActivateFilter(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("deActivateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1342,9 +1197,7 @@ CMPIStatus mustPoll(
         const char* className,
         const CMPIObjectPath* classPath)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     //_SBLIM_TRACE(1,("mustPoll(Python) called, ctx %p, rslt %p, filter %p, className %s, classPath %p", ctx, rslt, filter, className, classPath));
     _SBLIM_TRACE(1,("mustPoll(Python) called, ctx %p, filter %p, className %s, classPath %p", ctx, filter, className, classPath));
@@ -1369,7 +1222,6 @@ CMPIStatus mustPoll(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("mustPoll() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 }
 
@@ -1379,9 +1231,7 @@ CMPIStatus enableIndications(
         CMPIIndicationMI* self,
         const CMPIContext* ctx)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("enableIndications(Python) called, ctx %p", ctx));
 
@@ -1396,7 +1246,6 @@ CMPIStatus enableIndications(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("enableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 
 }
@@ -1406,9 +1255,7 @@ CMPIStatus disableIndications(
         CMPIIndicationMI* self,
         const CMPIContext* ctx)
 {
-    const CMPIBroker* cb = _broker_of(self->hdl);
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-    _push_broker(cb);
    
     _SBLIM_TRACE(1,("disableIndications(Python) called, ctx %p", ctx));
 
@@ -1423,7 +1270,6 @@ CMPIStatus disableIndications(
    /* Finished. */
 exit:
    _SBLIM_TRACE(1,("disableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-    _pop_broker();
    return status;
 
 }

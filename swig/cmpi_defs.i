@@ -109,8 +109,8 @@
   %rename("ok?") is_ok;
 #endif
   int is_ok() { return $self->rc == CMPI_RC_OK; }
-  const char* to_s() {
-    CMPIString *s = CDToString(_BROKER, $self, NULL);
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
 }
