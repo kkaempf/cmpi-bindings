@@ -410,9 +410,8 @@ FIXME: if clone() is exposed, release() must also
     return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
 #endif
 #if defined (SWIGPYTHON)
-    #TODO memory leak alert (clone_data)
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
@@ -627,9 +626,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
     return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
 #endif
 #if defined (SWIGPYTHON)
-    #TODO memory leak alert (clone_data)
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
@@ -725,9 +723,8 @@ inst, status.rc, status.msg?CMGetCharPtr(status.msg):"<NULL>" );
     return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
 #endif
 #if defined (SWIGPYTHON)
-    #TODO memory leak alert (clone_data)
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
