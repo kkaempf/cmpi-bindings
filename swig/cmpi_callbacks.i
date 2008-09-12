@@ -9,7 +9,6 @@ typedef struct _CMPIBroker {} CMPIBroker;
 
 
 %extend CMPIBroker {
-  /* TODO remove CMPIBroker() { return _BROKER; } */
   void LogMessage(int severity, const char *id, const char *text) {
     CMLogMessage($self, severity, id, text, NULL);
   }
