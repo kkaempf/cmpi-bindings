@@ -497,8 +497,6 @@ static CMPIStatus Cleanup(
     }
     pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   
-    /* Finished. */
-exit:
     _SBLIM_TRACE(1,("Cleanup() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
     return status;
 }
@@ -580,7 +578,6 @@ static CMPIStatus EnumInstanceNames(
                                                         pyresult,
                                                         pyreference); 
 
-exit:
    _SBLIM_TRACE(1,("EnumInstanceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -617,7 +614,6 @@ static CMPIStatus EnumInstances(
                                                                pyreference,
                                                                pyproperties); 
 
-exit:
    _SBLIM_TRACE(1,("EnumInstances() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -653,7 +649,6 @@ static CMPIStatus GetInstance(
                                                                pyreference,
                                                                pyproperties); 
 
-exit:
    _SBLIM_TRACE(1,("GetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -691,8 +686,6 @@ static CMPIStatus CreateInstance(
                                                                pyreference,
                                                                pynewinst); 
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("CreateInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -736,8 +729,6 @@ static CMPIStatus SetInstance(
                                                                pynewinst,
                                                                plist); 
   
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("SetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -769,8 +760,6 @@ static CMPIStatus DeleteInstance(
                                                                pyresult, 
                                                                pyreference); 
   
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("DeleteInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -810,8 +799,6 @@ static CMPIStatus ExecQuery(
 
    /* Query filtering is not supported for this class. */
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("ExecQuery() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -873,10 +860,7 @@ CMPIStatus associatorNames(
                                                                pyrole,
                                                                pyresultRole); 
 
-   /* Query filtering is not supported for this class. */
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("associatorNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -936,10 +920,7 @@ CMPIStatus associators(
                                                                pyresultRole,
                                                                pyprops); 
 
-   /* Query filtering is not supported for this class. */
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("associators() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -982,10 +963,7 @@ CMPIStatus referenceNames(
                                                                pyresultClass,
                                                                pyrole); 
 
-   /* Query filtering is not supported for this class. */
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("referenceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1032,8 +1010,6 @@ CMPIStatus references(
                                                                pyrole,
                                                                pyprops); 
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("references() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1071,8 +1047,6 @@ CMPIStatus invokeMethod(
                                                                pyin,
                                                                pyout); 
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("invokeMethod() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1107,8 +1081,6 @@ CMPIStatus authorizeFilter(
                                                                pyclassPath,
                                                                pyowner);
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("authorizeFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1143,8 +1115,6 @@ CMPIStatus activateFilter(
                                                                pyclassPath,
                                                                pyfirstActivation);
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("activateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1179,8 +1149,6 @@ CMPIStatus deActivateFilter(
                                                                pyclassPath,
                                                                pylastActivation);
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("deActivateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1219,8 +1187,6 @@ CMPIStatus mustPoll(
                                                                pyclassName,
                                                                pyclassPath);
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("mustPoll() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
@@ -1243,8 +1209,6 @@ CMPIStatus enableIndications(
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "enable_indications", 1, pyctx); 
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("enableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 
@@ -1267,8 +1231,6 @@ CMPIStatus disableIndications(
 
     call_py_provider((PyProviderMIHandle*)self->hdl, &status, "disable_indications", 1, pyctx); 
 
-   /* Finished. */
-exit:
    _SBLIM_TRACE(1,("disableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 
