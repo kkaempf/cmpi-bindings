@@ -198,7 +198,7 @@ string2py(const char *s)
 
 #define TB_ERROR(str) {tbstr = str; goto cleanup;}
 static CMPIString*
-get_exc_trace()
+get_exc_trace(const CMPIBroker* broker)
 {
     char *tbstr = NULL; 
 
@@ -267,7 +267,7 @@ get_exc_trace()
     tbstr = PyString_AsString(newstr); 
 
     char* tmp = fmtstr("cmpi:%s", tbstr); 
-    rv = _BROKER->eft->newString(_BROKER, tmp, NULL); 
+    rv = broker->eft->newString(broker, tmp, NULL); 
     free(tmp); 
 
 cleanup:
@@ -275,7 +275,7 @@ cleanup:
 
     if (rv == NULL)
     {
-        rv = _BROKER->eft->newString(_BROKER, tbstr ? tbstr : "", NULL);    
+        rv = broker->eft->newString(broker, tbstr ? tbstr : "", NULL);    
     }
 
     Py_DecRef(func);
@@ -294,7 +294,7 @@ cleanup:
 
 SWIGEXPORT void SWIG_init(void);
 #define PY_CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
-static int PyGlobalInitialize(CMPIStatus* st)
+static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
   int rc = 0; 
 
@@ -321,7 +321,7 @@ static int PyGlobalInitialize(CMPIStatus* st)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
       _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_bindings failed", getpid(), pthread_self()));
-      PY_CMPI_SETFAIL(get_exc_trace()); 
+      PY_CMPI_SETFAIL(get_exc_trace(broker)); 
       abort();
       return -1; 
     }
@@ -344,7 +344,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
       perror("Can't lock _CMPI_INIT_MUTEX");
       abort();
   }
-  rc = PyGlobalInitialize(st); 
+  rc = PyGlobalInitialize(hdl->broker, st); 
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (rc != 0)
   {
@@ -359,10 +359,10 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   if (provclass == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      PY_CMPI_SETFAIL(get_exc_trace()); 
+      PY_CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
       return -1; 
     }
-  PyObject* broker = SWIG_NewPointerObj((void*) _BROKER, SWIGTYPE_p__CMPIBroker, 0);
+  PyObject* broker = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
   PyObject* args = PyTuple_New(2); 
   _SBLIM_TRACE(1,("\n<%d/0x%x> >>>>> PyInitialize(Python) called, MINAME=%s\n",
                getpid(), pthread_self(), hdl->miName));
@@ -374,7 +374,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   if (provinst == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      PY_CMPI_SETFAIL(get_exc_trace()); 
+      PY_CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
       return -1; 
     }
   
@@ -431,7 +431,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
         char* str = fmtstr("Python module does not contain \"%s\"", opname); 
         _SBLIM_TRACE(1,(str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
-        st->msg = _BROKER->eft->newString(_BROKER, str, NULL); 
+        st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
         rc = 1; 
         goto cleanup; 
@@ -442,7 +442,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
                 opname); 
         _SBLIM_TRACE(1,(str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
-        st->msg = _BROKER->eft->newString(_BROKER, str, NULL); 
+        st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
         rc = 1; 
         goto cleanup; 
@@ -465,7 +465,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     if (PyErr_Occurred())
     {
         st->rc = CMPI_RC_ERR_FAILED; 
-        st->msg = get_exc_trace(); 
+        st->msg = get_exc_trace(hdl->broker); 
         PyErr_Clear(); 
         rc = 1; 
         goto cleanup; 
@@ -479,7 +479,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
                 opname); 
         _SBLIM_TRACE(1,(str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
-        st->msg = _BROKER->eft->newString(_BROKER, str, NULL); 
+        st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
         rc = 1; 
         SWIG_PYTHON_THREAD_END_ALLOW; 
@@ -498,7 +498,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
         char* str = fmtstr("Python function \"%s\" didn't return a {<int>, <str>) two-tuple", opname); 
         _SBLIM_TRACE(1,(str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
-        st->msg = _BROKER->eft->newString(_BROKER, str, NULL); 
+        st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
         rc = 1; 
         SWIG_PYTHON_THREAD_END_ALLOW; 
@@ -509,12 +509,13 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     if (prstr == Py_None)
     {
         SWIG_PYTHON_THREAD_BEGIN_ALLOW;
-        st->msg = _BROKER->eft->newString(_BROKER, "", NULL); 
+        st->msg = hdl->broker->eft->newString(hdl->broker, "", NULL); 
         SWIG_PYTHON_THREAD_END_ALLOW; 
     }
     else
     {
-        st->msg = _BROKER->eft->newString(_BROKER, PyString_AsString(prstr), NULL); 
+        st->msg = hdl->broker->eft->newString(hdl->broker, 
+				PyString_AsString(prstr), NULL); 
     }
     rc = pi != 0; 
 cleanup:
@@ -748,10 +749,6 @@ static CMPIStatus GetInstance(
     PY_CMPI_INIT
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    {
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    }
     PyObject *pycontext = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     PyObject *pyresult = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     PyObject *pyreference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
@@ -1489,7 +1486,6 @@ static void createInit(const CMPIBroker* broker,
 {
     _SBLIM_TRACE(1,("\n>>>>> createInit(Python) called, miname= %s (ctx=%p)\n", miname, context));
   
-   //_MINAME = strdup(miname); 
    /*
     * We can't initialize Python here and load Python modules, because
     * SFCB passes a NULL CMPIStatus* st, which means we can't report 

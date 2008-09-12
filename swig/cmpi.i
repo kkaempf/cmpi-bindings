@@ -43,6 +43,6 @@ clone_data(const CMPIData *dp)
 # Data types
 %include "cmpi_types.i"
 
-# _BROKER callbacks
+# Broker callbacks
 %include "cmpi_callbacks.i"
 
