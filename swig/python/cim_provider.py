@@ -649,7 +649,7 @@ class CIMProvider(object):
         if not assocClassName:
             raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                     "Empty assocClassName passed to Associators")
-        ch = env.get_cimom_handle2()
+        ch = env.get_cimom_handle()
         model = pywbem.CIMInstance(classname=assocClassName)
         model.path = pywbem.CIMInstanceName(classname=assocClassName, 
                                             namespace=objectName.namespace)
@@ -1197,6 +1197,13 @@ class %(classname)sProvider(CIMProvider):
         ''' % (args, CIMProvider.get_instance.__doc__ )
     keyProps = [p for p in cc.properties.values() \
                 if 'key' in p.qualifiers]
+    if not keyProps and 'association' in cc.qualifiers:
+        # SFCB has problems with qualifiers on REF properties. 
+        # http://sourceforge.net/tracker/index.php?func=detail&aid=2104565&group_id=128809&atid=712784
+        keyProps = [p for p in cc.properties.values() \
+                    if p.type == 'reference']
+        for prop in keyProps:
+            prop.qualifiers['KEY'] = True
     code+= '''
 
         # TODO fetch system resource matching the following keys:'''
@@ -1226,13 +1233,13 @@ class %(classname)sProvider(CIMProvider):
         logger.log_debug('Entering %%s.enum_instances()' \\
                 %% self.__class__.__name__)
                 '''  % (args, CIMProvider.enum_instances.__doc__)
-    kd = dict([(kp.name, None) for kp in keyProps])
+    keydict = dict([(kp.name, None) for kp in keyProps])
     code+= '''
         # Prime model.path with knowledge of the keys, so key values on
         # the CIMInstanceName (model.path) will automatically be set when
         # we set property values on the model. 
         model.path.update(%s)
-        ''' % str(kd)
+        ''' % str(keydict)
 
     code+= '''
         while False: # TODO more instances?
@@ -1373,15 +1380,22 @@ class %(classname)sProvider(CIMProvider):
         logger = env.get_logger()
         logger.log_debug('Entering %%s.references()' \\
                 %% self.__class__.__name__)
-        ch = env.get_cimom_handle()
-        # This is a common pattern.  YMMV''' % \
+        ch = env.get_cimom_handle()''' % \
                 (args, CIMProvider.references.__doc__)
+        code+='''
+        # Prime model.path with knowledge of the keys, so key values on
+        # the CIMInstanceName (model.path) will automatically be set when
+        # we set property values on the model. 
+        model.path.update(%s)
+        ''' % str(keydict)
+
         refprops = []
         for prop in cc.properties.values():
             if prop.reference_class is not None:
                 refprops.append((prop.name, prop.reference_class))
         for refprop in refprops:
             code+= '''
+        # This is a common pattern.  YMMV
         if (not role or role.lower() == '%(refpropnamel)s') and \\
            ch.is_subclass(object_name.namespace, 
                        sub=object_name.classname, 
@@ -1456,7 +1470,7 @@ instance of OpenWBEM_PyProviderRegistration
     mof ='''
 // SFCB Provider registration for %(classname)s
 [%(classname)s]
-   provider: %(classname)sProvider
+   provider: %(classname)s
    location: pyCmpiProvider
    type: %(sfcbtypes)s
    namespace: root/cimv2 // TODO
@@ -1474,14 +1488,14 @@ instance of PG_ProviderModule
 }; 
 instance of PG_Provider
 {
-    Name = "%(classname)sProvider"; 
+    Name = "%(classname)s"; 
     ProviderModuleName = "pyCmpiProvider_%(classname)s";
 }; 
 instance of PG_ProviderCapabilities
 {
     CapabilityID = "%(classname)s";
     ProviderModuleName = "pyCmpiProvider_%(classname)s";
-    ProviderName = "%(classname)sProvider";
+    ProviderName = "%(classname)s";
     ClassName = "%(classname)s";
     Namespaces = {"root/cimv2"}; // TODO
     ProviderType = {%(pegtypeNum)s}; // %(pegtypeStr)s

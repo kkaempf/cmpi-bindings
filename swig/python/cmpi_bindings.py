@@ -149,9 +149,9 @@ class ProviderEnvironment(object):
         self.ctx = None
     def get_logger(self):
         return Logger(self.proxy.broker)
+    #def get_cimom_handle(self):
+    #    return SFCBUDSConnection()
     def get_cimom_handle(self):
-        return SFCBUDSConnection()
-    def get_cimom_handle2(self):
         return BrokerCIMOMHandle(self.proxy, self.ctx)
     def get_user_name(self):
         pass
