@@ -199,10 +199,8 @@ __all__ = ['CIMProvider',
            'is_subclass',
            'codegen']
 
-class _NotImplemented(Exception):
-    pass
 
-def _path_equals_ignore_host(lhs, rhs):
+def _paths_equal(lhs, rhs):
     """If one object path doesn't inlcude a host, don't include the hosts
     in the comparison
 
@@ -417,8 +415,8 @@ class CIMProvider(object):
         | ~~~~~~~~~~~~~~~~~~~~~  |                    | ~~~~~~~~~~~~~~~~~ |
         +------------------------+                    +-------------------+
            |              +-----------------------------------+      |
-           |              |  [Association] assoc_class        |      |
-           | object_name  |  ~~~~~~~~~~~~~~~~~~~~~~~~~        |      |
+           |              |  [Association] model.classname    |      |
+           | object_name  |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    |      |
            +--------------+ object_name.classname REF role    |      |
         (CIMInstanceName) | result_class_name REF result_role +------+
                           |                                   |(CIMInstanceName)
@@ -433,7 +431,38 @@ class CIMProvider(object):
         CIM_ERR_FAILED (some other unspecified error occurred)
 
         """
-        raise _NotImplemented()
+        # Don't change this return value.  If affects the behavior 
+        # of the MI_* methods. 
+        return None
+
+    def simple_refs(self, env, object_name, model, 
+                   result_class_name, role, result_role, keys_only):
+
+        gen = self.enum_instances(env, model, model.property_list, keys_only)
+        for inst in gen:
+            for prop in inst.properties.values():
+                if prop.type != 'reference':
+                    continue
+                if role and prop.name.lower() != role:
+                    continue
+                if self.paths_equal(object_name, prop.value):
+                    yield inst
+            
+        
+    def paths_equal(self, lhs, rhs):
+        """If one object path doesn't inlcude a host, don't include the hosts
+        in the comparison
+
+        """
+
+        if lhs is rhs:
+            return True
+        if lhs.host is not None and rhs.host is not None and lhs.host != rhs.host:
+            return False
+        # need to make sure this stays in sync with CIMInstanceName.__cmp__()
+        return not (pywbem.cmpname(rhs.classname, lhs.classname) or
+                    cmp(rhs.keybindings, lhs.keybindings) or
+                    pywbem.cmpname(rhs.namespace, lhs.namespace))
 
     def _set_filter_results(self, value):
         self._filter_results = value
@@ -653,13 +682,17 @@ class CIMProvider(object):
         model = pywbem.CIMInstance(classname=assocClassName)
         model.path = pywbem.CIMInstanceName(classname=assocClassName, 
                                             namespace=objectName.namespace)
-        for inst in self.references(env=env, 
+        gen = self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
                                     result_class_name=resultClassName, 
                                     role=role, 
                                     result_role=None,
-                                    keys_only=False):
+                                    keys_only=False)
+        if gen is None:
+            logger.log_debug('references() returned None instead of generator object')
+            return
+        for inst in gen:
             for prop in inst.properties.values():
                 lpname = prop.name.lower()
                 if prop.type != 'reference':
@@ -668,7 +701,7 @@ class CIMProvider(object):
                     continue
                 if resultRole and resultRole.lower() != lpname:
                     continue
-                if _path_equals_ignore_host(prop.value, objectName):
+                if self.paths_equal(prop.value, objectName):
                     continue
                 if resultClassName and self.filter_results and \
                         resultClassName.lower() != prop.value.classname.lower():
@@ -710,13 +743,17 @@ class CIMProvider(object):
         model = pywbem.CIMInstance(classname=assocClassName)
         model.path = pywbem.CIMInstanceName(classname=assocClassName, 
                                             namespace=objectName.namespace)
-        for inst in self.references(env=env, 
+        gen = self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
                                     result_class_name=resultClassName, 
                                     role=role, 
                                     result_role=None,
-                                    keys_only=False):
+                                    keys_only=False)
+        if gen is None:
+            logger.log_debug('references() returned None instead of generator object')
+            return
+        for inst in gen:
             for prop in inst.properties.values():
                 lpname = prop.name.lower()
                 if prop.type != 'reference':
@@ -725,7 +762,7 @@ class CIMProvider(object):
                     continue
                 if resultRole and resultRole.lower() != lpname:
                     continue
-                if _path_equals_ignore_host(prop.value, objectName):
+                if self.paths_equal(prop.value, objectName):
                     continue
                 if resultClassName and self.filter_results and \
                         resultClassName.lower() != prop.value.classname.lower():
@@ -766,13 +803,17 @@ class CIMProvider(object):
                                       "** this shouldn't happen")
             model[role] = objectName
 
-        for inst in self.references(env=env, 
+        gen = self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
                                     result_class_name='', 
                                     role=role, 
                                     result_role=None,
-                                    keys_only=False):
+                                    keys_only=False)
+        if gen is None:
+            logger.log_debug('references() returned None instead of generator object')
+            return
+        for inst in gen:
             if self.filter_results and plist is not None:
                 inst = inst.copy()
                 filter_instance(inst, plist)
@@ -810,13 +851,17 @@ class CIMProvider(object):
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                                       "** this shouldn't happen")
             model[role] = objectName
-        for inst in self.references(env=env, 
+        gen = self.references(env=env, 
                                     object_name=objectName, 
                                     model=model,
                                     result_class_name='', 
                                     role=role, 
                                     result_role=None,
-                                    keys_only=True):
+                                    keys_only=True)
+        if gen is None:
+            logger.log_debug('references() returned None instead of generator object')
+            return 
+        for inst in gen:
             for prop in inst.properties.values():
                 if hasattr(prop.value, 'namespace') and prop.value.namespace is None:
                     prop.value.namespace = objectName.namespace
@@ -1382,20 +1427,48 @@ class %(classname)sProvider(CIMProvider):
                 %% self.__class__.__name__)
         ch = env.get_cimom_handle()''' % \
                 (args, CIMProvider.references.__doc__)
-        code+='''
-        # Prime model.path with knowledge of the keys, so key values on
-        # the CIMInstanceName (model.path) will automatically be set when
-        # we set property values on the model. 
-        model.path.update(%s)
-        ''' % str(keydict)
 
         refprops = []
         for prop in cc.properties.values():
             if prop.reference_class is not None:
                 refprops.append((prop.name, prop.reference_class))
+
+        code+= '''\n
+        # If you want to get references for free, implemented in terms 
+        # of enum_instances, just leave the code below unaltered.'''
+
+        for i, refprop in enumerate(refprops):
+            if i == 0:
+                code+= '''
+        if ch.is_subclass(object_name.namespace, 
+                          sub=object_name.classname,
+                          super='%s')''' % refprop[1]
+                          
+            else:
+                code+= ''' or \\
+                ch.is_subclass(object_name.namespace,
+                               sub=object_name.classname,
+                               super='%s')''' % refprop[1]
+        code+=''':
+            return self.simple_refs(env, object_name, model,
+                          result_class_name, role, result_role, keys_only)
+                          '''
+
+
+        code+='''
+        # If you are doing simple refs with the code above, remove the 
+        # remainder of this method.  Or, remove the stuff above and 
+        # implement references below. 
+        #
+        # Prime model.path with knowledge of the keys, so key values on
+        # the CIMInstanceName (model.path) will automatically be set when
+        # we set property values on the model. 
+        model.path.update(%s)
+
+        # This is a common pattern.  YMMV''' % str(keydict)
+
         for refprop in refprops:
             code+= '''
-        # This is a common pattern.  YMMV
         if (not role or role.lower() == '%(refpropnamel)s') and \\
            ch.is_subclass(object_name.namespace, 
                        sub=object_name.classname, 
@@ -1721,17 +1794,14 @@ class ProviderProxy(object):
         for lcname in lcnames:
             fn = self._get_callable(lcname, 'MI_associators', is_assoc)
             if fn is not None:
-                try:
-                    for i in fn(env, 
-                               objectName, 
-                               lcname, 
-                               resultClassName, 
-                               role, 
-                               resultRole, 
-                               propertyList):
-                        yield i
-                except _NotImplemented:
-                    continue
+                for i in fn(env, 
+                           objectName, 
+                           lcname, 
+                           resultClassName, 
+                           role, 
+                           resultRole, 
+                           propertyList):
+                    yield i
         logger.log_debug('CIMProvider MI_associators returning')
 
 ##############################################################################
@@ -1769,16 +1839,13 @@ class ProviderProxy(object):
         for lcname in lcnames:
             fn = self._get_callable(lcname, 'MI_associatorNames', is_assoc)
             if fn is not None:
-                try:
-                    for i in fn(env, 
-                               objectName, 
-                               lcname, 
-                               resultClassName, 
-                               role, 
-                               resultRole):
-                        yield i
-                except _NotImplemented:
-                    continue
+                for i in fn(env, 
+                           objectName, 
+                           lcname, 
+                           resultClassName, 
+                           role, 
+                           resultRole):
+                    yield i
 
         logger.log_debug('CIMProvider MI_associatorNames returning')
 
@@ -1811,15 +1878,12 @@ class ProviderProxy(object):
         for lcname in lcnames:
             fn = self._get_callable(lcname, 'MI_references', is_assoc)
             if fn is not None:
-                try:
-                    for i in fn(env, 
-                                objectName, 
-                                lcname, 
-                                role, 
-                                propertyList):
-                        yield i
-                except _NotImplemented:
-                    continue
+                for i in fn(env, 
+                            objectName, 
+                            lcname, 
+                            role, 
+                            propertyList):
+                    yield i
 
         logger.log_debug('CIMProvider MI_references returning')
 
@@ -1852,14 +1916,11 @@ class ProviderProxy(object):
         for lcname in lcnames:
             fn = self._get_callable(lcname, 'MI_referenceNames', is_assoc)
             if fn is not None:
-                try:
-                    for i in fn(env, 
-                                objectName, 
-                                lcname, 
-                                role):
-                        yield i
-                except _NotImplemented:
-                    continue
+                for i in fn(env, 
+                            objectName, 
+                            lcname, 
+                            role):
+                    yield i
 
         logger.log_debug('CIMProvider MI_referenceNames returning')
 
