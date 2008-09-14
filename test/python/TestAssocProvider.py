@@ -10,7 +10,7 @@ Instruments:
 import pywbem
 import pwd
 import grp
-from cim_provider import CIMProvider
+from pywbem.cim_provider2 import CIMProvider2
 
 def get_user_instance(uid, model, keys_only):
     try:
@@ -65,12 +65,12 @@ def get_assoc_instance(uid, gid, model, keys_only):
     except KeyError:
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
 
-class TestAssoc_User(CIMProvider):
+class TestAssoc_User(CIMProvider2):
     
     def __init__(self, env):
         self._logger = env.get_logger()
         
-    def get_instance(self, env, model, property_list, inst=None):
+    def get_instance(self, env, model, inst=None):
         try:
             uid = model.path['UserID']
             uid = int(uid)
@@ -78,12 +78,12 @@ class TestAssoc_User(CIMProvider):
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def enum_instances(self, env, model, property_list, keys_only):
+    def enum_instances(self, env, model, keys_only):
         self._logger.log_debug("%s:  enum_instances called for class %s" % (self.__class__.__name__.upper(), model.classname))
         for pwent in pwd.getpwall():
             yield get_user_instance(pwent[2], model, keys_only)
         
-    def set_instance(self, env, instance, modify_existing, property_list):
+    def set_instance(self, env, instance, modify_existing):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
@@ -91,12 +91,12 @@ class TestAssoc_User(CIMProvider):
         
     
     
-class TestAssoc_Group(CIMProvider):
+class TestAssoc_Group(CIMProvider2):
     
     def __init__(self, env):
         self._logger = env.get_logger()
         
-    def get_instance(self, env, model, property_list, inst=None):
+    def get_instance(self, env, model, inst=None):
         try:
             gid = model.path['GroupID']
             gid = int(gid)
@@ -104,23 +104,23 @@ class TestAssoc_Group(CIMProvider):
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def enum_instances(self, env, model, property_list, keys_only):
+    def enum_instances(self, env, model, keys_only):
         for grent in grp.getgrall():
             yield get_group_instance(grent[2], model, keys_only)
         
-    def set_instance(self, env, instance, modify_existing, property_list):
+    def set_instance(self, env, instance, modify_existing):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     
-class TestAssoc_MemberOfGroup(CIMProvider):
+class TestAssoc_MemberOfGroup(CIMProvider2):
     
     def __init__(self, env):
         self._logger = env.get_logger()
         
-    def get_instance(self, env, model, property_list, inst=None):
+    def get_instance(self, env, model, inst=None):
         try:
             uid = model.path['Dependent']['UserID']
             uid = int(uid)
@@ -130,7 +130,7 @@ class TestAssoc_MemberOfGroup(CIMProvider):
         except KeyError:
             raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
         
-    def enum_instances(self, env, model, property_list, keys_only):
+    def enum_instances(self, env, model, keys_only):
         self._logger.log_debug("\n%s:  enum_instances called for class %s" % (self.__class__.__name__.upper(), model.classname))
         for pwent in pwd.getpwall():
             user_cin = pywbem.CIMInstanceName('TestAssoc_User',
@@ -156,7 +156,7 @@ class TestAssoc_MemberOfGroup(CIMProvider):
                         model['isPrimaryGroup'] = False
                     yield model
         
-    def set_instance(self, env, instance, modify_existing, property_list):
+    def set_instance(self, env, instance, modify_existing):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
         
     def delete_instance(self, env, instance_name):

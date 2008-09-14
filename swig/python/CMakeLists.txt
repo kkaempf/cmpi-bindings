@@ -57,8 +57,8 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmpi.py DESTINATION ${PYTHON_LIB_DIR}/
 
 
 #
-# cmpi_bindings.py: provider implementation
+# cmpi_pywbem_bindings.py: provider implementation
 #
-INSTALL(FILES cmpi_bindings.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
+INSTALL(FILES cmpi_pywbem_bindings.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
 INSTALL(FILES cim_provider.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
 #INSTALL(FILES Py_UnixProcessProvider.py DESTINATION /usr/lib/pycim )

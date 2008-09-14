@@ -238,11 +238,11 @@ static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   PyEval_ReleaseThread(cmpiMainPyThreadState); 
   
   SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-  _PYPROVMOD = PyImport_ImportModule("cmpi_bindings");
+  _PYPROVMOD = PyImport_ImportModule("cmpi_pywbem_bindings");
   if (_PYPROVMOD == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_bindings failed", getpid(), pthread_self()));
+      _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
       PY_CMPI_SETFAIL(get_exc_trace(broker)); 
       abort();
       return -1; 
@@ -277,7 +277,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   
   SWIG_PYTHON_THREAD_BEGIN_BLOCK;
   PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
-                           "CMPIProvider"); 
+                           "CMPIProxyProvider"); 
   if (provclass == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 

@@ -6,11 +6,11 @@ Instruments the CIM class TestMethod
 
 import pywbem
 import random
-from cim_provider import CIMProvider
+from pywbem.cim_provider2 import CIMProvider2
 
 g_insts = {}
 
-class TestMethodProvider(CIMProvider):
+class TestMethodProvider(CIMProvider2):
     """Instrument the CIM class TestMethod 
 
     Class with several methods to test method provider capabilities.
@@ -21,12 +21,8 @@ class TestMethodProvider(CIMProvider):
         logger = env.get_logger()
         logger.log_debug('Initializing provider %s from %s' \
                 % (self.__class__.__name__, __file__))
-        # If you will be filtering instances yourself according to 
-        # property_list, role, result_role, and result_class_name 
-        # parameters, set self.filter_results to False
-        # self.filter_results = False
 
-    def get_instance(self, env, model, property_list):
+    def get_instance(self, env, model):
         logger = env.get_logger()
         logger.log_debug('Entering %s.get_instance()' \
                 % self.__class__.__name__)
@@ -42,7 +38,7 @@ class TestMethodProvider(CIMProvider):
         model['p_str']=inst[0]
         return model
 
-    def enum_instances(self, env, model, property_list, keys_only):
+    def enum_instances(self, env, model, keys_only):
         logger = env.get_logger()
         logger.log_debug('Entering %s.enum_instances()' \
                 % self.__class__.__name__)
@@ -71,13 +67,13 @@ class TestMethodProvider(CIMProvider):
                 yield model
             else:
                 try:
-                    yield self.get_instance(env, model, property_list)
+                    yield self.get_instance(env, model)
                 except pywbem.CIMError, (num, msg):
                     if num not in (pywbem.CIM_ERR_NOT_FOUND, 
                                    pywbem.CIM_ERR_ACCESS_DENIED):
                         raise
 
-    def set_instance(self, env, instance, modify_existing, property_list):
+    def set_instance(self, env, instance, modify_existing):
         logger = env.get_logger()
         logger.log_debug('Entering %s.set_instance()' \
                 % self.__class__.__name__)

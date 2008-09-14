@@ -34,7 +34,7 @@
 import cmpi
 
 
-from cim_provider import ProviderProxy
+from pywbem.cim_provider2 import ProviderProxy
 import pywbem
 
 
@@ -164,10 +164,10 @@ _classcache = {}
 _conn = SFCBUDSConnection()
 
 
-class CMPIProvider(object):
+class CMPIProxyProvider(object):
 
     def __init__(self, miname, broker):
-        print 'called CMPIProvider(', miname, ',', broker, ')'
+        print 'called CMPIProxyProvider(', miname, ',', broker, ')'
         self.broker = broker
         self.miname = miname
         self.env = ProviderEnvironment(self)

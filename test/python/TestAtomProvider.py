@@ -6,9 +6,9 @@ Instruments the CIM class TestAtom
 
 import pywbem
 import sys
-from cim_provider import CIMProvider
+from pywbem.cim_provider2 import CIMProvider2
 
-class TestAtomProvider(CIMProvider):
+class TestAtomProvider(CIMProvider2):
     """Instrument the CIM class TestAtom 
 
     Model an atom, For use with CIMOM and PyWBEM Provider
@@ -19,12 +19,8 @@ class TestAtomProvider(CIMProvider):
         logger.log_debug('Initializing provider %s from %s' \
                 % (self.__class__.__name__, __file__))
         self.storage = {}
-        # If you will be filtering instances yourself according to 
-        # property_list, role, result_role, and result_class_name 
-        # parameters, set self.filter_results to False
-        # self.filter_results = False
 
-    def get_instance(self, env, model, property_list):
+    def get_instance(self, env, model):
         """Return an instance.
 
         Keyword arguments:
@@ -70,7 +66,7 @@ class TestAtomProvider(CIMProvider):
         return model
 
 
-    def enum_instances(self, env, model, property_list, keys_only):
+    def enum_instances(self, env, model, keys_only):
         """Enumerate instances.
 
         The WBEM operations EnumerateInstances and EnumerateInstanceNames
@@ -109,13 +105,13 @@ class TestAtomProvider(CIMProvider):
             model['Name'] = key
             model.path['Name'] = key
             try:
-                yield self.get_instance(env, model, property_list)
+                yield self.get_instance(env, model)
             except pywbem.CIMError, (num, msg):
                 if num not in (pywbem.CIM_ERR_NOT_FOUND, 
                                pywbem.CIM_ERR_ACCESS_DENIED):
                     raise
 
-    def set_instance(self, env, instance, modify_existing, property_list):
+    def set_instance(self, env, instance, modify_existing):
         """Return a newly created or modified instance.
 
         Keyword arguments:
@@ -152,11 +148,7 @@ class TestAtomProvider(CIMProvider):
             if instance['Name'] not in self.storage:
                 raise pywbem.CIMError(pywbem.CIM_ERR_NOT_FOUND)
             inst = self.storage[instance.path['Name']] 
-            if property_list:
-                for pn in property_list:
-                    inst.properties[pn] = instance.properties[pn]
-            else:
-                inst.properties.update(instance.properties)
+            inst.properties.update(instance.properties)
             #logger.log_debug("***** Updating stuff :%s *****" % instance.properties)
 
         else:
