@@ -11,6 +11,7 @@ Instruments the CIM class UpcallAtom
 
 import os,time,socket
 import pywbem
+from pywbem.cim_provider2 import CIMProvider2
 
 
 _inst_paths = []
@@ -159,7 +160,7 @@ def _get_instance(ch, keybindings, propertylist=None):
     try:
         iname = pywbem.CIMInstanceName(classname='Test_Atom', \
                 keybindings=(keybindings), namespace='root/cimv2')
-        inst = ch.GetInstance(iname, PropertyList=propertylist)
+        inst = ch.GetInstance(ch.default_namespace, iname, PropertyList=propertylist)
     except pywbem.CIMError, arg:
         raise
     return inst
@@ -172,7 +173,7 @@ def _get_instance_names(ch):
     """
 
     try:
-        ta_list = ch.EnumerateInstanceNames('Test_Atom')
+        ta_list = ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom')
     except pywbem.CIMError, arg:
         raise
     return ta_list
@@ -185,7 +186,7 @@ def _delete_test_instances(conn, del_instances):
     """
     try:
         for atom in del_instances:
-            ch.DeleteInstance(atom)
+            ch.DeleteInstance(ch.default_namespace, atom)
     except pywbem.CIMError, arg:
         raise 
 
@@ -199,6 +200,9 @@ def _create_test_instance(ch, name_of_atom, number, time):
 
     new_instance = pywbem.CIMInstance('Test_Atom')
     new_instance['Name'] = name_of_atom
+    cop = pywbem.CIMInstanceName(namespace=ch.default_namespace, classname='Test_Atom')
+    cop['Name'] = name_of_atom
+    new_instance.path = cop
     new_instance['boolProp']     = False
     #new_instance['char16Prop']  = 
     #new_instance['char16Propa'] = Null
@@ -249,13 +253,15 @@ def _create_test_instance(ch, name_of_atom, number, time):
 
     try:
         msg = ''
-        cipath = ch.CreateInstance(new_instance)
+        cipath = ch.CreateInstance(cop, new_instance)
+        print "#*$&#)* Got cipath=%s" %cipath
         new_instance.path = cipath
         _inst_paths.append(cipath)
 
     except pywbem.CIMError, arg:
         raise
 
+    print "returning new_instance path: %s   instance: %s    msg: %s" %(cop, new_instance, msg)
     return new_instance, msg 
 
 ################################################################################
@@ -268,6 +274,8 @@ def _setup(ch, time, env):
         if not rval:
             continue
         try:
+            print "rval.path=%s    rval=%s" %(rval.path, rval)
+            print "Trying to GetInstance(%s)" %(rval.path)
             ci = ch.GetInstance(rval.path)
             insts.append(ci)
         except pywbem.CIMError,arg:
@@ -280,7 +288,7 @@ def _cleanup(ch):
     global _inst_paths
     for ipath in _inst_paths:
         try:
-            ch.DeleteInstance(ipath)
+            ch.DeleteInstance(ch.default_namespace, ipath)
         except pywbem.CIMError,arg:
             raise '#### Delete Instance failed'
     _inst_paths = []
@@ -323,7 +331,7 @@ def authorize_filter(env, filter, namespace, classes, owner):
     logger.log_debug('#### Python authorize_filter owner: %s' % owner)
 
 ################################################################################
-class UpcallAtomProvider(pywbem.CIMProvider):
+class UpcallAtomProvider(CIMProvider2):
     """Instrument the CIM class UpcallAtom 
 
     Testing up-calls into the CIMOM from a provider
@@ -341,7 +349,8 @@ class UpcallAtomProvider(pywbem.CIMProvider):
         # self.filter_results = False
 
         
-    def cim_method_starttest(self, env, object_name, method):
+    def cim_method_starttest(self, env, object_name):
+        print "Got into provider invokeMethod"
         """Implements UpcallAtom.starttest()
 
         Kickoff the method provider test
@@ -374,7 +383,7 @@ class UpcallAtomProvider(pywbem.CIMProvider):
         time = pywbem.CIMDateTime.now()
         #Create a cimom_handle
         ch = env.get_cimom_handle()
-        ch.set_default_namespace("root/cimv2")
+        ch.default_namespace = "root/cimv2"
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_starttest()' \
                 % self.__class__.__name__)
@@ -384,53 +393,59 @@ class UpcallAtomProvider(pywbem.CIMProvider):
 #       'DeleteInstance', 'DeleteQualifier', 'EnumerateClassNames', 'EnumerateClasses', 
 #       'EnumerateInstanceNames', 'EnumerateInstances', 'EnumerateQualifiers', 'GetClass', #                    'GetInstance', 'GetQualifier', 'InvokeMethod', 'ModifyClass', 'ModifyInstance', #                    'ReferenceNames', 'References', 'SetQualifier', 'export_indication', #                    'set_default_namespace'] 
         #test_1_upcalls
-        #Written to test associators of OMC_UnixProcess class
+        #Written to test associators of Linux_UnixProcess class
         # 
         try:
             logger.log_debug("Getting AssociatorNames")
-            ci_list = ch.EnumerateInstanceNames("OMC_UnixProcess")
-            if ci_list and len(ci_list) > 0:
-                assoc_names = ch.AssociatorNames(ci_list[0],\
-                        AssocClass="OMC_OSProcess") #AssocNames
-                if assoc_names and len(assoc_names) > 0:
-                    #OMC_UnixProcess has an association through OMC_OSProcess
-                    #1. OMC_OperatingSystem
+            ci_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
+            if ci_list and ci_list.length > 0:
+                ci_entry=ci_list.next()
+                assoc_names = ch.AssociatorNames(ci_entry,\
+                        assocClass="Linux_OSProcess") #AssocNames
+                if assoc_names and assoc_names.length > 0:
+                    #Linux_UnixProcess has an association through Linux_OSProcess
+                    #1. Linux_OperatingSystem
                     for name in assoc_names:
-                        if name['CSCreationClassName'] != 'OMC_UnitaryComputerSystem' \
-                          and name['CreationClassName'] != 'OMC_OperatingSystem':
+                        if name['CSCreationClassName'] != 'Linux_UnitaryComputerSystem' \
+                          and name['CreationClassName'] != 'Linux_OperatingSystem':
                             raise "AssociatorName Error: %s" %str(name)
 
-                assoc = ch.AssociatorNames(ci_list[0], \
-                        AssocClass="OMC_ProcessExecutable")#Assoc
-                if assoc and len(assoc_names) > 0:
-                    #OMC_UnixProcess has an association through OMC_ProcessExecutable
-                    #1. OMC_LinuxDataFile
+                assoc = ch.AssociatorNames(ci_entry, \
+                        assocClass="Linux_ProcessExecutable")#Assoc
+                if assoc and assoc_names.length > 0:
+                    #Linux_UnixProcess has an association through Linux_ProcessExecutable
+                    #1. Linux_LinuxDataFile
                     for inst in assoc:
                         if inst['CSCreationClassName'] != 'CIM_UnitaryComputerSystem' \
-                          and inst['CreationClassName'] != 'OMC_LinuxDataFile':
+                          and inst['CreationClassName'] != 'Linux_LinuxDataFile':
                             raise "Associator Error: %s" %str(inst)
 
 #
 #CreateClass Method
 #
+            '''
             try:
                 cim_class = pywbem.CIMClass("Test")
-                ch.CreateClass(cim_class)
+                ch.CreateClass(ch.default_namespace, cim_class)
             except pywbem.CIMError,arg:
                 logger.log_debug("**** CIMError: ch.CreateClass ****")
                 ch.DeleteClass("Test")
                 raise
+            '''
 #
 #GetClass
 #
+            '''
             try:
                 _class = ch.GetClass("Test")
             except pywbem.CIMError,arg:
                 logger.log_debug("**** CIMError: ch.GetClass ****")
                 raise
+            '''
 #
 #ModifyClass
 #
+            '''
             try:
                 _class.properties['NewBogusProperty'] = pywbem.CIMProperty('BogProp', None, 'uint64')
                 ch.ModifyClass(_class)
@@ -441,10 +456,12 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             except pywbem.CIMError,arg:
                 logger.log_debug("**** CIMError: ch.ModifyClass ****")
                 raise
+            '''
 
 #
 #DeleteClass
 #
+            '''
             try:
                 ch.DeleteClass("Test")
             except pywbem.CIMError,arg:
@@ -458,10 +475,12 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             except pywbem.CIMError,arg:
                 if arg[0] != pywbem.CIM_ERR_NOT_FOUND:
                     raise
+            '''
 
 #
 #SetQualifier
 #
+            '''
             try:
                 # Just in case it is still there
                 ch.DeleteQualifier('Bogus')
@@ -475,10 +494,12 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             except pywbem.CIMError, arg:
                 logger.log_debug("**** CIMError: ch.SetQualifier ****")
                 raise
+            '''
 
 #
 #GetQualifier
 #
+            '''
             try:
                 q = ch.GetQualifier('Bogus')
                 copy_q = q.copy() 
@@ -491,8 +512,10 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             except pywbem.CIMError,arg:
                 logger.log_debug("**** CIMError: ch.GetQualifier ****")
                 raise
+            '''
 
 #EnumerateQualifiers
+            '''
             cq_list = ch.EnumerateQualifiers()
             if not cq_list:
                 raise "EnumerateQualifiers Failed"
@@ -506,9 +529,11 @@ class UpcallAtomProvider(pywbem.CIMProvider):
                     raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
                         '*** CIMError: EnumerateQualifiers did not return '
                         'qualifier that was just created')
+            '''
 #
 #DeleteQualifier
 #
+            '''
             try:
                 ch.DeleteQualifier('Bogus')
             except pywbem.CIMError, arg:
@@ -522,44 +547,47 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             except pywbem.CIMError,arg:
                 if arg[0] != pywbem.CIM_ERR_NOT_FOUND:
                     raise
+            '''
 
 #
 #InvokeMethod
 #            
             try:
                 logger.log_debug("**** Calling EnumInstances ****")
-                list = ch.EnumerateInstanceNames("Novell_DCAMStatGatheringService")
-                if list and len(list) > 0:
+                list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatGatheringService")
+                if list and list.length() > 0:
                     logger.log_debug("**** Calling GetINstance ****")
-                    service = ch.GetInstance(list[0])
+                    list_entry = list.next()
+                    service = ch.GetInstance(list_entry)
                     if service:
                         if service['Started']:
-                            ch.InvokeMethod("StopService", list[0])
+                            ch.InvokeMethod("StopService", list_entry)
                         else:
-                            ch.InvokeMethod("StartService", list[0])
+                            ch.InvokeMethod("StartService", list.entry)
 
                 logger.log_debug("**** #2:Calling EnumInstances ****")
-                list = ch.EnumerateInstanceNames("Novell_DCAMStatGatheringService")
-                if list and len(list) > 0:
+                list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatGatheringService")
+                if list and list.length() > 0:
                     logger.log_debug("**** #2:Calling GetInstance ****")
-                    service = ch.GetInstance(list[0])
+                    list_entry = list.next()
+                    service = ch.GetInstance(list_entry)
                     if service:
                         if service['Started']:
                             pass
                         else:
-                            ch.InvokeMethod("StartService", list[0])
+                            ch.InvokeMethod("StartService", list_entry)
 
             except pywbem.CIMError, arg:
                 logger.log_debug("**** CIMError: ch.InvokeMethod ****")
 
 #ReferenceNames
             try:
-                stat_list = ch.EnumerateInstanceNames("Novell_DCAMStatDef")
-                if stat_list and len(stat_list) > 0:
+                stat_list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatDef")
+                if stat_list and stat_list.length() > 0:
                     for statdef in stat_list:
                         if statdef['DefinitionID'] == "machine_type":
                             ref_list = ch.ReferenceNames(statdef)
-                            if ref_list and len(ref_list) > 0:
+                            if ref_list and ref_list.length > 0:
                                 for ref in ref_list:
                                     cn = ref.classname 
                                     if cn == "Novell_DCAMCurrentValueForStatDef" or\
@@ -575,12 +603,12 @@ class UpcallAtomProvider(pywbem.CIMProvider):
 
 #Reference
             try:
-                stat_list = ch.EnumerateInstanceNames("Novell_DCAMStatDef")
-                if stat_list and len(stat_list) > 0:
+                stat_list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatDef")
+                if stat_list and stat_list.length() > 0:
                     for statdef in stat_list:
                         if statdef['DefinitionID'] == "machine_type":
                             ref_list = ch.References(statdef)
-                            if ref_list and len(ref_list) > 0:
+                            if ref_list and ref_list.length() > 0:
                                 for ref in ref_list:
                                     cn = ref.classname 
                                     if cn == "Novell_DCAMCurrentValueForStatDef" or\
@@ -603,6 +631,8 @@ class UpcallAtomProvider(pywbem.CIMProvider):
 
 ################################################################################
 #        #test_2_create_instance
+        print "test_2_create_instance"
+        '''
         try:
             insts = _setup(ch, time, env)
             for inst in insts:
@@ -612,35 +642,45 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             _cleanup(ch)
         except pywbem.CIMError, arg:
             raise "**** CreateInstance Failed ****"
+        '''
 
 ################################################################################
         #test_3_enum_instances
         #Test enumeration of instances and then compare them with the local
         # storage dictionary
+        print "test_3_enum_instances"
         insts = _setup(ch, time, env)
         paths = []
         ta_list = []
         try: 
-            ta_list = ch.EnumerateInstances('Test_Atom')
+            ta_list = ch.EnumerateInstances(ch.default_namespace, 'Test_Atom')
         except pywbem.CIMError, arg:
             raise 'EnumerateInstances failed: %s' % str(arg)
         try:
-            paths = ch.EnumerateInstanceNames('Test_Atom')
+            paths = ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom')
         except pywbem.CIMError, arg:
             raise 'EnumerateInstanceNames failed: %s' % str(arg)
 
-        if len(paths) != len(ta_list):
-            raise 'EnumerateInstances returned different number of '\
-                'results than EnumerateInstanceNames'
+        if paths.length() != ta_list.length():
+            raise 'EnumerateInstances (%s) returned different number of '\
+                'results than EnumerateInstanceNames (%s)' %(ta_list.length(), paths.length())
+
+        print "1"
 
         for ci in insts:#Loop through instances
+            print "2: ci.path=%s" %ci.path
+            print "ta_list.length()=%d" %ta_list.length()
+            print "ta_list: %s" %ta_list
             for rci in ta_list:
+                print "3"
                 print '==== rci.path:',str(rci.path)
                 print '==== ci.path:',str(ci.path)
                 if rci.path != ci.path:
                     continue
                 else:
+                    print "4"
                     rval = _compare_values(rci, time, logger)
+                    print "5"
                     if rval:
                         break
                     else:
@@ -653,19 +693,20 @@ class UpcallAtomProvider(pywbem.CIMProvider):
 ################################################################################
         #test_4_enum_instance_names
         #Test enumeration of names
+        print "test_4_enum_instance_names"
         insts = _setup(ch, time, env)
 
         try: 
-            ta_list = ch.EnumerateInstanceNames('Test_Atom')
+            ta_list = ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom')
         except pywbem.CIMError, arg:
             raise 'EnumerateInstanceNames Failed: %s' % str(arg)
 
         try: 
-            instances = ch.EnumerateInstances('Test_Atom')
+            instances = ch.EnumerateInstances(ch.default_namespace, 'Test_Atom')
         except pywbem.CIMError, arg:
             raise 'EnumerateInstances Failed: %s' % str(arg)
 
-        if len(instances) != len(ta_list):
+        if instances.length() != ta_list.length():
             raise 'EnumerateInstances returned different number of '\
                 'results than EnumerateInstanceNames'
 
@@ -735,7 +776,7 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             mod_instance['Name'] = 'Boron'
 
             try:
-                ch.ModifyInstance(mod_instance)
+                ch.ModifyInstance(ch.default_namespace, mod_instance)
             except pywbem.CIMError, arg:
                 raise 
 
@@ -774,13 +815,13 @@ class UpcallAtomProvider(pywbem.CIMProvider):
         del_instances = _get_instance_names(ch)
         for inst in del_instances:
             try:
-                ch.DeleteInstance(inst)
+                ch.DeleteInstance(ch.default_namespace, inst)
             except pywbem.CIMError, arg:
                 raise 'DeleteInstance Failed: %s' % str(arg)
         else:
             for inst in del_instances:
                 try:
-                    ch.DeleteInstance(inst)
+                    ch.DeleteInstance(ch.default_namespace, inst)
                 except pywbem.CIMError, arg:
                     if arg[0] != pywbem.CIM_ERR_NOT_FOUND:
                          raise 'Unexpected exception on delete: %s' % str(arg)
@@ -790,14 +831,14 @@ class UpcallAtomProvider(pywbem.CIMProvider):
         rval = "Finished testing Upcalls..." # TODO (type pywbem.Sint32)
         return (rval, out_params)
 
-    def cim_method_send_indication(self, env, object_name, method):
+    def cim_method_send_indication(self, env, object_name):
         """
         Method to test the upcalls to the cimom handle for export_indications.
         """
         global _indication_names,_indication_count
         cimtime = pywbem.CIMDateTime.now()
         ch = env.get_cimom_handle()
-        ch.set_default_namespace("root/cimv2")
+        ch.default_namespace = "root/cimv2"
         logger = env.get_logger()
 
 
@@ -813,13 +854,13 @@ class UpcallAtomProvider(pywbem.CIMProvider):
             
             try:
                 print '### Exporting indication. pid:',os.getpid()
-                ch.export_indication(alert_ind)
+                ch.export_indication(ch.default_namespace, alert_ind)
                 print '### Done exporting indication'
             except pywbem.CIMError, arg:
                 print '### Caught exception exporting indication'
                 raise
 
-        indcount = len(_indication_names)
+        indcount = _indication_names.length()
         st = time.time()
         while _indication_count < indcount:
             time.sleep(.01)
@@ -839,4 +880,4 @@ class UpcallAtomProvider(pywbem.CIMProvider):
 
 def get_providers(env): 
     upcallatom_prov = UpcallAtomProvider(env)  
-    return {'UpcallAtom': upcallatom_prov} 
+    return {'Test_UpcallAtom': upcallatom_prov} 

@@ -1,5 +1,5 @@
 [ Description("Testing up-calls into the CIMOM from a provider")]
-class UpcallAtom
+class Test_UpcallAtom
 {
 
 	[Description("Kickoff the method provider test")]

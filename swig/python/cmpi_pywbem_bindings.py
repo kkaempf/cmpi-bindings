@@ -57,6 +57,11 @@ class CIMInstanceNameIterator:
             raise StopIteration
         return self.proxy.cmpi2pywbem_instname(val)
 
+    def length(self):
+        if not self.enumeration or not self.enumeration.hasNext():
+            return -1;
+        return self.enumeration.length();
+
 class CIMInstanceIterator:
     def __init__(self, proxy, enumeration):
         self.enumeration = enumeration
@@ -72,6 +77,11 @@ class CIMInstanceIterator:
         if val is None:
             raise StopIteration
         return self.proxy.cmpi2pywbem_inst(val)
+
+    def length(self):
+        if not self.enumeration or not self.enumeration.hasNext():
+            return -1;
+        return self.enumeration.length();
 
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
@@ -122,6 +132,20 @@ class BrokerCIMOMHandle(object):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
     def EnumerateClasses(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    def CreateClass(self, *args, **kwargs):
+        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    def DeleteClass(self, *args, **kwargs):
+        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    def CreateInstance(self, path, instance):
+        cop = self.proxy.pywbem2cmpi_instname(path)
+        inst = self.proxy.pywbem2cmpi_inst(instance)
+        ciname = self.broker.createInstance(self.ctx, cop, inst)
+        if ciname is None:
+            return None
+        return self.proxy.cmpi2pywbem_instname(ciname)
+    def DeleteInstance(self, path):
+        cop = self.proxy.pywbem2cmpi_instname(path)
+        return self.broker.createInstance(self.ctx, cop, inst)
     ### Not sure whether this should be on BrokerCIMOMHandle or
     ### on ProviderEnvironment
     ### We may want to move it ?
