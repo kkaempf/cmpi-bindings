@@ -105,9 +105,7 @@ class BrokerCIMOMHandle(object):
 
     def GetInstance(self, path, props = None):
         cop = self.proxy.pywbem2cmpi_instname(path)
-        # passing in props currently causes segfault
-        #ci = self.broker.getInstance(self.ctx, cop, props)
-        ci = self.broker.getInstance(self.ctx, cop, None)
+        ci = self.broker.getInstance(self.ctx, cop, props)
         print "  --> ci=%s" %(ci)
         if ci is None:
             return None
