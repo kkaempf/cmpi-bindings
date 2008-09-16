@@ -50,6 +50,8 @@ class CIMInstanceNameIterator:
         return self
 
     def next(self):
+        if not self.enumeration:
+            return None
         if not self.enumeration.hasNext():
             raise StopIteration
         val = getattr(self.enumeration.next().value, 'ref')
@@ -58,9 +60,9 @@ class CIMInstanceNameIterator:
         return self.proxy.cmpi2pywbem_instname(val)
 
     def length(self):
-        if not self.enumeration or not self.enumeration.hasNext():
-            return -1;
-        return self.enumeration.length();
+        if not self.enumeration:
+            return 0
+        return self.enumeration.toArray().size()
 
 class CIMInstanceIterator:
     def __init__(self, proxy, enumeration):
@@ -71,6 +73,8 @@ class CIMInstanceIterator:
         return self
 
     def next(self):
+        if not self.enumeration:
+            return None
         if not self.enumeration.hasNext():
             raise StopIteration
         val = getattr(self.enumeration.next().value, 'inst')
@@ -79,9 +83,9 @@ class CIMInstanceIterator:
         return self.proxy.cmpi2pywbem_inst(val)
 
     def length(self):
-        if not self.enumeration or not self.enumeration.hasNext():
-            return -1;
-        return self.enumeration.length();
+        if not self.enumeration:
+            return 0
+        return self.enumeration.toArray().size()
 
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
@@ -101,7 +105,10 @@ class BrokerCIMOMHandle(object):
 
     def GetInstance(self, path, props = None):
         cop = self.proxy.pywbem2cmpi_instname(path)
-        ci = self.broker.getInstance(self.ctx, cop, props)
+        # passing in props currently causes segfault
+        #ci = self.broker.getInstance(self.ctx, cop, props)
+        ci = self.broker.getInstance(self.ctx, cop, None)
+        print "  --> ci=%s" %(ci)
         if ci is None:
             return None
         return self.proxy.cmpi2pywbem_inst(ci)
@@ -145,7 +152,7 @@ class BrokerCIMOMHandle(object):
         return self.proxy.cmpi2pywbem_instname(ciname)
     def DeleteInstance(self, path):
         cop = self.proxy.pywbem2cmpi_instname(path)
-        return self.broker.createInstance(self.ctx, cop, inst)
+        return self.broker.deleteInstance(self.ctx, cop)
     ### Not sure whether this should be on BrokerCIMOMHandle or
     ### on ProviderEnvironment
     ### We may want to move it ?
