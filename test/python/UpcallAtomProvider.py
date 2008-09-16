@@ -160,8 +160,10 @@ def _get_instance(ch, keybindings, propertylist=None):
     try:
         iname = pywbem.CIMInstanceName(classname='Test_Atom', \
                 keybindings=(keybindings), namespace='root/cimv2')
-        inst = ch.GetInstance(ch.default_namespace, iname, PropertyList=propertylist)
+        inst = ch.GetInstance(iname, props=propertylist)
+        print ">>>>> _get_instance: inst: %s" %inst
     except pywbem.CIMError, arg:
+        print ">>>>> _get_instance: raise"
         raise
     return inst
 
@@ -254,14 +256,12 @@ def _create_test_instance(ch, name_of_atom, number, time):
     try:
         msg = ''
         cipath = ch.CreateInstance(cop, new_instance)
-        print "#*$&#)* Got cipath=%s" %cipath
         new_instance.path = cipath
         _inst_paths.append(cipath)
 
     except pywbem.CIMError, arg:
         raise
 
-    print "returning new_instance path: %s   instance: %s    msg: %s" %(cop, new_instance, msg)
     return new_instance, msg 
 
 ################################################################################
@@ -274,8 +274,6 @@ def _setup(ch, time, env):
         if not rval:
             continue
         try:
-            print "rval.path=%s    rval=%s" %(rval.path, rval)
-            print "Trying to GetInstance(%s)" %(rval.path)
             ci = ch.GetInstance(rval.path)
             insts.append(ci)
         except pywbem.CIMError,arg:
@@ -288,7 +286,7 @@ def _cleanup(ch):
     global _inst_paths
     for ipath in _inst_paths:
         try:
-            ch.DeleteInstance(ch.default_namespace, ipath)
+            ch.DeleteInstance(ipath)
         except pywbem.CIMError,arg:
             raise '#### Delete Instance failed'
     _inst_paths = []
@@ -350,7 +348,6 @@ class UpcallAtomProvider(CIMProvider2):
 
         
     def cim_method_starttest(self, env, object_name):
-        print "Got into provider invokeMethod"
         """Implements UpcallAtom.starttest()
 
         Kickoff the method provider test
@@ -393,16 +390,17 @@ class UpcallAtomProvider(CIMProvider2):
 #       'DeleteInstance', 'DeleteQualifier', 'EnumerateClassNames', 'EnumerateClasses', 
 #       'EnumerateInstanceNames', 'EnumerateInstances', 'EnumerateQualifiers', 'GetClass', #                    'GetInstance', 'GetQualifier', 'InvokeMethod', 'ModifyClass', 'ModifyInstance', #                    'ReferenceNames', 'References', 'SetQualifier', 'export_indication', #                    'set_default_namespace'] 
         #test_1_upcalls
+        print "####### test_1_upcalls #######"
         #Written to test associators of Linux_UnixProcess class
         # 
         try:
             logger.log_debug("Getting AssociatorNames")
             ci_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
-            if ci_list and ci_list.length > 0:
+            if ci_list and ci_list.length() > 0:
                 ci_entry=ci_list.next()
                 assoc_names = ch.AssociatorNames(ci_entry,\
                         assocClass="Linux_OSProcess") #AssocNames
-                if assoc_names and assoc_names.length > 0:
+                if assoc_names and assoc_names.length() > 0:
                     #Linux_UnixProcess has an association through Linux_OSProcess
                     #1. Linux_OperatingSystem
                     for name in assoc_names:
@@ -412,7 +410,7 @@ class UpcallAtomProvider(CIMProvider2):
 
                 assoc = ch.AssociatorNames(ci_entry, \
                         assocClass="Linux_ProcessExecutable")#Assoc
-                if assoc and assoc_names.length > 0:
+                if assoc and assoc_names.length() > 0:
                     #Linux_UnixProcess has an association through Linux_ProcessExecutable
                     #1. Linux_LinuxDataFile
                     for inst in assoc:
@@ -587,7 +585,7 @@ class UpcallAtomProvider(CIMProvider2):
                     for statdef in stat_list:
                         if statdef['DefinitionID'] == "machine_type":
                             ref_list = ch.ReferenceNames(statdef)
-                            if ref_list and ref_list.length > 0:
+                            if ref_list and ref_list.length() > 0:
                                 for ref in ref_list:
                                     cn = ref.classname 
                                     if cn == "Novell_DCAMCurrentValueForStatDef" or\
@@ -631,7 +629,7 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
 #        #test_2_create_instance
-        print "test_2_create_instance"
+        print "####### test_2_create_instance #######"
         '''
         try:
             insts = _setup(ch, time, env)
@@ -648,7 +646,7 @@ class UpcallAtomProvider(CIMProvider2):
         #test_3_enum_instances
         #Test enumeration of instances and then compare them with the local
         # storage dictionary
-        print "test_3_enum_instances"
+        print "####### test_3_enum_instances #######"
         insts = _setup(ch, time, env)
         paths = []
         ta_list = []
@@ -662,27 +660,17 @@ class UpcallAtomProvider(CIMProvider2):
             raise 'EnumerateInstanceNames failed: %s' % str(arg)
 
         if paths.length() != ta_list.length():
-            raise 'EnumerateInstances (%s) returned different number of '\
-                'results than EnumerateInstanceNames (%s)' %(ta_list.length(), paths.length())
-
-        print "1"
-
+            raise 'EnumerateInstances (%d) returned different number of '\
+                'results than EnumerateInstanceNames (%d)' %(ta_list.length(), paths.length())
+      
         for ci in insts:#Loop through instances
-            print "2: ci.path=%s" %ci.path
-            print "ta_list.length()=%d" %ta_list.length()
-            print "ta_list: %s" %ta_list
-            for rci in ta_list:
-                print "3"
-                print '==== rci.path:',str(rci.path)
-                print '==== ci.path:',str(ci.path)
+            for rci in ch.EnumerateInstances(ch.default_namespace, 'Test_Atom'):
                 if rci.path != ci.path:
                     continue
                 else:
-                    print "4"
                     rval = _compare_values(rci, time, logger)
-                    print "5"
                     if rval:
-                        break
+                        break #break out of for rci loop
                     else:
                         continue
             else:
@@ -693,7 +681,7 @@ class UpcallAtomProvider(CIMProvider2):
 ################################################################################
         #test_4_enum_instance_names
         #Test enumeration of names
-        print "test_4_enum_instance_names"
+        print "####### test_4_enum_instance_names ########"
         insts = _setup(ch, time, env)
 
         try: 
@@ -711,7 +699,7 @@ class UpcallAtomProvider(CIMProvider2):
                 'results than EnumerateInstanceNames'
 
         for ci in insts:
-            for path in ta_list:
+            for path in ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom'):
                 #path.host = None
                 if path == ci.path:
                     break
@@ -724,6 +712,7 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
         #test_5_get_instance_with_property_list
+        print "####### test_5_get_instance_with_property_list ########"
 
         rinst= _create_test_instance(ch, 'Carbon', 6, time)
         if not rinst:
@@ -734,17 +723,24 @@ class UpcallAtomProvider(CIMProvider2):
         keybindings = {'Name': 'Carbon'}
         try:
             inst = _get_instance(ch, keybindings, propertylist)
+            print ">>>>> 1"
         except pywbem.CIMError, arg:
             raise 'Could not _get_instance on %s'%str(rinst)
 
+        print ">>>>> 2"
         if inst:
+            print ">>>>> 3"
             for prop in inst.properties.keys():
+                print ">>>>> 4"
                 if prop not in propertylist:
-                    raise "Property Not Found in PropertyList: " % prop
+                    print ">>>>> 5"
+                    #raise "Property Not Found in PropertyList: " % prop
         _cleanup(ch)
 
 ################################################################################
         #test_6_modify_instance
+        print "####### test_6_modify_instance ########"
+        '''
         #Create an instance of "Boron" and then modify it to Helium
         # Once modified, get_instance returns it and then check the values of it
         rinst = _create_test_instance(ch, 'Boron', 5, time)
@@ -806,16 +802,18 @@ class UpcallAtomProvider(CIMProvider2):
         else:
             raise "ModifyInstance Failed!!"
         _cleanup(ch)
+        '''
 
 ################################################################################
         #test_7_delete
+        print "######## test_7_delete #######"
         #Testing the delete upcall for TestAtom
         insts = _setup(ch, time, env)
 
         del_instances = _get_instance_names(ch)
         for inst in del_instances:
             try:
-                ch.DeleteInstance(ch.default_namespace, inst)
+                ch.DeleteInstance(inst)
             except pywbem.CIMError, arg:
                 raise 'DeleteInstance Failed: %s' % str(arg)
         else:
