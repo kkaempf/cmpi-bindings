@@ -42,7 +42,7 @@
 
       size = PyList_Size($input);
 
-      $1 = (char**)malloc(size + 1);
+      $1 = (char**)malloc(sizeof(char *) * (size+1));
 
       for (i = 0; i < size; i++) 
       {
