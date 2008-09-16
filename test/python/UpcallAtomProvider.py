@@ -161,9 +161,7 @@ def _get_instance(ch, keybindings, propertylist=None):
         iname = pywbem.CIMInstanceName(classname='Test_Atom', \
                 keybindings=(keybindings), namespace='root/cimv2')
         inst = ch.GetInstance(iname, props=propertylist)
-        print ">>>>> _get_instance: inst: %s" %inst
     except pywbem.CIMError, arg:
-        print ">>>>> _get_instance: raise"
         raise
     return inst
 
@@ -723,17 +721,12 @@ class UpcallAtomProvider(CIMProvider2):
         keybindings = {'Name': 'Carbon'}
         try:
             inst = _get_instance(ch, keybindings, propertylist)
-            print ">>>>> 1"
         except pywbem.CIMError, arg:
             raise 'Could not _get_instance on %s'%str(rinst)
 
-        print ">>>>> 2"
         if inst:
-            print ">>>>> 3"
             for prop in inst.properties.keys():
-                print ">>>>> 4"
                 if prop not in propertylist:
-                    print ">>>>> 5"
                     #raise "Property Not Found in PropertyList: " % prop
         _cleanup(ch)
 
