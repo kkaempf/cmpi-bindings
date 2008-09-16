@@ -50,19 +50,13 @@ class CIMInstanceNameIterator:
         return self
 
     def next(self):
-        if not self.enumeration:
-            return None
-        if not self.enumeration.hasNext():
-            raise StopIteration
-        val = getattr(self.enumeration.next().value, 'ref')
-        if val is None:
-            raise StopIteration
-        return self.proxy.cmpi2pywbem_instname(val)
-
-    def length(self):
-        if not self.enumeration:
-            return 0
-        return self.enumeration.toArray().size()
+        if self.enumeration:
+            if not self.enumeration.hasNext():
+                raise StopIteration
+            val = getattr(self.enumeration.next().value, 'ref')
+            if val is None:
+                raise StopIteration
+            yield self.proxy.cmpi2pywbem_instname(val)
 
 class CIMInstanceIterator:
     def __init__(self, proxy, enumeration):
@@ -73,19 +67,13 @@ class CIMInstanceIterator:
         return self
 
     def next(self):
-        if not self.enumeration:
-            return None
-        if not self.enumeration.hasNext():
-            raise StopIteration
-        val = getattr(self.enumeration.next().value, 'inst')
-        if val is None:
-            raise StopIteration
-        return self.proxy.cmpi2pywbem_inst(val)
-
-    def length(self):
-        if not self.enumeration:
-            return 0
-        return self.enumeration.toArray().size()
+        if self.enumeration:
+            if not self.enumeration.hasNext():
+                raise StopIteration
+            val = getattr(self.enumeration.next().value, 'inst')
+            if val is None:
+                raise StopIteration
+            yield self.proxy.cmpi2pywbem_instname(val)
 
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
@@ -96,17 +84,24 @@ class BrokerCIMOMHandle(object):
     def EnumerateInstanceNames(self, ns, cn):
         cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstanceNames(self.ctx, cop)
-        return CIMInstanceNameIterator(self.proxy, e)
+        while e and e.hasNext():
+            data=e.next()
+            assert(data.type == cmpi.CMPI_ref)
+            piname=self.proxy.cmpi2pywbem_instname(data.value.ref)
+            yield piname
 
     def EnumerateInstances(self, ns, cn, props = None):
         cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstances(self.ctx, cop, props)
-        return CIMInstanceIterator(self.proxy, e)
+        while e and e.hasNext():
+            data=e.next()
+            assert(data.type == cmpi.CMPI_instance)
+            pinst=self.proxy.cmpi2pywbem_inst(data.value.inst)
+            yield pinst
 
     def GetInstance(self, path, props = None):
         cop = self.proxy.pywbem2cmpi_instname(path)
         ci = self.broker.getInstance(self.ctx, cop, props)
-        print "  --> ci=%s" %(ci)
         if ci is None:
             return None
         return self.proxy.cmpi2pywbem_inst(ci)
@@ -129,7 +124,16 @@ class BrokerCIMOMHandle(object):
         pass
     def ReferenceNames(self):
         pass
-    def InvokeMethod(self):
+    def InvokeMethod(self, path, method, args):
+        '''
+        cop = self.proxy.pywbem2cmpi_instname(path)
+        self.proxy.pywbem2cmpi_args(args, inargs)
+        poutargs=cmpi.CMPIArgs()
+        rc=self.broker.invokeMethod(self.ctx, cop, method, inargs, poutargs)
+        outargs = self.proxy.cmpi2pywbem_args(poutargs)
+        rslt = (rc,outargs)
+        return rslt
+        '''
         pass
     def GetClass(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)

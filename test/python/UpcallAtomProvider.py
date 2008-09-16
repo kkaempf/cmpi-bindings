@@ -392,29 +392,32 @@ class UpcallAtomProvider(CIMProvider2):
         #Written to test associators of Linux_UnixProcess class
         # 
         try:
+            '''
             logger.log_debug("Getting AssociatorNames")
             ci_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
-            if ci_list and ci_list.length() > 0:
+            if ci_list:
                 ci_entry=ci_list.next()
                 assoc_names = ch.AssociatorNames(ci_entry,\
                         assocClass="Linux_OSProcess") #AssocNames
-                if assoc_names and assoc_names.length() > 0:
+                if assoc_names:
                     #Linux_UnixProcess has an association through Linux_OSProcess
                     #1. Linux_OperatingSystem
                     for name in assoc_names:
+                        print "****** Got name: type: %s   name: %s" %(type(name), name)
                         if name['CSCreationClassName'] != 'Linux_UnitaryComputerSystem' \
                           and name['CreationClassName'] != 'Linux_OperatingSystem':
                             raise "AssociatorName Error: %s" %str(name)
 
                 assoc = ch.AssociatorNames(ci_entry, \
                         assocClass="Linux_ProcessExecutable")#Assoc
-                if assoc and assoc_names.length() > 0:
+                if assoc:
                     #Linux_UnixProcess has an association through Linux_ProcessExecutable
                     #1. Linux_LinuxDataFile
                     for inst in assoc:
                         if inst['CSCreationClassName'] != 'CIM_UnitaryComputerSystem' \
                           and inst['CreationClassName'] != 'Linux_LinuxDataFile':
                             raise "Associator Error: %s" %str(inst)
+             '''
 
 #
 #CreateClass Method
@@ -548,42 +551,52 @@ class UpcallAtomProvider(CIMProvider2):
 #
 #InvokeMethod
 #            
+            '''
             try:
-                logger.log_debug("**** Calling EnumInstances ****")
-                list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatGatheringService")
-                if list and list.length() > 0:
+                logger.log_debug("**** Testing InvokeMethod ****")
+
+                new_instance = pywbem.CIMInstance('Test_Method')
+                new_instance['id'] = '1'
+                new_instance['p_sint32'] = '1'
+                new_instance['p_str'] = 'str'
+                cop = pywbem.CIMInstanceName(namespace=ch.default_namespace, classname='Test_Method')
+                cop['id'] = '1'
+                new_instance.path = cop
+                cipath=ch.CreateInstance(cop, new_instance)
+                new_instance.path = cipath
+
+                inamelist = ch.EnumerateInstanceNames(ch.default_namespace, "Test_Method")
+                if inamelist:
                     logger.log_debug("**** Calling GetINstance ****")
-                    list_entry = list.next()
-                    service = ch.GetInstance(list_entry)
-                    if service:
-                        if service['Started']:
-                            ch.InvokeMethod("StopService", list_entry)
-                        else:
-                            ch.InvokeMethod("StartService", list.entry)
+                    for list_entry in inamelist:
+                        entry = ch.GetInstance(list_entry)
+                        if entry:
+                            rc,outArgs = ch.InvokeMethod("setStrProp", list_entry, value='newstr')
 
                 logger.log_debug("**** #2:Calling EnumInstances ****")
-                list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatGatheringService")
-                if list and list.length() > 0:
-                    logger.log_debug("**** #2:Calling GetInstance ****")
-                    list_entry = list.next()
-                    service = ch.GetInstance(list_entry)
-                    if service:
-                        if service['Started']:
-                            pass
-                        else:
-                            ch.InvokeMethod("StartService", list_entry)
+                inamelist = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatGatheringService")
+                if inamelist:
+                    for list_entry in inamelist:
+                        logger.log_debug("**** #2:Calling GetInstance ****")
+                        list_entry = inamelist.next()
+                        service = ch.GetInstance(list_entry)
+                        if service:
+                            if service['Started']:
+                                pass
+                            else:
+                                ch.InvokeMethod("StartService", list_entry)
 
             except pywbem.CIMError, arg:
                 logger.log_debug("**** CIMError: ch.InvokeMethod ****")
-
+            '''
 #ReferenceNames
             try:
                 stat_list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatDef")
-                if stat_list and stat_list.length() > 0:
+                if stat_list:
                     for statdef in stat_list:
                         if statdef['DefinitionID'] == "machine_type":
                             ref_list = ch.ReferenceNames(statdef)
-                            if ref_list and ref_list.length() > 0:
+                            if ref_list:
                                 for ref in ref_list:
                                     cn = ref.classname 
                                     if cn == "Novell_DCAMCurrentValueForStatDef" or\
@@ -600,11 +613,11 @@ class UpcallAtomProvider(CIMProvider2):
 #Reference
             try:
                 stat_list = ch.EnumerateInstanceNames(ch.default_namespace, "Novell_DCAMStatDef")
-                if stat_list and stat_list.length() > 0:
+                if stat_list:
                     for statdef in stat_list:
                         if statdef['DefinitionID'] == "machine_type":
                             ref_list = ch.References(statdef)
-                            if ref_list and ref_list.length() > 0:
+                            if ref_list:
                                 for ref in ref_list:
                                     cn = ref.classname 
                                     if cn == "Novell_DCAMCurrentValueForStatDef" or\
@@ -627,8 +640,8 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
 #        #test_2_create_instance
-        print "####### test_2_create_instance #######"
         '''
+        print "####### test_2_create_instance #######"
         try:
             insts = _setup(ch, time, env)
             for inst in insts:
@@ -646,21 +659,17 @@ class UpcallAtomProvider(CIMProvider2):
         # storage dictionary
         print "####### test_3_enum_instances #######"
         insts = _setup(ch, time, env)
-        paths = []
-        ta_list = []
-        try: 
-            ta_list = ch.EnumerateInstances(ch.default_namespace, 'Test_Atom')
-        except pywbem.CIMError, arg:
-            raise 'EnumerateInstances failed: %s' % str(arg)
-        try:
-            paths = ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom')
-        except pywbem.CIMError, arg:
-            raise 'EnumerateInstanceNames failed: %s' % str(arg)
-
-        if paths.length() != ta_list.length():
+        
+        ta_list = ch.EnumerateInstances(ch.default_namespace, 'Test_Atom')
+        paths = ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom')
+        lTAList=list(ta_list)
+        lNames=list(paths)
+        print "ta_list:  %d   paths: %d" %(len(lTAList), len(lNames))
+    
+        if len(lNames) != len(lTAList):
             raise 'EnumerateInstances (%d) returned different number of '\
-                'results than EnumerateInstanceNames (%d)' %(ta_list.length(), paths.length())
-      
+                'results than EnumerateInstanceNames (%d)' %(len(lTAList), len(lNames))
+     
         for ci in insts:#Loop through instances
             for rci in ch.EnumerateInstances(ch.default_namespace, 'Test_Atom'):
                 if rci.path != ci.path:
@@ -692,9 +701,12 @@ class UpcallAtomProvider(CIMProvider2):
         except pywbem.CIMError, arg:
             raise 'EnumerateInstances Failed: %s' % str(arg)
 
-        if instances.length() != ta_list.length():
-            raise 'EnumerateInstances returned different number of '\
-                'results than EnumerateInstanceNames'
+        lTAList=list(ta_list)
+        lInsts=list(instances)
+    
+        if len(lInsts) != len(lTAList):
+            raise 'EnumerateInstances (%d) returned different number of '\
+                'results than EnumerateInstanceNames (%d)' %(len(lInsts), len(lTAList))
 
         for ci in insts:
             for path in ch.EnumerateInstanceNames(ch.default_namespace, 'Test_Atom'):
@@ -727,13 +739,15 @@ class UpcallAtomProvider(CIMProvider2):
         if inst:
             for prop in inst.properties.keys():
                 if prop not in propertylist:
-                    #raise "Property Not Found in PropertyList: " % prop
+                    #raise "Property Not Found in PropertyList: %s" % prop
+                    print "Property Not Found in PropertyList: %s" % prop
+                    continue
         _cleanup(ch)
 
 ################################################################################
         #test_6_modify_instance
-        print "####### test_6_modify_instance ########"
         '''
+        print "####### test_6_modify_instance ########"
         #Create an instance of "Boron" and then modify it to Helium
         # Once modified, get_instance returns it and then check the values of it
         rinst = _create_test_instance(ch, 'Boron', 5, time)
