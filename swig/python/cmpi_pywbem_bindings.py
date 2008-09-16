@@ -461,6 +461,9 @@ class CMPIProxyProvider(object):
     def pywbem2cmpi_instname(self, iname):
         cop = self.broker.new_object_path(iname.namespace, str(iname.classname))
         for name, val in iname.keybindings.items():
+            if val is None:
+                raise ValueError('NULL value for key "%s.%s"' % \
+                        (iname.classname, name))
             data, _type = self.pywbem2cmpi_value(val)
             cop.add_key(str(name), data, _pywbem2cmpi_typemap[_type])
         return cop

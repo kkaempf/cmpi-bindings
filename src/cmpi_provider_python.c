@@ -178,6 +178,7 @@ get_exc_trace(const CMPIBroker* broker)
     if (!PyString_Check(obstr))
         TB_ERROR("getvalue() did not return a string");
 
+    _SBLIM_TRACE(1,(PyString_AsString(obstr))); 
     args = PyTuple_New(2);
     PyTuple_SetItem(args, 0, string2py("\n")); 
     PyTuple_SetItem(args, 1, string2py("<br>")); 
