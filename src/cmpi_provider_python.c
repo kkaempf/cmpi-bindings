@@ -324,9 +324,9 @@ proplist2py(const char** cplist)
     PyObject* pl;
  
     pl = PyList_New(0); 
-    for (; *cplist != NULL; ++cplist)
+    for (; (cplist!=NULL && *cplist != NULL); ++cplist)
     {
-    PyList_Append(pl, PyString_FromString(*cplist)); 
+        PyList_Append(pl, PyString_FromString(*cplist)); 
     }
     SWIG_PYTHON_THREAD_END_BLOCK; 
  
