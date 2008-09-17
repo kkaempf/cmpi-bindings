@@ -41,40 +41,6 @@ import pywbem
 def SFCBUDSConnection():
     return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
 
-class CIMInstanceNameIterator(object):
-    def __init__(self, proxy, enumeration):
-        self.enumeration = enumeration
-        self.proxy = proxy
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        if self.enumeration:
-            if not self.enumeration.hasNext():
-                raise StopIteration
-            val = getattr(self.enumeration.next().value, 'ref')
-            if val is None:
-                raise StopIteration
-            yield self.proxy.cmpi2pywbem_instname(val)
-
-class CIMInstanceIterator(object):
-    def __init__(self, proxy, enumeration):
-        self.enumeration = enumeration
-        self.proxy = proxy
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        if self.enumeration:
-            if not self.enumeration.hasNext():
-                raise StopIteration
-            val = getattr(self.enumeration.next().value, 'inst')
-            if val is None:
-                raise StopIteration
-            yield self.proxy.cmpi2pywbem_instname(val)
-
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
         self.broker = proxy.broker
@@ -111,40 +77,89 @@ class BrokerCIMOMHandle(object):
         cop = self.proxy.pywbem2cmpi_instname(path)
         e = self.broker.associators(self.ctx, cop, assocClass, resultClass,
             role, resultRole, props)
-        return CIMInstanceIterator(self.proxy, e)
+        while e and e.hasNext():
+            data = e.next()
+            assert(data.type == cmpi_instance)
+            pinst=self.proxy.cmpi2pywbem_inst(data.value.inst)
+            yield pinst
 
     def AssociatorNames(self, path, assocClass = None, resultClass = None, 
         role = None, resultRole = None, props = None):
         cop = self.proxy.pywbem2cmpi_instname(path)
         e = self.broker.associatorNames(self.ctx, cop, assocClass, resultClass,
             role, resultRole)
-        return CIMInstanceNameIterator(self.proxy, e)
+        while e and e.hasNext():
+            data = e.next()
+            assert(data.type == cmpi_ref)
+            piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
+            yield piname
 
-    def References(self):
-        pass
-    def ReferenceNames(self):
-        pass
-    def InvokeMethod(self, path, method, args):
-        '''
+    def References(self, path, resultClass=None, role=None, props=None):
         cop = self.proxy.pywbem2cmpi_instname(path)
-        self.proxy.pywbem2cmpi_args(args, inargs)
-        poutargs=cmpi.CMPIArgs()
+        e = self.broker.references(self.ctx, cop, resultClass,
+            role, props)
+        while e and e.hasNext():
+            data = e.next()
+            assert(data.type == cmpi_ref)
+            piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
+            yield piname
+            
+    def ReferenceNames(self, path, resultClass=None, role=None):
+        cop = self.proxy.pywbem2cmpi_instname(path)
+        e = self.broker.referenceNames(self.ctx, cop, resultClass, role)
+        while e and e.hasNext():
+            data = e.next()
+            assert(data.type == cmpi_ref)
+            piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
+            yield piname
+
+    def InvokeMethod(self, path, method, **params):
+        print "!@!@!@!@ Entering ch.InvokeMethod...  path=%s  method=%s  params=%s" %(path, method, params)
+        # TODO: Handle the case where the classname is passed in for path (class methods rather than instance methods)
+
+        # TODO: Where does default namespace come from?
+        ns = 'root/cimv2'
+        if isinstance(path, pywbem.StringTypes):
+            print "path is a String type:  convert to CIMClassName"
+            objpath = pywbem.CIMClassName(path, namespace=ns)
+        elif isinstance(path, pywbem.CIMInstanceName):
+            if path.namespace is None:
+                path.namespace = ns
+            objpath = path
+        else:
+            raise pywbem.CIMError(pywbem.CIM_INVALIDPARAMETER)
+        cop = self.proxy.pywbem2cmpi_instname(objpath)
+        print "!@!@!@!@ Working with cop: ", cop
+        inargs=self.proxy.pywbem2cmpi_args(params)
+        print "!@!@!@!@ Working with inargs: ", inargs
+        poutargs = self.broker.new_args()
+        print "!@!@!@!@ about to call invokeMethod:  inargs(%s)=%s  outargs(%s)=%s" %(type(inargs), inargs, type(poutargs), poutargs)
         rc=self.broker.invokeMethod(self.ctx, cop, method, inargs, poutargs)
+        print "!@!@!@!@ Got rc(type:%s)=%s   poutargs: " %(type(rc),rc), poutargs
+        outrc = self.proxy.cmpi2pywbem_data(rc)
+        print "!@!@!@!@ Converted to rc(type:%s): %s "%(type(outrc),outrc)
         outargs = self.proxy.cmpi2pywbem_args(poutargs)
-        rslt = (rc,outargs)
+        print "!@!@!@!@ Converted to outargs: ", outargs
+        rslt = ((type(rc),rc),outargs)
+        print "!@!@!@!@ returning ", rslt
         return rslt
-        '''
-        pass
+        #pass
+        
     def GetClass(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    
     def EnumerateClassNames(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    
     def EnumerateClasses(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    
     def CreateClass(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    
     def DeleteClass(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
+    
     def CreateInstance(self, path, instance):
         cop = self.proxy.pywbem2cmpi_instname(path)
         inst = self.proxy.pywbem2cmpi_inst(instance)
@@ -152,9 +167,11 @@ class BrokerCIMOMHandle(object):
         if ciname is None:
             return None
         return self.proxy.cmpi2pywbem_instname(ciname)
+    
     def DeleteInstance(self, path):
         cop = self.proxy.pywbem2cmpi_instname(path)
         return self.broker.deleteInstance(self.ctx, cop)
+    
     ### Not sure whether this should be on BrokerCIMOMHandle or
     ### on ProviderEnvironment
     ### We may want to move it ?
@@ -432,6 +449,7 @@ class CMPIProxyProvider(object):
         if cargs is None:
             cargs = self.broker.new_args()
         for name, (_type, pval) in pargs.items():
+            print "@@@@ Got name: ",name,"   _type: ", _type, "    pval: ",pval
             data, _type = self.pywbem2cmpi_value(pval, _type)
             ctype = _pywbem2cmpi_typemap[_type]
             if isinstance(pval, list):
@@ -471,12 +489,13 @@ class CMPIProxyProvider(object):
 
     def pywbem2cmpi_instname(self, iname):
         cop = self.broker.new_object_path(iname.namespace, str(iname.classname))
-        for name, val in iname.keybindings.items():
-            if val is None:
-                raise ValueError('NULL value for key "%s.%s"' % \
-                        (iname.classname, name))
-            data, _type = self.pywbem2cmpi_value(val)
-            cop.add_key(str(name), data, _pywbem2cmpi_typemap[_type])
+        if isinstance(iname, pywbem.CIMInstanceName):
+            for name, val in iname.keybindings.items():
+                if val is None:
+                    raise ValueError('NULL value for key "%s.%s"' % \
+                            (iname.classname, name))
+                data, _type = self.pywbem2cmpi_value(val)
+                cop.add_key(str(name), data, _pywbem2cmpi_typemap[_type])
         return cop
         
     def pywbem2cmpi_value(self, pdata, _type=None, cval=None):
@@ -514,6 +533,9 @@ class CMPIProxyProvider(object):
         elif _type == 'instance':
             attr = 'inst'
             pdata = self.pywbem2cmpi_inst(pdata)
+        elif _type == 'chars':
+            print "!!!! pywbem2cmpi_value: Got a _char_ type... Need to convert it"
+            pdata = self.broker.new_string(str(pdata))
         setattr(cval, attr, pdata)
         return cval, _type
 
@@ -532,6 +554,9 @@ class CMPIProxyProvider(object):
         else:
             cval = getattr(cval, ctype)
             if _type == 'string':
+                pval = cval.to_s()
+            elif _type == 'chars':
+                print "!!!! cmpi2pywbem_value: Got a _char_ type... Need to convert it"
                 pval = cval.to_s()
             elif ctype == 'ref':
                 pval = self.cmpi2pywbem_instname(cval)
@@ -595,6 +620,10 @@ class CMPIProxyProvider(object):
         if _type == 'instance':
             val = self.cmpi2pywbem_inst(val)
             return val
+        if _type == 'chars':
+            _type = 'string'
+            print "!!!! cmpi2pywbem_data: Got a _char_ type... Need to convert it: type: %s  value: "%type(val), val
+            print "!!!! cmpi2pywbem_data: post convert?"
         return pywbem.tocimobj(_type, val)
 
     def cmpi2pywbem_datetime(self, dt):
@@ -620,6 +649,7 @@ _pywbem2cmpi_typemap = {
         'string'        : cmpi.CMPI_string,
         'datetime'      : cmpi.CMPI_dateTime,
         'instance'      : cmpi.CMPI_instance,
+        'chars'         : cmpi.CMPI_chars,
         }
 
 _cmpi2pywbem_typemap = {
@@ -639,6 +669,7 @@ _cmpi2pywbem_typemap = {
         cmpi.CMPI_string      : 'string', 
         cmpi.CMPI_dateTime    : 'datetime', 
         cmpi.CMPI_instance    : 'instance', 
+        cmpi.CMPI_chars       : 'chars', 
 
         #cmpi.CMPI_null        : None,
         #cmpi.CMPI_args        : 'args', 
@@ -666,6 +697,7 @@ def _cmpi_type2string(itype):
         itype = itype ^ cmpi.CMPI_ARRAY
 
     try:
+        print "^^^^^^^^ in _cmpi_type2string... calling _cmpi2pywbem_typemap[%d]" %itype
         tp = _cmpi2pywbem_typemap[itype]
     except KeyError:
         raise ValueError('Unknown type: %d' % itype)
