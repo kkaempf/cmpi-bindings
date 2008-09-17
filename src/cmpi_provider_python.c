@@ -178,7 +178,7 @@ get_exc_trace(const CMPIBroker* broker)
     if (!PyString_Check(obstr))
         TB_ERROR("getvalue() did not return a string");
 
-    _SBLIM_TRACE(1,(PyString_AsString(obstr))); 
+    _SBLIM_TRACE(1,("%s", PyString_AsString(obstr))); 
     args = PyTuple_New(2);
     PyTuple_SetItem(args, 0, string2py("\n")); 
     PyTuple_SetItem(args, 1, string2py("<br>")); 
@@ -352,7 +352,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
         PyErr_Print(); 
         PyErr_Clear(); 
         char* str = fmtstr("Python module does not contain \"%s\"", opname); 
-        _SBLIM_TRACE(1,(str)); 
+        _SBLIM_TRACE(1,("%s", str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
         st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
@@ -363,7 +363,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     {
         char* str = fmtstr("Python module attribute \"%s\" is not callable", 
                 opname); 
-        _SBLIM_TRACE(1,(str)); 
+        _SBLIM_TRACE(1,("%s", str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
         st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
@@ -400,7 +400,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
         SWIG_PYTHON_THREAD_BEGIN_ALLOW;
         char* str = fmtstr("Python function \"%s\" didn't return a two-tuple",
                 opname); 
-        _SBLIM_TRACE(1,(str)); 
+        _SBLIM_TRACE(1,("%s", str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
         st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
@@ -419,7 +419,7 @@ call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st,
     {
         SWIG_PYTHON_THREAD_BEGIN_ALLOW;
         char* str = fmtstr("Python function \"%s\" didn't return a {<int>, <str>) two-tuple", opname); 
-        _SBLIM_TRACE(1,(str)); 
+        _SBLIM_TRACE(1,("%s", str)); 
         st->rc = CMPI_RC_ERR_FAILED; 
         st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
         free(str); 
