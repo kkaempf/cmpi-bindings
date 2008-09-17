@@ -259,6 +259,9 @@ class Test_Method
 	sint32 createObjects(
 			[in, required, EmbeddedInstance("Test_Method")] string insts[]
 	); 
+
+    [ Description("Return the number of instances") ]
+	sint32 numInsts(); 
 	
     [ Description("Retrieve instances of Test_Method as an instance list output parameter") ]
 	sint32 getObjects(

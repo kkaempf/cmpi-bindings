@@ -35,7 +35,8 @@ class TestMethodProvider(CIMProvider2):
         
         #model['id'] = model.path['id']
         model['p_sint32']=inst[1]
-        model['p_str']=inst[0]
+        model['p_str']=pywbem.CIMProperty('p_str', type='string', value=inst[0])
+        #model['p_str']=inst[0]
         return model
 
     def enum_instances(self, env, model, keys_only):
@@ -676,6 +677,13 @@ class TestMethodProvider(CIMProvider2):
             rval = pywbem.Sint32(0)
         out_params = [pywbem.CIMParameter('path', 'reference', value=path)]
         return (rval, out_params)
+
+    def cim_method_numinsts(self, env, object_name):
+        logger = env.get_logger()
+        logger.log_debug('Entering %s.cim_method_getobjectpath()' \
+                % self.__class__.__name__)
+
+        return (pywbem.Sint32(len(g_insts)), [])
 
     def cim_method_getobjectpaths(self, env, object_name):
         logger = env.get_logger()
