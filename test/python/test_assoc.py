@@ -1143,8 +1143,9 @@ class TestAssociations(unittest.TestCase):
                     self.fail('KeyError caught trying to access properties that should exist.')
                 isValid=False
                 try:
-                    if usr['UserID'] is not None:
-                        self.fail('UserID property set when it should not be.')
+                    # some CIMOMs always return keys .
+                    #if usr['UserID'] is not None:
+                    #    self.fail('UserID property set when it should not be.')
                     if usr['HomeDirectory'] is not None:
                         self.fail('HomeDirectory property set when it should not be.')
                     isValid=True

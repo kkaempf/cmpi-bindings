@@ -41,7 +41,7 @@ import pywbem
 def SFCBUDSConnection():
     return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
 
-class CIMInstanceNameIterator:
+class CIMInstanceNameIterator(object):
     def __init__(self, proxy, enumeration):
         self.enumeration = enumeration
         self.proxy = proxy
@@ -58,7 +58,7 @@ class CIMInstanceNameIterator:
                 raise StopIteration
             yield self.proxy.cmpi2pywbem_instname(val)
 
-class CIMInstanceIterator:
+class CIMInstanceIterator(object):
     def __init__(self, proxy, enumeration):
         self.enumeration = enumeration
         self.proxy = proxy
@@ -446,6 +446,8 @@ class CMPIProxyProvider(object):
             pcop = pywbem.CIMInstanceName(pinst.classname)
         cop = self.pywbem2cmpi_instname(pcop)
         cinst = self.broker.new_instance(cop)
+        if pinst.property_list is not None:
+            cinst.set_property_filter(pinst.property_list)
         for prop in pinst.properties.values():
             data, _type = self.pywbem2cmpi_value(prop.value, _type=prop.type)
             ctype = _pywbem2cmpi_typemap[_type]

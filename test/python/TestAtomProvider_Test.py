@@ -437,9 +437,8 @@ class TestAtomProvider(unittest.TestCase):
             raise arg
 
         for prop in inst.properties.keys():
-            if prop not in propertylist:
-                #self.fail("Property Not Found in PropertyList: %s" % prop)
-                print "Property Not Found in PropertyList: %s" % prop
+            if prop not in inst.path and prop not in propertylist:
+                self.fail("Property Not Found in PropertyList: %s" % prop)
 
 
     def test_6_modify_instance(self):
