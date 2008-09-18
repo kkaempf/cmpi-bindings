@@ -79,7 +79,7 @@ class BrokerCIMOMHandle(object):
             role, resultRole, props)
         while e and e.hasNext():
             data = e.next()
-            assert(data.type == cmpi_instance)
+            assert(data.type == cmpi.CMPI_instance)
             pinst=self.proxy.cmpi2pywbem_inst(data.value.inst)
             yield pinst
 
@@ -90,7 +90,7 @@ class BrokerCIMOMHandle(object):
             role, resultRole)
         while e and e.hasNext():
             data = e.next()
-            assert(data.type == cmpi_ref)
+            assert(data.type == cmpi.CMPI_ref)
             piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
             yield piname
 
@@ -100,7 +100,7 @@ class BrokerCIMOMHandle(object):
             role, props)
         while e and e.hasNext():
             data = e.next()
-            assert(data.type == cmpi_ref)
+            assert(data.type == cmpi.CMPI_instance)
             piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
             yield piname
             
@@ -109,7 +109,7 @@ class BrokerCIMOMHandle(object):
         e = self.broker.referenceNames(self.ctx, cop, resultClass, role)
         while e and e.hasNext():
             data = e.next()
-            assert(data.type == cmpi_ref)
+            assert(data.type == cmpi.CMPI_ref)
             piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
             yield piname
 
@@ -213,6 +213,7 @@ class ProviderEnvironment(object):
 _classcache = {}
 _conn = SFCBUDSConnection()
 
+g_proxies = {}
 
 class CMPIProxyProvider(object):
 
@@ -221,8 +222,15 @@ class CMPIProxyProvider(object):
         self.broker = broker
         self.miname = miname
         self.env = ProviderEnvironment(self)
-        self.proxy = ProviderProxy(self.env, 
-                '/usr/lib/pycim/'+miname+'.py')
+        try:
+            self.proxy = g_proxies[self.miname]
+            if str(self.proxy.env.proxy.broker) != str(broker):
+                raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                        'New broker not the same as cached broker!')
+        except KeyError:
+            self.proxy = ProviderProxy(self.env, 
+                  '/usr/lib/pycim/'+miname+'.py')
+            g_proxies[self.miname] = self.proxy
         #print '*** broker.name()', broker.name()
         #print '*** broker.capabilities()', broker.capabilities()
         #print '*** broker.version()', broker.version()
