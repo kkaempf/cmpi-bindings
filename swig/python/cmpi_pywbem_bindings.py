@@ -200,9 +200,6 @@ class ProviderEnvironment(object):
     def set_context_value(self, key, value):
         pass
 
-_classcache = {}
-_conn = SFCBUDSConnection()
-
 g_proxies = {}
 
 class CMPIProxyProvider(object):
@@ -232,7 +229,6 @@ class CMPIProxyProvider(object):
         #test_conversions()
         self.env.ctx = ctx
         op = self.cmpi2pywbem_instname(objname)
-        conn = SFCBUDSConnection()
         try:
             for i in self.proxy.MI_enumInstanceNames(self.env, op):
                 cop = self.pywbem2cmpi_instname(i)
@@ -246,7 +242,6 @@ class CMPIProxyProvider(object):
         print 'provider.py: In enum_instances()' 
         self.env.ctx = ctx
         op = self.cmpi2pywbem_instname(objname)
-        conn = SFCBUDSConnection()
         try:
             for i in self.proxy.MI_enumInstances(self.env, op, plist):
                 cinst = self.pywbem2cmpi_inst(i)
@@ -260,7 +255,6 @@ class CMPIProxyProvider(object):
         print 'provider.py: In get_instance()' 
         self.env.ctx = ctx
         op = self.cmpi2pywbem_instname(objname)
-        conn = SFCBUDSConnection()
         try:
             pinst = self.proxy.MI_getInstance(self.env, op, plist)
         except pywbem.CIMError, args:
