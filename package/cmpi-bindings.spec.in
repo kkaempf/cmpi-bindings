@@ -2,22 +2,29 @@
 # spec file for package cmpi-bindings
 #
 # Copyright (c) 2008 SUSE LINUX Products GmbH, Nuernberg, Germany.
-# This file and all modifications and additions to the pristine
-# package are under the same license as the package itself.
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
 #
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
 # nodebuginfo
+Url:            http://omc-project.com
 
 Name:           @PACKAGE@
 Version:        @VERSION@
 Release:        0
-License:        GPL
-Summary:        Bindings for cmpi
-Group:          Development/Sources
+License:        BSD 3-Clause; EPL 1.0
+Summary:        Adapter to write and run CMPI-type CIM providers
+Group:          Development/Libraries/Other
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  cmake gcc-c++ ruby-devel python-devel swig
+BuildRequires:  cmake gcc-c++ python-devel ruby-devel swig
 BuildRequires:  sblim-sfcb
 Source:         %{name}-%{version}.tar.bz2
 Prefix:         /usr
@@ -49,8 +56,10 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{__rm} -rf %{buildroot}
 
 %package -n cmpi-bindings-ruby
-Summary:        Ruby bindings for cmpi
+Summary:        Adapter to write and run CMPI-type CIM providers in Ruby
 Group:          Development/Languages/Ruby
+# for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
+Provides:       %{name} = %{version}-%{release}
 
 %description -n cmpi-bindings-ruby
 -
@@ -61,8 +70,10 @@ Group:          Development/Languages/Ruby
 %{_libdir}/ruby/vendor_ruby/%{rb_ver}/rcmpi_instance.rb
 
 %package -n cmpi-bindings-pywbem
-Summary:        Python bindings for cmpi
+Summary:        Adapter to write and run CMPI-type CIM providers in Python
 Group:          Development/Languages/Python
+# for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
+Provides:       %{name} = %{version}-%{release}
 
 %description -n cmpi-bindings-pywbem
 -

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Sep 17 02:10:37 CEST 2008 - mrueckert@suse.de
+
+- provide the main package for the debug package. we dont use
+  debug_package_requires here as it would enforce to install both
+  packages.
+
+-------------------------------------------------------------------
 Thu Sep 11 15:29:08 CEST 2008 - kkaempf@suse.de
 
 - Support Python threads, do proper locking 
