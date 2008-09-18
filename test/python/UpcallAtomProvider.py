@@ -387,7 +387,7 @@ class UpcallAtomProvider(CIMProvider2):
 #       ch methods =['AssociatorNames', 'Associators', 'References', 'ReferenceNames'
 #       'CreateInstance', 'DeleteInstance', 'GetInstance', 'ModifyInstance',
 #       'EnumerateInstanceNames', 'EnumerateInstances', 'InvokeMethod', 
-#       'export_indication' ]
+#       'DeliverIndication' ]
         #test_1_upcalls
         print "####### test_1_upcalls #######"
         #Written to test associators of Linux_UnixProcess class
@@ -496,7 +496,7 @@ class UpcallAtomProvider(CIMProvider2):
             except pywbem.CIMError, arg:
                 logger.log_debug("**** CIMError: ch.Reference ****")
 
-#export_indication
+#DeliverIndication
             # Separate test for indications
 
             
@@ -701,7 +701,7 @@ class UpcallAtomProvider(CIMProvider2):
 
     def cim_method_send_indication(self, env, object_name):
         """
-        Method to test the upcalls to the cimom handle for export_indications.
+        Method to test the upcalls to the cimom handle for DeliverIndications.
         """
         global _indication_names,_indication_count
         cimtime = pywbem.CIMDateTime.now()
@@ -722,17 +722,17 @@ class UpcallAtomProvider(CIMProvider2):
             
             try:
                 print '### Exporting indication. pid:',os.getpid()
-                ch.export_indication(ch.default_namespace, alert_ind)
+                ch.DeliverIndication(ch.default_namespace, alert_ind)
                 print '### Done exporting indication'
             except pywbem.CIMError, arg:
                 print '### Caught exception exporting indication'
                 raise
 
-        indcount = _indication_names.length()
+        indcount = len(_indication_names)
         st = time.time()
         while _indication_count < indcount:
             time.sleep(.01)
-            if (time.time() - st) > 60.00:
+            if (time.time() - st) > 10.00:
                 raise "Only received %d. expected %d" % (_indication_count, indcount)
 
         for name,received in _indication_names.items():
