@@ -19,8 +19,8 @@ class TestMethodProvider(CIMProvider2):
 
     def __init__ (self, env):
         logger = env.get_logger()
-        logger.log_debug('Initializing provider %s from %s' \
-                % (self.__class__.__name__, __file__))
+        logger.log_debug('Initializing provider %s from %s.... num g_insts=%d' \
+                % (self.__class__.__name__, __file__, len(g_insts)))
 
     def get_instance(self, env, model):
         logger = env.get_logger()
@@ -700,6 +700,13 @@ class TestMethodProvider(CIMProvider2):
         rval = pywbem.Sint32(0)
         return (rval, out_params)
 
+    def cim_method_numinsts(self, env, object_name):
+        logger = env.get_logger()
+        logger.log_debug('Entering %s.cim_method_numinsts()' \
+                % self.__class__.__name__)
+
+        return (pywbem.Sint32(len(g_insts)), {})
+    
     def cim_method_createobject(self, env, object_name, param_inst):
         logger = env.get_logger()
         logger.log_debug('Entering %s.cim_method_createobject()' \

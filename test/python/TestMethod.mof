@@ -250,6 +250,9 @@ class Test_Method
 			[in, required] Test_Method REF paths[]
 	); 
 
+    [ Description("Return number of instances of Test_Method") ]
+	sint32 numInsts();
+
     [ Description("Create the specified instance of Test_Method") ]
 	sint32 createObject(
 			[in, required, EmbeddedInstance("Test_Method")] string inst
