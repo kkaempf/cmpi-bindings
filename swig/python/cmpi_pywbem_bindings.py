@@ -114,13 +114,11 @@ class BrokerCIMOMHandle(object):
             yield piname
 
     def InvokeMethod(self, path, method, **params):
-        print "!@!@!@!@ Entering ch.InvokeMethod...  path=%s  method=%s  params=%s" %(path, method, params)
-        # TODO: Handle the case where the classname is passed in for path (class methods rather than instance methods)
 
         # TODO: Where does default namespace come from?
         ns = 'root/cimv2'
         if isinstance(path, pywbem.StringTypes):
-            print "path is a String type:  convert to CIMClassName"
+            # path is a String type:  convert to CIMClassName
             objpath = pywbem.CIMClassName(path, namespace=ns)
         elif isinstance(path, pywbem.CIMInstanceName):
             if path.namespace is None:
@@ -129,21 +127,13 @@ class BrokerCIMOMHandle(object):
         else:
             raise pywbem.CIMError(pywbem.CIM_INVALIDPARAMETER)
         cop = self.proxy.pywbem2cmpi_instname(objpath)
-        print "!@!@!@!@ Working with cop: ", cop
         inargs=self.proxy.pywbem2cmpi_args(params)
-        print "!@!@!@!@ Working with inargs: ", inargs
         poutargs = self.broker.new_args()
-        print "!@!@!@!@ about to call invokeMethod:  inargs(%s)=%s  outargs(%s)=%s" %(type(inargs), inargs, type(poutargs), poutargs)
         rc=self.broker.invokeMethod(self.ctx, cop, method, inargs, poutargs)
-        print "!@!@!@!@ Got rc(type:%s)=%s   poutargs: " %(type(rc),rc), poutargs
         outrc = self.proxy.cmpi2pywbem_data(rc)
-        print "!@!@!@!@ Converted to rc(type:%s): %s "%(type(outrc),outrc)
         outargs = self.proxy.cmpi2pywbem_args(poutargs)
-        print "!@!@!@!@ Converted to outargs: ", outargs
-        rslt = ((type(rc),rc),outargs)
-        print "!@!@!@!@ returning ", rslt
+        rslt = ((type(outrc),outrc),outargs)
         return rslt
-        #pass
         
     def GetClass(self, *args, **kwargs):
         raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
@@ -457,7 +447,6 @@ class CMPIProxyProvider(object):
         if cargs is None:
             cargs = self.broker.new_args()
         for name, (_type, pval) in pargs.items():
-            print "@@@@ Got name: ",name,"   _type: ", _type, "    pval: ",pval
             data, _type = self.pywbem2cmpi_value(pval, _type)
             ctype = _pywbem2cmpi_typemap[_type]
             if isinstance(pval, list):
@@ -542,7 +531,6 @@ class CMPIProxyProvider(object):
             attr = 'inst'
             pdata = self.pywbem2cmpi_inst(pdata)
         elif _type == 'chars':
-            print "!!!! pywbem2cmpi_value: Got a _char_ type... Need to convert it"
             pdata = self.broker.new_string(str(pdata))
         setattr(cval, attr, pdata)
         return cval, _type
@@ -564,7 +552,6 @@ class CMPIProxyProvider(object):
             if _type == 'string':
                 pval = cval.to_s()
             elif _type == 'chars':
-                print "!!!! cmpi2pywbem_value: Got a _char_ type... Need to convert it"
                 pval = cval.to_s()
             elif ctype == 'ref':
                 pval = self.cmpi2pywbem_instname(cval)
@@ -630,8 +617,6 @@ class CMPIProxyProvider(object):
             return val
         if _type == 'chars':
             _type = 'string'
-            print "!!!! cmpi2pywbem_data: Got a _char_ type... Need to convert it: type: %s  value: "%type(val), val
-            print "!!!! cmpi2pywbem_data: post convert?"
         return pywbem.tocimobj(_type, val)
 
     def cmpi2pywbem_datetime(self, dt):
@@ -705,7 +690,6 @@ def _cmpi_type2string(itype):
         itype = itype ^ cmpi.CMPI_ARRAY
 
     try:
-        print "^^^^^^^^ in _cmpi_type2string... calling _cmpi2pywbem_typemap[%d]" %itype
         tp = _cmpi2pywbem_typemap[itype]
     except KeyError:
         raise ValueError('Unknown type: %d' % itype)
