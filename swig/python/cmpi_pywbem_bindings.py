@@ -132,7 +132,7 @@ class BrokerCIMOMHandle(object):
         rc=self.broker.invokeMethod(self.ctx, cop, method, inargs, poutargs)
         outrc = self.proxy.cmpi2pywbem_data(rc)
         outargs = self.proxy.cmpi2pywbem_args(poutargs)
-        rslt = ((type(outrc),outrc),outargs)
+        rslt = (outrc,outargs)
         return rslt
         
     def GetClass(self, *args, **kwargs):
