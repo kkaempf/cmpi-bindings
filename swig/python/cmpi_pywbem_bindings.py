@@ -184,9 +184,9 @@ class Logger(object):
 
 
 class ProviderEnvironment(object):
-    def __init__(self, proxy):
+    def __init__(self, proxy, ctx):
         self.proxy = proxy
-        self.ctx = None
+        self.ctx = ctx
     def get_logger(self):
         return Logger(self.proxy.broker)
     #def get_cimom_handle(self):
@@ -220,8 +220,8 @@ class CMPIProxyProviderImpl(object):
         print 'called CMPIProxyProvider(', miname, ',', broker, ')'
         self.miname = miname
         self.broker = broker
-        self.env = ProviderEnvironment(self)
-        self.proxy = ProviderProxy(self.env, 
+        env = ProviderEnvironment(self, None)
+        self.proxy = ProviderProxy(env, 
               '/usr/lib/pycim/'+miname+'.py')
         #print '*** broker.name()', broker.name()
         #print '*** broker.capabilities()', broker.capabilities()
@@ -232,10 +232,10 @@ class CMPIProxyProviderImpl(object):
     def enum_instance_names(self, ctx, rslt, objname):
         print 'provider.py: In enum_instance_names()' 
         #test_conversions()
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objname)
         try:
-            for i in self.proxy.MI_enumInstanceNames(self.env, op):
+            for i in self.proxy.MI_enumInstanceNames(env, op):
                 cop = self.pywbem2cmpi_instname(i)
                 rslt.return_objectpath(cop)
         except pywbem.CIMError, args:
@@ -245,10 +245,10 @@ class CMPIProxyProviderImpl(object):
 
     def enum_instances(self, ctx, rslt, objname, plist):
         print 'provider.py: In enum_instances()' 
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objname)
         try:
-            for i in self.proxy.MI_enumInstances(self.env, op, plist):
+            for i in self.proxy.MI_enumInstances(env, op, plist):
                 cinst = self.pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
         except pywbem.CIMError, args:
@@ -258,10 +258,10 @@ class CMPIProxyProviderImpl(object):
 
     def get_instance(self, ctx, rslt, objname, plist):
         print 'provider.py: In get_instance()' 
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objname)
         try:
-            pinst = self.proxy.MI_getInstance(self.env, op, plist)
+            pinst = self.proxy.MI_getInstance(env, op, plist)
         except pywbem.CIMError, args:
             return args[:2]
         cinst = self.pywbem2cmpi_inst(pinst)
@@ -271,10 +271,10 @@ class CMPIProxyProviderImpl(object):
 
 
     def create_instance(self, ctx, rslt, objname, newinst):
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         pinst = self.cmpi2pywbem_inst(newinst)
         try:
-            piname = self.proxy.MI_createInstance(self.env, pinst)
+            piname = self.proxy.MI_createInstance(env, pinst)
         except pywbem.CIMError, args:
             return args[:2]
         ciname = self.pywbem2cmpi_instname(piname)
@@ -284,19 +284,20 @@ class CMPIProxyProviderImpl(object):
 
 
     def set_instance(self, ctx, rslt, objname, newinst, plist):
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         pinst = self.cmpi2pywbem_inst(newinst)
         pinst.path = self.cmpi2pywbem_instname(objname)
         try:
-            self.proxy.MI_modifyInstance(self.env, pinst, plist)
+            self.proxy.MI_modifyInstance(env, pinst, plist)
         except pywbem.CIMError, args:
             return args[:2]
         return (0, '')
 
     def delete_instance(self, ctx, rslt, objname):
+        env = ProviderEnvironment(self, ctx)
         piname = self.cmpi2pywbem_instname(objname)
         try:
-            self.proxy.MI_deleteInstance(self.env, piname)
+            self.proxy.MI_deleteInstance(env, piname)
         except pywbem.CIMError, args:
             return args[:2]
         return (0, '')
@@ -308,11 +309,11 @@ class CMPIProxyProviderImpl(object):
 
     def associator_names(self, ctx, rslt, objName, assocClass, resultClass,
             role, resultRole):
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         piname = self.cmpi2pywbem_instname(objName)
 
         try:
-            for i in self.proxy.MI_associatorNames(self.env, piname, 
+            for i in self.proxy.MI_associatorNames(env, piname, 
                     assocClass, resultClass, role, resultRole):
                 ciname = self.pywbem2cmpi_instname(i)
                 rslt.return_objectpath(ciname)
@@ -323,11 +324,11 @@ class CMPIProxyProviderImpl(object):
 
     def associators(self, ctx, rslt, objName, assocClass, resultClass,
             role, resultRole, props):
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         piname = self.cmpi2pywbem_instname(objName)
 
         try:
-            for i in self.proxy.MI_associators(self.env, piname, 
+            for i in self.proxy.MI_associators(env, piname, 
                     assocClass, resultClass, role, resultRole, props):
                 cinst = self.pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
@@ -339,11 +340,11 @@ class CMPIProxyProviderImpl(object):
 
     def reference_names(self, ctx, rslt, objName, resultClass, role):
         print 'pycmpi_provider.py: In reference_names()' 
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         piname = self.cmpi2pywbem_instname(objName)
 
         try:
-            for i in self.proxy.MI_referenceNames(self.env, piname, 
+            for i in self.proxy.MI_referenceNames(env, piname, 
                     resultClass, role):
                 ciname = self.pywbem2cmpi_instname(i)
                 rslt.return_objectpath(ciname)
@@ -354,11 +355,11 @@ class CMPIProxyProviderImpl(object):
 
 
     def references(self, ctx, rslt, objName, resultClass, role, props):
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         piname = self.cmpi2pywbem_instname(objName)
 
         try:
-            for i in self.proxy.MI_references(self.env, piname, 
+            for i in self.proxy.MI_references(env, piname, 
                     resultClass, role, props):
                 cinst = self.pywbem2cmpi_inst(i)
                 rslt.return_instance(cinst)
@@ -370,11 +371,11 @@ class CMPIProxyProviderImpl(object):
 
     def invoke_method(self, ctx, rslt, objName, method, inargs, outargs):
         print '*** in invoke_method'
-        self.env.ctx = ctx
+        env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objName)
         pinargs = self.cmpi2pywbem_args(inargs)
         try:
-            ((_type, rv), poutargs) = self.proxy.MI_invokeMethod(self.env, 
+            ((_type, rv), poutargs) = self.proxy.MI_invokeMethod(env, 
                     op, method, pinargs)
         except pywbem.CIMError, args:
             return args[:2]
@@ -389,18 +390,18 @@ class CMPIProxyProviderImpl(object):
 
 
     def authorize_filter(self, ctx, filter, className, classPath, owner):
-        #self.env.ctx = ctx
+        #env = ProviderEnvironment(self, ctx)
         pass
 
     def activate_filter(self, ctx, filter, className, classPath, 
             firstActivation):
-        #self.env.ctx = ctx
+        #env = ProviderEnvironment(self, ctx)
         pass
 
 
     def deactivate_filter(self, ctx, filter, className, classPath, 
             lastActivation):
-        #self.env.ctx = ctx
+        #env = ProviderEnvironment(self, ctx)
         pass
 
 
@@ -408,16 +409,16 @@ class CMPIProxyProviderImpl(object):
     #def must_poll(self, ctx, rslt, filter, className, classPath):
     # NOTE: sfcb signature for this doesn't have the rslt. 
     def must_poll(self, ctx, filter, className, classPath):
-        #self.env.ctx = ctx
+        #env = ProviderEnvironment(self, ctx)
         pass
 
 
     def enable_indications(self, ctx):
-        #self.env.ctx = ctx
+        #env = ProviderEnvironment(self, ctx)
         pass
 
     def disable_indications(self, ctx):
-        #self.env.ctx = ctx
+        #env = ProviderEnvironment(self, ctx)
         pass
 
 
