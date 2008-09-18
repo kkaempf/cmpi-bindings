@@ -114,14 +114,16 @@ class BrokerCIMOMHandle(object):
             yield piname
 
     def InvokeMethod(self, path, method, **params):
-
-        # TODO: Where does default namespace come from?
-        ns = 'root/cimv2'
         if isinstance(path, pywbem.StringTypes):
             # path is a String type:  convert to CIMClassName
             objpath = pywbem.CIMClassName(path, namespace=ns)
         elif isinstance(path, pywbem.CIMInstanceName):
             if path.namespace is None:
+                # TODO: Where does default namespace come from?
+                #    will likely either have to pass in a ns, or make
+                #    path always be an objectpath and not support just a 
+                #    string for a classname (to creata a CIMClassName)
+                ns = 'root/cimv2'
                 path.namespace = ns
             objpath = path
         else:
@@ -161,6 +163,10 @@ class BrokerCIMOMHandle(object):
     def DeleteInstance(self, path):
         cop = self.proxy.pywbem2cmpi_instname(path)
         return self.broker.deleteInstance(self.ctx, cop)
+
+    def DeliverIndication(self, ns, instance):
+        inst = self.proxy.pywbem2cmpi_inst(instance)
+        return self.broker.deliverIndication(self.ctx, ns, inst)
     
     ### Not sure whether this should be on BrokerCIMOMHandle or
     ### on ProviderEnvironment
