@@ -244,7 +244,10 @@ static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
       _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
-      PY_CMPI_SETFAIL(get_exc_trace(broker)); 
+	  CMPIString* trace = get_exc_trace(broker);
+      _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), 
+				  CMGetCharsPtr(trace, NULL)));
+      PY_CMPI_SETFAIL(trace); 
       abort();
       return -1; 
     }
