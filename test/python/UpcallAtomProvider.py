@@ -393,7 +393,9 @@ class UpcallAtomProvider(CIMProvider2):
         #Written to test associators of Linux_UnixProcess class
         # 
         try:
-            logger.log_debug("Getting AssociatorNames")
+            print "####### test_1A_associatorNames #######"
+            # NOTE:  AssociatorNames upcall is currently broken in sfcb
+            #        This test will get no assoc_names, but will not fail
             proc_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
             if proc_list:
                 # Use the first entry
@@ -407,9 +409,27 @@ class UpcallAtomProvider(CIMProvider2):
                       and name['CreationClassName'] != 'Linux_OperatingSystem':
                         raise "AssociatorName Error: %s" %str(name)
 
+            print "####### test_1B_associators #######"
+            # NOTE:  Associators upcall is currently broken in sfcb
+            #        This test will get no assocs, but will not fail
+            proc_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
+            if proc_list:
+                # Use the first entry
+                proc_entry=proc_list.next()
+                assocs = ch.Associators(proc_entry,\
+                        assocClass="Linux_OSProcess") #Assocs
+                #Linux_UnixProcess has an association through Linux_OSProcess
+                #1. Linux_OperatingSystem
+                for assoc in assoc_names:
+                    name = assoc.path
+                    if name['CSCreationClassName'] != 'Linux_ComputerSystem' \
+                      and name['CreationClassName'] != 'Linux_OperatingSystem':
+                        raise "Associator Error: %s" %str(name)
+
 #
 #InvokeMethod
 #            
+            print "####### test_1C_InvokeMethod #######"
             try:
                 logger.log_debug("**** Testing InvokeMethod ****")
 
@@ -443,6 +463,9 @@ class UpcallAtomProvider(CIMProvider2):
             except pywbem.CIMError, arg:
                 logger.log_debug("**** CIMError: ch.InvokeMethod ****")
 #ReferenceNames
+            print "####### test_1D_referenceNames #######"
+            # NOTE:  ReferenceNames upcall is currently broken in sfcb
+            #        This test will get no refs, but will not fail
             try:
                 user_list = ch.EnumerateInstanceNames(ch.default_namespace, "TestAssoc_User")
                 for user in user_list:
@@ -457,6 +480,9 @@ class UpcallAtomProvider(CIMProvider2):
                 logger.log_debug("**** CIMError: ch.ReferenceNames ****")
 
 #Reference
+            print "####### test_1E_references #######"
+            # NOTE:  References upcall is currently broken in sfcb
+            #        This test will get no refs, but will not fail
             try:
                 user_list = ch.EnumerateInstanceNames(ch.default_namespace, "TestAssoc_User")
                 for user in user_list:
@@ -576,9 +602,9 @@ class UpcallAtomProvider(CIMProvider2):
         if inst:
             for prop in inst.properties.keys():
                 if prop not in propertylist:
-                    #raise "Property Not Found in PropertyList: %s" % prop
-                    print "Property Not Found in PropertyList: %s" % prop
-                    continue
+                    raise "Property Not Found in PropertyList: %s" % prop
+                    #print "Property Not Found in PropertyList: %s" % prop
+                    #continue
         _cleanup(ch)
 
 ################################################################################
