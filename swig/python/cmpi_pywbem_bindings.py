@@ -396,27 +396,60 @@ class CMPIProxyProviderImpl(object):
 
 
     def authorize_filter(self, ctx, filter, className, classPath, owner):
-        #env = ProviderEnvironment(self, ctx)
-        pass
+        env = ProviderEnvironment(self, ctx)
+        filt = self.cmpi2pywbem_selectexp(filter)
+        classpath = self.cmpi2pywbem_instname(classPath)
+        try:
+            rv = self.proxy.MI_authorizeFilter(env, 
+                    filt, className, classpath, owner)
+        except pywbem.CIMError, args:
+            return args[:2]
+
+        return (0, '')
 
     def activate_filter(self, ctx, filter, className, classPath, 
             firstActivation):
-        #env = ProviderEnvironment(self, ctx)
-        pass
+        env = ProviderEnvironment(self, ctx)
+        filt = self.cmpi2pywbem_selectexp(filter)
+        classpath = self.cmpi2pywbem_instname(classPath)
+        try:
+            rv = self.proxy.MI_activateFilter(env, 
+                    filt, className, classpath, firstActivation)
+        except pywbem.CIMError, args:
+            return args[:2]
 
+        return (0, '')
 
     def deactivate_filter(self, ctx, filter, className, classPath, 
             lastActivation):
-        #env = ProviderEnvironment(self, ctx)
-        pass
+        env = ProviderEnvironment(self, ctx)
+        filt = self.cmpi2pywbem_selectexp(filter)
+        classpath = self.cmpi2pywbem_instname(classPath)
+        try:
+            rv = self.proxy.MI_activateFilter(env, 
+                    filt, className, classpath, lastActivation)
+        except pywbem.CIMError, args:
+            return args[:2]
 
-
+        return (0, '')
 
     #def must_poll(self, ctx, rslt, filter, className, classPath):
     # NOTE: sfcb signature for this doesn't have the rslt. 
     def must_poll(self, ctx, filter, className, classPath):
-        #env = ProviderEnvironment(self, ctx)
-        pass
+        # must_poll is not supported by most cimoms, partly because
+        # the spec is ambiguous, so commented out for a no-op
+        # and just return 1 for FALSE
+        '''
+        env = ProviderEnvironment(self, ctx)
+        filt = self.cmpi2pywbem_selectexp(filter)
+        classpath = self.cmpi2pywbem_instname(classPath)
+        try:
+            rv = self.proxy.MI_mustPoll(env, 
+                    filt, className, classpath)
+        except pywbem.CIMError, args:
+            return args[:2]
+        '''
+        return (1, '')
 
 
     def enable_indications(self, ctx):
@@ -630,6 +663,9 @@ class CMPIProxyProviderImpl(object):
 
     def pywbem2cmpi_datetime(self, dt):
         return self.broker.new_datetime_from_string(str(dt))
+
+    def cmpi2pywbem_selectexp(self, filter):
+        return filter.to_s()
 
 
 _pywbem2cmpi_typemap = {

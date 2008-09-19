@@ -11,12 +11,13 @@ class Test_UpcallAtom
 	//return a string array of log messages
 	);
 };
-class UpcallAtom_Indication : CIM_AlertIndication
+[ Indication ]
+class UpcallAtom_Indication : CIM_ProcessIndication
 {
 };
-class UpcallAtom_Indication_Handler : CIM_ListenerDestination
-{
-};
+//class UpcallAtom_Indication_Handler : CIM_ListenerDestination
+//{
+//};
 
 
 
@@ -38,8 +39,8 @@ class UpcallAtom_Indication_Handler : CIM_ListenerDestination
 // Listener Destination Instance
 //INSTANCE OF UpcallAtom_Indication_Handler as $dest
 //{
-//    SystemCreationClassName = "OMC_UnitaryComputerSystem";
-//    SystemName = "127.0.0.1";
+//    SystemCreationClassName = "Linux_ComputerSystem";
+//    SystemName = "npaxton1.provo.novell.com";
 //    CreationClassName = "UpcallAtom_Indication_Handler";
 //    Name = "/UpcallAtom_Indication_Handler";
 //};

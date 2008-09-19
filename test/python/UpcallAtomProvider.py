@@ -325,6 +325,9 @@ def authorize_filter(env, filter, namespace, classes, owner):
     logger = env.get_logger()
     logger.log_debug('#### Python authorize_filter called. filter: %s' % filter)
     logger.log_debug('#### Python authorize_filter owner: %s' % owner)
+    # if not authorized
+    #    raise pywbem.CIM_ERR_ACCESS_DENIED
+    return
 
 ################################################################################
 class UpcallAtomProvider(CIMProvider2):
@@ -344,7 +347,6 @@ class UpcallAtomProvider(CIMProvider2):
         # parameters, set self.filter_results to False
         # self.filter_results = False
 
-        
     def cim_method_starttest(self, env, object_name):
         """Implements UpcallAtom.starttest()
 

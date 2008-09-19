@@ -107,6 +107,9 @@ static char* fmtstr(const char* fmt, ...)
 static PyObject *
 string2py(const char *s)
 {
+    if (s == NULL)
+        return NULL;
+
     PyObject *obj;
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
  
@@ -1065,7 +1068,7 @@ CMPIStatus authorizeFilter(
         const char* owner)
 {
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
-   
+  
     _SBLIM_TRACE(1,("authorizeFilter(Python) called, ctx %p, filter %p, className %s, classPath %p, owner %s", ctx, filter, className, classPath, owner)); 
 
     PY_CMPI_INIT
@@ -1310,7 +1313,7 @@ static void createInit(const CMPIBroker* broker,
 CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
         const CMPIContext* context, const char* miname, CMPIStatus* st)\
 { \
-    /*_SBLIM_TRACE(1, ("\n>>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname));*/ \
+    _SBLIM_TRACE(1, ("\n>>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname)); \
     PyProviderMIHandle *hdl = (PyProviderMIHandle*)malloc(sizeof(PyProviderMIHandle)); \
     if (hdl) { \
         hdl->pyMod = NULL; \

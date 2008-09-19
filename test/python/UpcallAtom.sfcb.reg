@@ -1,8 +1,8 @@
 [Test_UpcallAtom]
    provider: UpcallAtomProvider
    location: pyCmpiProvider
-   type: method
-   namespace: root/cimv2
+   type: method indication
+   namespace: root/cimv2 root/interop
 
 [UpcallAtom_Indication]
    provider: UpcallAtomProvider
@@ -13,5 +13,5 @@
 #[UpcallAtom_Indication_Handler]
 #   provider: UpcallAtomProvider
 #   location: pyCmpiProvider
-#   type: instance method indication-handler
+#   type: instance method
 #   namespace: root/cimv2

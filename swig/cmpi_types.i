@@ -686,9 +686,8 @@ FIXME: if clone() is exposed, release() must also
    *       and provides mechanism to operate on the query.
    */
   ~CMPISelectExp() { }
-  const char* to_s(const CMPIBroker* broker) {
-    CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+  const char* to_s() {
+    return CMGetCharPtr( CMGetSelExpString( $self, NULL ) );
   }
 }
 
