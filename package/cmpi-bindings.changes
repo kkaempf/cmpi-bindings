@@ -6,6 +6,12 @@ Wed Sep 17 02:10:37 CEST 2008 - mrueckert@suse.de
   packages.
 
 -------------------------------------------------------------------
+Mon Sep 15 20:38:55 MDT 2008 - bwhiteley@suse.de  
+   
+- Refactered broker wrapping.   
+- Lots of cleanup.  
+
+-------------------------------------------------------------------
 Thu Sep 11 15:29:08 CEST 2008 - kkaempf@suse.de
 
 - Support Python threads, do proper locking 
