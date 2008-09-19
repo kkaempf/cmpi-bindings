@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep 19 13:57:43 CEST 2008 - kkaempf@suse.de
+
+- rename .py filename to reflect 'pywbem' dependency.
+- fix build for SLE10 in OpenSUSE build service.
+
+-------------------------------------------------------------------
 Wed Sep 17 02:10:37 CEST 2008 - mrueckert@suse.de
 
 - provide the main package for the debug package. we dont use
