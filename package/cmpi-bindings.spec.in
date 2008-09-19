@@ -24,7 +24,8 @@ License:        BSD 3-Clause; EPL 1.0
 Summary:        Adapter to write and run CMPI-type CIM providers
 Group:          Development/Libraries/Other
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  cmake gcc-c++ python-devel ruby-devel swig
+# We need swig threads support.
+BuildRequires:  cmake gcc-c++ python-devel ruby-devel swig >= 1.3.34
 BuildRequires:  sblim-sfcb
 Source:         %{name}-%{version}.tar.bz2
 Prefix:         /usr
@@ -67,7 +68,11 @@ Provides:       %{name} = %{version}-%{release}
 %files -n cmpi-bindings-ruby
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/librbCmpiProvider.so
+%if 0%{?sles_version} == 10 
+%{_libdir}/ruby/site_ruby/%{rb_ver}/rcmpi_instance.rb
+%else
 %{_libdir}/ruby/vendor_ruby/%{rb_ver}/rcmpi_instance.rb
+%endif
 
 %package -n cmpi-bindings-pywbem
 Summary:        Adapter to write and run CMPI-type CIM providers in Python
@@ -81,8 +86,7 @@ Provides:       %{name} = %{version}-%{release}
 %files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/libpyCmpiProvider.so
-%{py_sitedir}/cmpi_bindings.py
-%{py_sitedir}/cim_provider.py
+%{py_sitedir}/cmpi_pywbem_bindings.py
 %{py_sitedir}/cmpi.py
 
 %changelog

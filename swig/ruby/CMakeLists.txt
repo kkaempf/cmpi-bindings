@@ -1,12 +1,18 @@
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
 
-EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorarchdir']" OUTPUT_VARIABLE RUBY_VENDOR_ARCH_DIR)
-EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorlibdir']" OUTPUT_VARIABLE RUBY_VENDOR_LIB_DIR)
+EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorarchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
+EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorlibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
+
+IF( "${RUBY_ARCH_DIR}" STREQUAL "nil" OR "${RUBY_LIB_DIR}" STREQUAL "nil")
+  MESSAGE(STATUS "Ruby too old, no vendor_dir, going for site_dir")
+  EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['sitearchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
+  EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['sitelibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
+ENDIF( "${RUBY_ARCH_DIR}" STREQUAL "nil" OR "${RUBY_LIB_DIR}" STREQUAL "nil")
 
 MESSAGE(STATUS "Ruby executable: ${RUBY_EXECUTABLE}")
-MESSAGE(STATUS "Ruby vendor arch dir: ${RUBY_VENDOR_ARCH_DIR}")
-MESSAGE(STATUS "Ruby vendor lib dir: ${RUBY_VENDOR_LIB_DIR}")
+MESSAGE(STATUS "Ruby arch dir: ${RUBY_ARCH_DIR}")
+MESSAGE(STATUS "Ruby lib dir: ${RUBY_LIB_DIR}")
 MESSAGE(STATUS "Ruby include path: ${RUBY_INCLUDE_PATH}")
 
 SET( SWIG_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/cmpi_wrap.c" )
@@ -46,4 +52,4 @@ INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 #
 # rcmpi_instance.rb: provider implementation
 #
-INSTALL(FILES rcmpi_instance.rb DESTINATION ${RUBY_VENDOR_LIB_DIR})
+INSTALL(FILES rcmpi_instance.rb DESTINATION ${RUBY_LIB_DIR})
