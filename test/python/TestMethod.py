@@ -61,6 +61,18 @@ class TestMethodProvider(CIMProvider2):
         print inst 
         '''
 
+        '''
+        ch = env.get_cimom_handle()
+        print "BEFORE"
+
+        try:
+            ch.oops()
+        except RuntimeError:
+            print "CAUGHT"
+
+        print "AFTER"
+        '''
+
         for key in g_insts.keys():
             model['id'] = key
             model.path['id'] = key

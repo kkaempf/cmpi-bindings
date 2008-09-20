@@ -7,6 +7,16 @@
 %rename(CMPIBroker) CMPIBroker;
 typedef struct _CMPIBroker {} CMPIBroker;
 
+%exception {
+    _clr_raised();
+    $action
+    if (_get_raised())
+    {
+        _clr_raised();
+        SWIG_PYTHON_THREAD_END_ALLOW;
+        SWIG_fail;
+    }
+}
 
 %extend CMPIBroker {
   void LogMessage(int severity, const char *id, const char *text) {
@@ -143,5 +153,37 @@ typedef struct _CMPIBroker {} CMPIBroker;
                           cimStatusCode, NULL);    
   }
 
+  void oops()
+  {
+    raise_exception(99, "oops");
+  }
+}
+
+#-----------------------------------------------------
+#
+# CMPIException
+#
+
+%nodefault _CMPIException;
+%rename(CMPIException) CMPIException;
+typedef struct _CMPIException {} CMPIException;
+
+%extend CMPIException {
+
+  CMPIException() {
+      return (CMPIException*)calloc(1, sizeof(CMPIException));
+  }
+
+  ~CMPIException() {
+      free($self->description);
+  }
+
+  int error_code() {
+    return $self->error_code;
+  }
+
+  const char* get_description() {
+    return $self->description;
+  }
 }
 

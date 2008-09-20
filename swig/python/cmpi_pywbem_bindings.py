@@ -175,6 +175,8 @@ class BrokerCIMOMHandle(object):
         subObjPath=self.broker.new_object_path(ns, sub)
         return bool(self.broker.classPathIsA(subObjPath,super))
 
+    def oops(self):
+        self.broker.oops()
 
 class Logger(object):
     def __init__(self, broker):

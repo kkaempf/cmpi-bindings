@@ -21,16 +21,42 @@ function __install {
     ln -s `pwd`/$fn $dir
 }
 
-__install TestMethod.mof /var/lib/sfcb/stage/mofs/root/cimv2
-__install TestAssoc.mof /var/lib/sfcb/stage/mofs/root/cimv2
-__install TestAtom.mof /var/lib/sfcb/stage/mofs/root/cimv2
+##
+## Check usage
+##
+
+if [ "$#" != 1 ]; then
+    echo "Usage: $0 [op|sfcb]"
+    exit 1
+fi
+
+if [ "$1" != "op" -a "$1" != "sfcb" ]; then
+    echo "Usage: $0 [op|sfcb]"
+    exit 1
+fi
+
+##
+## Install python providers:
+##
 
 __install TestMethod.py /usr/lib/pycim
 __install TestAssocProvider.py /usr/lib/pycim
 __install TestAtomProvider.py /usr/lib/pycim
 
-__install TestAssocProvider.sfcb.reg /var/lib/sfcb/stage/regs
-__install TestMethod.sfcb.reg /var/lib/sfcb/stage/regs
-__install TestAtomProvider.sfcb.reg /var/lib/sfcb/stage/regs
+if [ "$1" = "op" ]; then
+    cimmof TestMethod.mof
+    cimmof -n root/PG_InterOp TestMethod.peg.reg
+    cimmof TestAssoc.mof
+    cimmof -n root/PG_InterOp TestAssocProvider-peg.reg
+    cimmof TestAtom.mof
+    cimmof -n root/PG_InterOp TestAtomProvider.peg.reg
+else
+    __install TestMethod.mof /var/lib/sfcb/stage/mofs/root/cimv2
+    __install TestAssoc.mof /var/lib/sfcb/stage/mofs/root/cimv2
+    __install TestAtom.mof /var/lib/sfcb/stage/mofs/root/cimv2
 
-sfcbrepos -f
+    __install TestAssocProvider.sfcb.reg /var/lib/sfcb/stage/regs
+    __install TestMethod.sfcb.reg /var/lib/sfcb/stage/regs
+    __install TestAtomProvider.sfcb.reg /var/lib/sfcb/stage/regs
+    sfcbrepos -f
+fi
