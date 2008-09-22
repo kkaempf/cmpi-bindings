@@ -402,9 +402,10 @@ class CMPIProxyProviderImpl(object):
         filt = self.cmpi2pywbem_selectexp(filter)
         classpath = self.cmpi2pywbem_instname(classPath)
         try:
-            rv = self.proxy.MI_authorizeFilter(env, 
+            self.proxy.MI_authorizeFilter(env, 
                     filt, className, classpath, owner)
         except pywbem.CIMError, args:
+            #expect an exception if not success
             return args[:2]
 
         return (0, '')
@@ -415,9 +416,10 @@ class CMPIProxyProviderImpl(object):
         filt = self.cmpi2pywbem_selectexp(filter)
         classpath = self.cmpi2pywbem_instname(classPath)
         try:
-            rv = self.proxy.MI_activateFilter(env, 
+            self.proxy.MI_activateFilter(env, 
                     filt, className, classpath, firstActivation)
         except pywbem.CIMError, args:
+            #expect an exception if not success
             return args[:2]
 
         return (0, '')
@@ -428,9 +430,10 @@ class CMPIProxyProviderImpl(object):
         filt = self.cmpi2pywbem_selectexp(filter)
         classpath = self.cmpi2pywbem_instname(classPath)
         try:
-            rv = self.proxy.MI_activateFilter(env, 
+            self.proxy.MI_deActivateFilter(env, 
                     filt, className, classpath, lastActivation)
         except pywbem.CIMError, args:
+            #expect an exception if not success
             return args[:2]
 
         return (0, '')
@@ -455,12 +458,24 @@ class CMPIProxyProviderImpl(object):
 
 
     def enable_indications(self, ctx):
-        #env = ProviderEnvironment(self, ctx)
-        pass
+        env = ProviderEnvironment(self, ctx)
+        try:
+            self.proxy.MI_enableIndications(env)
+        except pywbem.CIMError, args:
+            #expect an exception if not success
+            return args[:2]
+
+        return (0, '')
 
     def disable_indications(self, ctx):
-        #env = ProviderEnvironment(self, ctx)
-        pass
+        env = ProviderEnvironment(self, ctx)
+        try:
+            self.proxy.MI_disableIndications(env)
+        except pywbem.CIMError, args:
+            #expect an exception if not success
+            return args[:2]
+
+        return (0, '')
 
 
     def cmpi2pywbem_inst(self, cmpiinst):
