@@ -43,5 +43,6 @@ if [ "$1" = "op" ]; then
 fi
 
 if [ "$1" = "sfcb" ]; then
+    echo "cp $SO /usr/lib64/"
     cp $SO /usr/lib64/
 fi

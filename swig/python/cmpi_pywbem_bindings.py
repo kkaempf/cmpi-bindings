@@ -176,7 +176,10 @@ class BrokerCIMOMHandle(object):
         return bool(self.broker.classPathIsA(subObjPath,super))
 
     def oops(self):
-        self.broker.oops()
+        try:
+            self.broker.oops()
+        except cmpi.CMPIException,e:
+            print "exception: %d:%s" %(e.get_error_code(), e.get_description())
 
 class Logger(object):
     def __init__(self, broker):

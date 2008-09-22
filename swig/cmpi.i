@@ -1,6 +1,7 @@
 %module cmpi
 
 %include "typemaps.i"
+%include exception.i
 
 %{
 #include <stdint.h>
@@ -16,15 +17,6 @@
 
 #include <pthread.h>
 
-/* CMPIException */
-struct _CMPIException
-{
-    int error_code;
-    char* description;
-};
-
-typedef struct _CMPIException CMPIException;
-
 static CMPIData *
 clone_data(const CMPIData *dp)
 {
@@ -34,41 +26,81 @@ clone_data(const CMPIData *dp)
 }
 
 /*
- * raise_exception()
- */
+**==============================================================================
+**
+** struct _CMPIException
+**
+**==============================================================================
+*/
 
-pthread_once_t _once = PTHREAD_ONCE_INIT;
+struct _CMPIException
+{
+    int error_code;
+    char* description;
+};
+
+typedef struct _CMPIException CMPIException;
+
+/*
+**==============================================================================
+**
+** raise_exception() and associated paraphernalia
+**
+**==============================================================================
+*/
+
+static pthread_once_t _once = PTHREAD_ONCE_INIT;
+static pthread_key_t _key;
+
+static void _init_key()
+{
+    pthread_key_create(&_key, NULL);
+}
 
 static void* _get_raised()
 {
-    return pthread_getspecific(_once);
+    pthread_once(&_once, _init_key);
+    return pthread_getspecific(_key);
 }
 
 static void _set_raised()
 {
-    static const char _data[] = "dummy string";
-    pthread_setspecific(_once, (void*)_data);
+    pthread_once(&_once, _init_key);
+    pthread_setspecific(_key, (void*)1);
 }
 
 static void _clr_raised()
 {
-    pthread_setspecific(_once, NULL);
+    pthread_once(&_once, _init_key);
+    pthread_setspecific(_key, NULL);
 }
 
 void raise_exception(int error_code, const char* description)
 {
-    char buffer[1024];
-    sprintf(buffer, "%d:%s", error_code, description);
+#ifdef SWIGPYTHON
+    PyObject* obj;
+    CMPIException* ex;
+    
+    ex = (CMPIException*)malloc(sizeof(CMPIException));
+    ex->error_code = error_code;
+    ex->description = strdup(description);
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-    PyErr_SetString(PyExc_RuntimeError, buffer);
+    obj = SWIG_NewPointerObj(ex, SWIGTYPE_p__CMPIException, 1);
+    PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p__CMPIException), obj);
     SWIG_PYTHON_THREAD_END_BLOCK;
     _set_raised();
+#endif /* SWIGPYTHON */
 }
 
 /*
- * provider code
- */
+**==============================================================================
+**
+** raise_exception()
+** provider code
+**
+**==============================================================================
+*/
 
 #if defined(SWIGRUBY)
 #include "../src/cmpi_provider_ruby.c"
@@ -79,6 +111,9 @@ void raise_exception(int error_code, const char* description)
 #endif
 
 %}
+
+%exceptionclass CMPIException;
+%exceptionclass _CMPIException;
 
 # Definitions
 %include "cmpi_defs.i"

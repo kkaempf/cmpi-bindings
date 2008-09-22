@@ -63,14 +63,7 @@ class TestMethodProvider(CIMProvider2):
 
         '''
         ch = env.get_cimom_handle()
-        print "BEFORE"
-
-        try:
-            ch.oops()
-        except RuntimeError:
-            print "CAUGHT"
-
-        print "AFTER"
+        ch.oops()
         '''
 
         for key in g_insts.keys():

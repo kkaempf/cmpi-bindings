@@ -102,6 +102,54 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 
 #-----------------------------------------------------
 #
+# CMPIException
+#
+#-----------------------------------------------------
+
+%nodefault _CMPIException;
+%rename(CMPIException) CMPIException;
+typedef struct _CMPIException {} CMPIException;
+
+%extend CMPIException {
+
+  CMPIException() {
+      return (CMPIException*)calloc(1, sizeof(CMPIException));
+  }
+
+  ~CMPIException() {
+      free($self->description);
+  }
+
+  int get_error_code() {
+    return $self->error_code;
+  }
+
+  const char* get_description() {
+    return $self->description;
+  }
+}
+
+#-----------------------------------------------------
+#
+# %exception
+#
+#-----------------------------------------------------
+
+#ifdef SWIGPYTHON
+%exception {
+    _clr_raised();
+    $action
+    if (_get_raised())
+    {
+        _clr_raised();
+        SWIG_PYTHON_THREAD_END_ALLOW;
+        SWIG_fail;
+    }
+}
+#endif /* SWIGPYTHON */
+
+#-----------------------------------------------------
+#
 # CMPIError
 #
 
@@ -260,7 +308,6 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
     CMReturnDone( $self );
   }
 }
-
 
 #-----------------------------------------------------
 #
