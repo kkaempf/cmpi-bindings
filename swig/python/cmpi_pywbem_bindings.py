@@ -175,9 +175,9 @@ class BrokerCIMOMHandle(object):
         subObjPath=self.broker.new_object_path(ns, sub)
         return bool(self.broker.classPathIsA(subObjPath,super))
 
-    def oops(self):
+    def bummer(self):
         try:
-            self.broker.oops()
+            self.broker.bummer()
         except cmpi.CMPIException,e:
             print "exception: %d:%s" %(e.get_error_code(), e.get_description())
 

@@ -63,7 +63,7 @@ class TestMethodProvider(CIMProvider2):
 
         '''
         ch = env.get_cimom_handle()
-        ch.oops()
+        ch.bummer()
         '''
 
         for key in g_insts.keys():

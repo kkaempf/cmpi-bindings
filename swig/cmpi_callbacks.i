@@ -142,8 +142,13 @@ typedef struct _CMPIBroker {} CMPIBroker;
                           cimStatusCode, NULL);    
   }
 
-  void oops()
+  void bummer()
   {
-    raise_exception(99, "oops");
+    CMPIStatus st;
+
+    CMSetStatusWithChars(
+        $self, &st, CMPI_RC_ERR_FAILED, "Bummer! I didn't see that coming");
+
+    _raise_ex(&st);
   }
 }

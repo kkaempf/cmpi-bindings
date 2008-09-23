@@ -75,15 +75,23 @@ static void _clr_raised()
     pthread_setspecific(_key, NULL);
 }
 
-void raise_exception(int error_code, const char* description)
+static void _raise_ex(const CMPIStatus* st)
 {
 #ifdef SWIGPYTHON
     PyObject* obj;
     CMPIException* ex;
     
     ex = (CMPIException*)malloc(sizeof(CMPIException));
-    ex->error_code = error_code;
-    ex->description = strdup(description);
+    ex->error_code = st->rc;
+    const char* chars;
+
+    if (st->msg)
+        chars = CMGetCharsPtr(st->msg, NULL);
+
+    if (chars)
+        ex->description = strdup(chars);
+    else
+        ex->description = NULL;
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
     obj = SWIG_NewPointerObj(ex, SWIGTYPE_p__CMPIException, 1);
