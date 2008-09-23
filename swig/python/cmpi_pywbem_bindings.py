@@ -36,14 +36,90 @@ import cmpi
 
 from pywbem.cim_provider2 import ProviderProxy
 import pywbem
+import types
 
+##==============================================================================
+##
+## _exception_to_error()
+##
+##     This function converts a cmpi.CMPIException to a pywbem.CIMError.
+##
+##==============================================================================
+
+def _exception_to_error(ex):
+
+    code = ex.get_error_code()
+    desc = ex.get_description()
+
+    if code < 0 or code > 17:
+        code = pywbem.CIM_ERR_ERR_FAILED
+
+    return pywbem.CIMError(code, desc)
+
+##==============================================================================
+##
+## ExceptionMethodWrapper
+##
+##     This class puts an exception catching block around a method. Instances
+##     are created by the ExceptionObjectWrapper defined below.
+##
+##==============================================================================
+
+class ExceptionMethodWrapper:
+
+    def __init__(self, meth):
+        self.meth = meth
+
+    def __call__(self, *args, **kwds):
+        try:
+            return self.meth(*args, **kwds)
+        except cmpi.CMPIException,e:
+            raise _exception_to_error(e)
+
+##==============================================================================
+##
+## ExceptionObjectWrapper
+##
+##     This class puts an exception catching block around all methods of any
+##     class. The block catches cmpi.CMPIException, translates it to a
+##     pywbem.CIMError, and raises it. The following creates wraps an instance
+##     of the "Gadget" class.
+##
+##         g = Gadget()
+##         w = ExceptionObjectWrapper(g)
+##
+##     And the following delegates the foo() method to the Gadget instance,
+##     while placing an exception catching block around it.
+##
+##         w.foo()  # call g.foo() with exception block around it.
+##
+##==============================================================================
+
+class ExceptionObjectWrapper:
+
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __getattr__(self, name):
+        attr = getattr(self.obj, name)
+
+        if type(attr) is types.MethodType:
+            return ExceptionMethodWrapper(attr)
+        else:
+            return attr
+
+##==============================================================================
+##
+##
+##
+##==============================================================================
 
 def SFCBUDSConnection():
     return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
 
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
-        self.broker = proxy.broker
+        self.broker = ExceptionObjectWrapper(proxy.broker)
         self.proxy = proxy
         self.ctx = ctx
 
@@ -176,10 +252,7 @@ class BrokerCIMOMHandle(object):
         return bool(self.broker.classPathIsA(subObjPath,super))
 
     def bummer(self):
-        try:
-            self.broker.bummer()
-        except cmpi.CMPIException,e:
-            print "exception: %d:%s" %(e.get_error_code(), e.get_description())
+        self.broker.bummer()
 
 class Logger(object):
     def __init__(self, broker):

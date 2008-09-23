@@ -63,7 +63,11 @@ class TestMethodProvider(CIMProvider2):
 
         '''
         ch = env.get_cimom_handle()
-        ch.bummer()
+
+        try:
+            ch.bummer()
+        except pywbem.CIMError, e:
+            print e
         '''
 
         for key in g_insts.keys():
