@@ -19,7 +19,5 @@ Wrap CMPIEnumeration and CMPIArray in typemaps.
 
 Indication providers
 
-Port omc/pybase and omc/pyprofiles to new interface. 
-
 Update docs on pywbem wiki, starting with quickstart guide. 
 
