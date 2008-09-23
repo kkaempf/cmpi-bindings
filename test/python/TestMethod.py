@@ -45,20 +45,13 @@ class TestMethodProvider(CIMProvider2):
                 % self.__class__.__name__)
 
         '''
-        ch = env.get_cimom_handle2()
-        keys = {
-            'CreationClassName':'Linux_EthernetPort',
-            'DeviceID':'0011D8378654',
-            'SystemCreationClassName':'Linux_ComputerSystem',
-            'SystemName':'redbird.austin.rr.com' }
-
-        path = pywbem.CIMInstanceName(
-            'Linux_EthernetPort', 
-            namespace='root/cimv2', 
-            keybindings=keys);
-
-        inst = ch.GetInstance(path);
-        print inst 
+        ch = env.get_cimom_handle()
+        try:
+            e = ch.EnumerateInstanceNames("root/cimv2", "TestAssoc_User")
+            for i in e:
+                print i
+        except pywbem.CIMError, e:
+            print e
         '''
 
         '''

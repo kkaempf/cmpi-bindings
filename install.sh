@@ -19,8 +19,11 @@ fi
 ##
 
 PKGS=/usr/lib64/python2.5/site-packages
+echo "cp ./build/swig/python/cmpi.py $PKGS"
 cp ./build/swig/python/cmpi.py $PKGS
+echo "cp ./swig/python/cim_provider.py $PKGS"
 cp ./swig/python/cim_provider.py $PKGS
+echo "cp ./swig/python/cmpi_pywbem_bindings.py $PKGS"
 cp ./swig/python/cmpi_pywbem_bindings.py $PKGS
 
 ##

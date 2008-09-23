@@ -27,7 +27,15 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return CBDeliverIndication($self, ctx, ns, ind);
   }
   CMPIEnumeration* enumInstanceNames(const CMPIContext * ctx, const CMPIObjectPath * op) {
-    return CBEnumInstanceNames($self, ctx, op, NULL);
+    CMPIStatus st;
+    CMPIEnumeration* e;
+
+    e = CBEnumInstanceNames($self, ctx, op, &st);
+
+    if (st.rc)
+        _raise_ex(&st);
+
+    return e;
   }
   CMPIEnumeration *enumInstances(const CMPIContext * ctx, const CMPIObjectPath * op, const char **properties) {
     return CBEnumInstances($self, ctx, op, properties, NULL);

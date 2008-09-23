@@ -60,8 +60,9 @@ def _exception_to_error(ex):
 ##
 ## ExceptionMethodWrapper
 ##
-##     This class puts an exception catching block around a method. Instances
-##     are created by the ExceptionObjectWrapper defined below.
+##     This class puts an exception translation block around any method. This
+##     block catches a cmpi.CMPIException, converts it a pywbem.CIMError, and
+##     raises the new exception.
 ##
 ##==============================================================================
 
@@ -78,24 +79,19 @@ class ExceptionMethodWrapper:
 
 ##==============================================================================
 ##
-## ExceptionObjectWrapper
+## ExceptionClassWrapper
 ##
-##     This class puts an exception catching block around all methods of any
-##     class. The block catches cmpi.CMPIException, translates it to a
-##     pywbem.CIMError, and raises it. The following creates wraps an instance
-##     of the "Gadget" class.
-##
+##     This class puts an exception translation block around all methods of any
+##     class. It creates an ExceptionMethodWrapper to invoke each method. For
+##     example, the following snipett wraps an instance of the Gadget class.
+##    
 ##         g = Gadget()
-##         w = ExceptionObjectWrapper(g)
-##
-##     And the following delegates the foo() method to the Gadget instance,
-##     while placing an exception catching block around it.
-##
-##         w.foo()  # call g.foo() with exception block around it.
+##         w = ExceptionClassWrapper(g)
+##         w.foo() # call g.foo() with exception translation block around it.
 ##
 ##==============================================================================
 
-class ExceptionObjectWrapper:
+class ExceptionClassWrapper:
 
     def __init__(self, obj):
         self.obj = obj
@@ -119,11 +115,24 @@ def SFCBUDSConnection():
 
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
-        self.broker = ExceptionObjectWrapper(proxy.broker)
+        #self.broker = proxy.broker
+        self.broker = ExceptionClassWrapper(proxy.broker)
         self.proxy = proxy
         self.ctx = ctx
 
+    def _EnumerateInstanceNamesYield(self, e):
+        while e and e.hasNext():
+            data=e.next()
+            assert(data.type == cmpi.CMPI_ref)
+            piname=self.proxy.cmpi2pywbem_instname(data.value.ref)
+            yield piname
+
     def EnumerateInstanceNames(self, ns, cn):
+        cop = self.broker.new_object_path(ns, cn)
+        e = self.broker.enumInstanceNames(self.ctx, cop)
+        return self._EnumerateInstanceNamesYield(e)
+
+    def EnumerateInstanceNamesOld(self, ns, cn):
         cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstanceNames(self.ctx, cop)
         while e and e.hasNext():
