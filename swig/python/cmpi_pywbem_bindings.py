@@ -120,7 +120,7 @@ class BrokerCIMOMHandle(object):
         self.proxy = proxy
         self.ctx = ctx
 
-    def _EnumerateInstanceNamesYield(self, e):
+    def _yield_instance_names(self, e):
         while e and e.hasNext():
             data=e.next()
             assert(data.type == cmpi.CMPI_ref)
@@ -130,16 +130,7 @@ class BrokerCIMOMHandle(object):
     def EnumerateInstanceNames(self, ns, cn):
         cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstanceNames(self.ctx, cop)
-        return self._EnumerateInstanceNamesYield(e)
-
-    def EnumerateInstanceNamesOld(self, ns, cn):
-        cop = self.broker.new_object_path(ns, cn)
-        e = self.broker.enumInstanceNames(self.ctx, cop)
-        while e and e.hasNext():
-            data=e.next()
-            assert(data.type == cmpi.CMPI_ref)
-            piname=self.proxy.cmpi2pywbem_instname(data.value.ref)
-            yield piname
+        return self._yield_instance_names(e)
 
     def EnumerateInstances(self, ns, cn, props = None):
         cop = self.broker.new_object_path(ns, cn)
