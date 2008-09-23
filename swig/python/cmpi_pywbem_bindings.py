@@ -110,9 +110,6 @@ class ExceptionClassWrapper:
 ##
 ##==============================================================================
 
-def SFCBUDSConnection():
-    return pywbem.WBEMConnection('/tmp/sfcbHttpSocket')
-
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
         #self.broker = proxy.broker
@@ -130,7 +127,11 @@ class BrokerCIMOMHandle(object):
     def EnumerateInstanceNames(self, ns, cn):
         cop = self.broker.new_object_path(ns, cn)
         e = self.broker.enumInstanceNames(self.ctx, cop)
-        return self._yield_instance_names(e)
+        while e and e.hasNext():
+            data=e.next()
+            assert(data.type == cmpi.CMPI_ref)
+            piname=self.proxy.cmpi2pywbem_instname(data.value.ref)
+            yield piname
 
     def EnumerateInstances(self, ns, cn, props = None):
         cop = self.broker.new_object_path(ns, cn)
@@ -273,8 +274,6 @@ class ProviderEnvironment(object):
         self.ctx = ctx
     def get_logger(self):
         return Logger(self.proxy.broker)
-    #def get_cimom_handle(self):
-    #    return SFCBUDSConnection()
     def get_cimom_handle(self):
         return BrokerCIMOMHandle(self.proxy, self.ctx)
     def get_user_name(self):
@@ -286,19 +285,19 @@ class ProviderEnvironment(object):
 
 g_proxies = {}
 
-def CMPIProxyProvider(miname, broker):
+def get_cmpi_proxy_provider(miname, broker):
     try:
         prox = g_proxies[miname]
         if str(prox.proxy.env.proxy.broker) != str(broker):
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                         'New broker not the same as cached broker!')
     except KeyError:
-        prox = CMPIProxyProviderImpl(miname, broker)
+        prox = CMPIProxyProvider(miname, broker)
         g_proxies[miname] = prox
     return prox
 
 
-class CMPIProxyProviderImpl(object):
+class CMPIProxyProvider(object):
 
     def __init__(self, miname, broker):
         print 'called CMPIProxyProvider(', miname, ',', broker, ')'

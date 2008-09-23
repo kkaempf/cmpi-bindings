@@ -284,7 +284,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   
   SWIG_PYTHON_THREAD_BEGIN_BLOCK;
   PyObject* provclass = PyObject_GetAttrString(_PYPROVMOD, 
-                           "CMPIProxyProvider"); 
+                           "get_cmpi_proxy_provider"); 
   if (provclass == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
