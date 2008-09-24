@@ -20,6 +20,8 @@ class TestAtomProvider(CIMProvider2):
                 % (self.__class__.__name__, __file__))
         self.storage = {}
 
+
+
     def get_instance(self, env, model):
         """Return an instance.
 
@@ -95,6 +97,36 @@ class TestAtomProvider(CIMProvider2):
                 % self.__class__.__name__)
         #for atom in self.storage.keys():
             #print "Key = %s " %str(atom)
+
+        ## Test context
+        if not isinstance(env.ctx['CMPIInvocationFlags'], pywbem.Uint32):
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    'context is broken: ' + `env.ctx`)
+
+        oldlen = len(env.ctx)
+        env.ctx['foo'] = 'bar'
+        if env.ctx['foo'] != 'bar':
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    'context is broken: ' + `env.ctx`)
+
+        if oldlen + 1 != len(env.ctx):
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    'context is broken: ' + `env.ctx`)
+
+        if not 'foo' in env.ctx:
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    'context is broken: ' + `env.ctx`)
+
+        if 'foobar' in env.ctx:
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    'context is broken: ' + `env.ctx`)
+
+        env.ctx.update(foobar='foobar')
+        if env.ctx['foobar'] != 'foobar':
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
+                    'context is broken: ' + `env.ctx`)
+
+        ## end context tests
 
         for key in self.storage.keys():
             #print "***** HELLO ***** "

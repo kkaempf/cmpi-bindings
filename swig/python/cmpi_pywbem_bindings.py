@@ -110,6 +110,80 @@ class ExceptionClassWrapper:
 ##
 ##==============================================================================
 
+class ContextWrap(object):
+    def __init__(self, proxy, cmpicontext):
+        self.proxy = proxy
+        self.cmpicontext = cmpicontext
+
+    def __getitem__(self, key):
+        data = self.cmpicontext.get_entry(key)
+        _type, is_array = _cmpi_type2string(data.type)
+        return self.proxy.cmpi2pywbem_data(data, _type, is_array)
+
+    def __setitem__(self, key, pval):
+        data, _type = self.proxy.pywbem2cmpi_value(pval)
+        ctype = _pywbem2cmpi_typemap[_type]
+        if isinstance(pval, list):
+            ctype = ctype | cmpi.CMPI_ARRAY
+        self.cmpicontext.add_entry(str(key), data, ctype)
+
+    def __len__(self):
+        return self.cmpicontext.get_entry_count()
+
+    def __repr__(self):
+        return `self.todict()`
+
+    def keys(self):
+        return self.todict().keys()
+
+    def items(self):
+        return self.todict().items()
+
+    def values(self):
+        return self.todict().values()
+
+    def __contains__(self, key):
+        return key in self.todict()
+
+    def has_key(self, key):
+        return self.todict().has_key(key)
+
+    def iterkeys(self):
+        return self.todict().iterkeys()
+
+    def itervalues(self):
+        return self.todict().itervalues()
+
+    def iteritems(self):
+        return self.todict().iteritems()
+
+    def update(self, *args, **kwargs):
+        for mapping in args:
+            if hasattr(mapping, 'items'):
+                for k, v in mapping.items():
+                    self[k] = v
+            else:
+                for (k, v) in mapping:
+                    self[k] = v
+        for k, v in kwargs.items():
+            self[k] = v
+
+    def get(self, key, default = None):
+        try:
+            return self.todict()[key]
+        except KeyError:
+            return default
+
+    def todict(self):
+        d = {}
+        for i in xrange(0, self.cmpicontext.get_entry_count()):
+            data, name = self.cmpicontext.get_entry_at(i)
+            _type, is_array = _cmpi_type2string(data.type)
+            pval = self.proxy.cmpi2pywbem_data(data, _type, is_array)
+            d[name] = pval
+        return d
+
+
 class BrokerCIMOMHandle(object):
     def __init__(self, proxy, ctx):
         #self.broker = proxy.broker
@@ -271,11 +345,11 @@ class Logger(object):
 class ProviderEnvironment(object):
     def __init__(self, proxy, ctx):
         self.proxy = proxy
-        self.ctx = ctx
+        self.ctx = ContextWrap(proxy, ctx)
     def get_logger(self):
         return Logger(self.proxy.broker)
     def get_cimom_handle(self):
-        return BrokerCIMOMHandle(self.proxy, self.ctx)
+        return BrokerCIMOMHandle(self.proxy, self.ctx.cmpicontext)
     def get_user_name(self):
         pass
     def get_context_value(self, key):
@@ -552,6 +626,8 @@ class CMPIProxyProvider(object):
 
         return (0, '')
 
+    # conversion routines
+    #######################################################################
 
     def cmpi2pywbem_inst(self, cmpiinst):
         cop = self.cmpi2pywbem_instname(cmpiinst.objectpath())

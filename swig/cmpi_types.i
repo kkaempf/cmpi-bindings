@@ -856,6 +856,47 @@ FIXME: if clone() is exposed, release() must also
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
+  void add_entry(const char* name, const CMPIValue* data, 
+                     const CMPIType type) {
+    CMAddContextEntry($self, name, data, type);
+  }
+
+  CMPIData get_entry(const char* name) {
+    return CMGetContextEntry($self, name, NULL); // TODO CMPIStatus exception handling
+  }
+
+#if defined (SWIGRUBY)
+  VALUE
+#endif
+#if defined (SWIGPYTHON)
+  PyObject* 
+#endif
+  get_entry_at( int index ) {
+    CMPIString *s = NULL;
+    CMPIData data = CMGetContextEntryAt( $self, index, &s, NULL );
+
+#if defined (SWIGRUBY)
+    VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    VALUE rl = rb_ary_new2(2);
+    return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
+#endif
+#if defined (SWIGPYTHON)
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
+    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
+
+    PyObject* pl = PyTuple_New(2);
+    PyTuple_SetItem(pl, 0, pydata);
+    PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
+    SWIG_PYTHON_THREAD_END_BLOCK; 
+    return pl;
+#endif
+  }
+
+  CMPICount get_entry_count(void) {
+     return CMGetContextEntryCount($self, NULL); 
+    // TODO CMPIStatus exception handling
+  }
+
 }
 
 #-----------------------------------------------------
