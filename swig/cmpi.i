@@ -118,6 +118,16 @@ static void _raise_ex(const CMPIStatus* st)
 #include "../src/cmpi_provider_python.c"
 #endif
 
+/* RAISE exception IF status argument has a nonzero rc member */
+#define RAISE_IF(ST) \
+    do \
+    { \
+        CMPIStatus __st__ = (ST); \
+        if (__st__.rc) \
+            _raise_ex(&__st__); \
+    } \
+    while (0)
+
 %}
 
 %exceptionclass CMPIException;

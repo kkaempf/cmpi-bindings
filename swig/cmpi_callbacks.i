@@ -7,120 +7,333 @@
 %rename(CMPIBroker) CMPIBroker;
 typedef struct _CMPIBroker {} CMPIBroker;
 
-%extend CMPIBroker {
-  void LogMessage(int severity, const char *id, const char *text) {
-    CMLogMessage($self, severity, id, text, NULL);
+%extend CMPIBroker 
+{
+  void LogMessage(
+    int severity, 
+    const char *id, 
+    const char *text) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    CMLogMessage($self, severity, id, text, &st);
+    RAISE_IF(st);
   }
-  unsigned long capabilities() {
+
+  unsigned long capabilities() 
+  {
     return CBGetCapabilities($self);
   }
-  int version() {
+
+  int version() 
+  {
     return CBBrokerVersion($self);
   }
-  const char *name() {
+
+  const char *name() 
+  {
     return CBBrokerName($self);
   }
-  CMPIBoolean classPathIsA(const CMPIObjectPath *op, const char *parent_class) {
+
+  CMPIBoolean classPathIsA(
+    const CMPIObjectPath *op, 
+    const char *parent_class) 
+  {
     return CMClassPathIsA($self, op, parent_class, NULL);
   }
-  CMPIStatus deliverIndication(const CMPIContext * ctx, const char * ns, const CMPIInstance * ind) {
-    return CBDeliverIndication($self, ctx, ns, ind);
+
+  void deliverIndication(
+    const CMPIContext * ctx, 
+    const char * ns, 
+    const CMPIInstance * ind) 
+  {
+    RAISE_IF(CBDeliverIndication($self, ctx, ns, ind));
   }
-  CMPIEnumeration* enumInstanceNames(const CMPIContext * ctx, const CMPIObjectPath * op) {
-    CMPIStatus st;
+
+  CMPIEnumeration* enumInstanceNames(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIEnumeration* e;
 
     e = CBEnumInstanceNames($self, ctx, op, &st);
-
-    if (st.rc)
-        _raise_ex(&st);
+    RAISE_IF(st);
 
     return e;
   }
-  CMPIEnumeration *enumInstances(const CMPIContext * ctx, const CMPIObjectPath * op, const char **properties) {
-    return CBEnumInstances($self, ctx, op, properties, NULL);
+
+  CMPIEnumeration *enumInstances(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op, const char **properties) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIEnumeration* result;
+
+    result = CBEnumInstances($self, ctx, op, properties, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIInstance *getInstance(const CMPIContext * ctx, const CMPIObjectPath * op, const char **properties) {
-    return CBGetInstance($self, ctx, op, properties, NULL);
+
+  CMPIInstance *getInstance(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op, 
+    const char **properties) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIInstance* result;
+    
+    result = CBGetInstance($self, ctx, op, properties, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIObjectPath *createInstance(const CMPIContext * ctx, const CMPIObjectPath * op, const CMPIInstance * inst) {
-    return CBCreateInstance($self, ctx, op, inst, NULL);
+
+  CMPIObjectPath *createInstance(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op, 
+    const CMPIInstance * inst) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIObjectPath* result;
+
+    result = CBCreateInstance($self, ctx, op, inst, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /*
   CMPIStatus setInstance(const CMPIContext* ctx, const CMPIObjectPath* op, const CMPIInstance* inst, const char** properties) { 
     return CBSetInstance($self, ctx, op, inst, properties);
   }
   */
-  CMPIStatus deleteInstance(const CMPIContext * ctx, const CMPIObjectPath * op) {
-    return CBDeleteInstance($self, ctx, op);
+
+  void deleteInstance(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op) 
+  {
+    RAISE_IF(CBDeleteInstance($self, ctx, op));
   }
-  CMPIEnumeration *execQuery(const CMPIContext * ctx, const CMPIObjectPath * op, const char *query, const char *lang) {	  
-    return CBExecQuery($self, ctx, op, query, lang, NULL);
+
+  CMPIEnumeration *execQuery(
+      const CMPIContext * ctx, 
+      const CMPIObjectPath * op, 
+      const char *query, 
+      const char *lang) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIEnumeration* result;
+
+    result = CBExecQuery($self, ctx, op, query, lang, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIEnumeration *associators(const CMPIContext * ctx, const CMPIObjectPath * op,
-                               const char *assocClass, const char *resultClass, const char *role,
-                   const char *resultRole, const char **properties) {
-    return CBAssociators($self, ctx, op, assocClass, resultClass, role, resultRole, properties, NULL);
+
+  CMPIEnumeration *associators(
+      const CMPIContext * ctx, 
+      const CMPIObjectPath * op,
+      const char *assocClass, 
+      const char *resultClass, 
+      const char *role,
+      const char *resultRole, 
+      const char **properties) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIEnumeration* result;
+
+    result = CBAssociators($self, ctx, op, assocClass, resultClass, role, 
+      resultRole, properties, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIEnumeration *associatorNames(const CMPIContext * ctx, const CMPIObjectPath * op,
-                                   const char *assocClass, const char *resultClass, const char *role,
-                   const char *resultRole) {
-    return CBAssociatorNames ($self, ctx, op, assocClass, resultClass, role, resultRole, NULL);
+
+  CMPIEnumeration *associatorNames(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op,
+    const char *assocClass, 
+    const char *resultClass, 
+    const char *role,
+    const char *resultRole) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIEnumeration* result;
+
+    result = CBAssociatorNames($self, ctx, op, assocClass, resultClass, role, 
+      resultRole, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIEnumeration *references(const CMPIContext * ctx, const CMPIObjectPath * op,
-                              const char *resultClass, const char *role, const char **properties) {
-    return CBReferences($self, ctx, op, resultClass, role, properties, NULL);
+
+  CMPIEnumeration *references(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op,
+    const char *resultClass, 
+    const char *role, 
+    const char **properties) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIEnumeration* result;
+
+    result = CBReferences($self, ctx, op, resultClass, role, properties, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIEnumeration *referenceNames(const CMPIContext * ctx, const CMPIObjectPath * op,
-                                  const char *resultClass, const char *role) {
-    return CBReferenceNames($self, ctx, op, resultClass, role, NULL);
+
+  CMPIEnumeration *referenceNames(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op,
+    const char *resultClass, 
+    const char *role) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIEnumeration* result;
+
+    result = CBReferenceNames($self, ctx, op, resultClass, role, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIData invokeMethod(const CMPIContext * ctx, const CMPIObjectPath * op, const char *method,
-                        const CMPIArgs * in, CMPIArgs * out) {
-    return CBInvokeMethod($self, ctx, op, method, in, out, NULL);
+
+  CMPIData invokeMethod(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op, 
+    const char *method,
+    const CMPIArgs * in, 
+    CMPIArgs * out) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CBInvokeMethod($self, ctx, op, method, in, out, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIStatus setProperty(const CMPIContext * ctx, const CMPIObjectPath * op, const char *name,
-                         const CMPIValue * value, const CMPIType type) {
-    return CBSetProperty($self, ctx, op, name, (CMPIValue *)value, type);
+
+  void setProperty(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath * op, 
+    const char *name,
+    const CMPIValue * value, 
+    const CMPIType type) 
+  {
+    RAISE_IF(CBSetProperty($self, ctx, op, name, (CMPIValue *)value, type));
   }
-  CMPIData getProperty(const CMPIContext * ctx, const CMPIObjectPath *op, const char *name) {
-    return CBGetProperty($self, ctx, op, name, NULL);
+
+  CMPIData getProperty(
+    const CMPIContext * ctx, 
+    const CMPIObjectPath *op, 
+    const char *name) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CBGetProperty($self, ctx, op, name, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   CMPIObjectPath* new_object_path(const char* ns, const char* cname)
   {
-    return CMNewObjectPath($self, ns, cname, NULL); 
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIObjectPath* result;
+
+    result = CMNewObjectPath($self, ns, cname, &st); 
+    RAISE_IF(st);
+
+    return result;
   }
+
   CMPIInstance* new_instance(const CMPIObjectPath* path)
   {
-    return CMNewInstance($self, path, NULL); 
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIInstance* result;
+
+    result = CMNewInstance($self, path, &st); 
+    RAISE_IF(st);
+
+    return result;
   }
+
   CMPIArgs* new_args(void)
   {
-    return CMNewArgs($self, NULL); 
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIArgs* result;
+
+    result = CMNewArgs($self, &st); 
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIDateTime* new_datetime(void) {
-    return CMNewDateTime($self, NULL);
+
+  CMPIDateTime* new_datetime(void) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIDateTime* result;
+
+    result = CMNewDateTime($self, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  /* bintime: Date/Time definition in binary format in microsecods
-   *          starting since 00:00:00 GMT, Jan 1,1970.
-   * interval: Wenn true, defines Date/Time definition to be an interval value
-   */
-  CMPIDateTime* new_datetime_from_uint64(uint64_t bintime, int interval = 0 ) {
-    return CMNewDateTimeFromBinary($self, bintime, interval, NULL);
+
+  CMPIDateTime* new_datetime_from_uint64(
+    uint64_t bintime, 
+    int interval = 0 ) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIDateTime* result;
+
+    result = CMNewDateTimeFromBinary($self, bintime, interval, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* utc Date/Time definition in UTC format */
-  CMPIDateTime* new_datetime_from_string(const char *utc) {
-    return CMNewDateTimeFromChars($self, utc, NULL);
+  CMPIDateTime* new_datetime_from_string(const char *utc) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIDateTime* result;
+
+    result = CMNewDateTimeFromChars($self, utc, &st);
+    RAISE_IF(st);
+
+    return result;
   }
-  CMPIString* new_string(const char *s) {
-    return CMNewString($self, s, NULL);
+
+  CMPIString* new_string(const char *s) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIStatus* result;
+
+    result = CMNewString($self, s, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* count: Maximum number of elements
    * type: Element type
    */
-  CMPIArray* new_array(int count, CMPIType type ) {
-    return CMNewArray( $self, count, type, NULL);
+  CMPIArray* new_array(int count, CMPIType type ) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIArray* result;
+
+    result = CMNewArray($self, count, type, &st);
+
+    RAISE_IF(st);
+    return result;
   }
+
 #-----------------------------------------------------
 #
 # TODO: CMPIMsgFileHandle stuff
@@ -130,10 +343,20 @@ typedef struct _CMPIBroker {} CMPIBroker;
    * lang: The query language.
    * projection [Output]: Projection specification (suppressed when NULL).
    */
-  CMPISelectExp* new_select_exp(const char *query, const char *lang, 
-                                CMPIArray **projection) {
-    return CMNewSelectExp($self, query, lang, projection, NULL);
+  CMPISelectExp* new_select_exp(
+    const char *query, 
+    const char *lang, 
+    CMPIArray **projection) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPISelectExp* result;
+
+    return CMNewSelectExp($self, query, lang, projection, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Create a new CMPIError object.
   * owner: Identifies the entity that owns the msg format definition.
   * msgID: Identifies the format of the message.
@@ -142,12 +365,22 @@ typedef struct _CMPIBroker {} CMPIBroker;
   * pc: Probable caues of this error.
   * cimStatusCodeStatus: Code.
   */
-  CMPIError* new_error(const char *owner, const char* msgID, const char* msg,
-     const CMPIErrorSeverity sev, const CMPIErrorProbableCause pc,
-     const CMPIrc cimStatusCode)
+  CMPIError* new_error(
+    const char *owner, 
+    const char* msgID, 
+    const char* msg,
+    const CMPIErrorSeverity sev, 
+    const CMPIErrorProbableCause pc,
+    const CMPIrc cimStatusCode)
   {
-    return CMNewCMPIError($self, owner, msgID, msg, sev, pc, 
-                          cimStatusCode, NULL);    
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIError* result;
+
+    result = CMNewCMPIError($self, owner, msgID, msg, sev, pc, cimStatusCode, 
+      &st);
+    RAISE_IF(st);
+
+    return result;
   }
 
   void bummer()

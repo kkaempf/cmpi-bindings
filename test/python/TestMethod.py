@@ -44,15 +44,17 @@ class TestMethodProvider(CIMProvider2):
         logger.log_debug('Entering %s.enum_instances()' \
                 % self.__class__.__name__)
 
-        '''
+        #'''
         ch = env.get_cimom_handle()
         try:
-            e = ch.EnumerateInstanceNames("root/cimv2", "TestAssoc_User")
+            e = ch.EnumerateInstanceNames("root/cimv2", "TestAssoc_Userx")
             for i in e:
                 print i
         except pywbem.CIMError, e:
+            print "ABCDEFG"
             print e
-        '''
+            print "HIJKLMNOP"
+        #'''
 
         '''
         ch = env.get_cimom_handle()
