@@ -383,8 +383,8 @@ class CMPIProxyProvider(object):
         #print '*** broker.name()', broker.name()
         #print '*** broker.capabilities()', broker.capabilities()
         #print '*** broker.version()', broker.version()
-        broker.LogMessage(1, 'LogID', 
-                '** This should go through broker.LogMessage()')
+        #broker.LogMessage(1, 'LogID', 
+        #        '** This should go through broker.LogMessage()')
 
     def enum_instance_names(self, ctx, rslt, objname):
         print 'provider.py: In enum_instance_names()' 
