@@ -7,15 +7,19 @@ add_subdirectory(tests)
 SET (BUILD_SHARED_LIBS ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
 
-FIND_PACKAGE(PythonInterp)
+FIND_PACKAGE(PythonInterp REQUIRED)
 
-EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; sys.stdout.write(sys.path[2])" OUTPUT_VARIABLE PYTHON_LIB_DIR)
+EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "from sys import stdout; from distutils import sysconfig; stdout.write(sysconfig.get_python_lib())" OUTPUT_VARIABLE PYTHON_LIB_DIR)
+
+IF (NOT PYTHON_SITE_DIR)
+  SET (PYTHON_SITE_DIR ${PYTHON_LIB_DIR})
+ENDIF (NOT PYTHON_SITE_DIR)
 
 MESSAGE(STATUS "Python executable: ${PYTHON_EXECUTABLE}")
 MESSAGE(STATUS "Python inc dir: ${PYTHON_INCLUDE_PATH}")
 MESSAGE(STATUS "Python lib dir: ${PYTHON_LIB_DIR}")
 #MESSAGE(STATUS "Python libraries: ${PYTHON_LIBRARIES}")
-MESSAGE(STATUS "Python site dir: ${PYTHON_LIB_DIR}/site-packages")
+MESSAGE(STATUS "Python site dir: ${PYTHON_SITE_DIR}")
 
 SET( SWIG_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/cmpi_wrap.c" )
 SET( SWIG_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/../cmpi.i" )
@@ -52,11 +56,13 @@ TARGET_LINK_LIBRARIES( ${NAME} util )
 
 INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 # .py: swig generated
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmpi.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmpi.py DESTINATION ${PYTHON_SITE_DIR} )
 
 
 #
 # cmpi_pywbem_bindings.py: provider implementation
 #
-INSTALL(FILES cmpi_pywbem_bindings.py DESTINATION ${PYTHON_LIB_DIR}/site-packages )
+INSTALL(FILES cmpi_pywbem_bindings.py DESTINATION ${PYTHON_SITE_DIR} )
 #INSTALL(FILES Py_UnixProcessProvider.py DESTINATION /usr/lib/pycim )
+
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${PYTHON_SITE_DIR}/cmpi.py ${PYTHON_SITE_DIR}/cmpi_pywbem_bindings.py)")
