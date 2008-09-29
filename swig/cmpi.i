@@ -83,13 +83,11 @@ static void _raise_ex(const CMPIStatus* st)
     
     ex = (CMPIException*)malloc(sizeof(CMPIException));
     ex->error_code = st->rc;
-    const char* chars;
 
-    if (st->msg)
-        chars = CMGetCharsPtr(st->msg, NULL);
-
-    if (chars)
+    if (st->msg) {
+        const char* chars = CMGetCharsPtr(st->msg, NULL);
         ex->description = strdup(chars);
+    }
     else
         ex->description = NULL;
 

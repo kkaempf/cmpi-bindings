@@ -14,10 +14,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     const char *id, 
     const char *text) 
   {
-    CMPIStatus st = { CMPI_RC_OK, NULL };
-
-    CMLogMessage($self, severity, id, text, &st);
-    RAISE_IF(st);
+    CMLogMessage($self, severity, id, text, NULL);
   }
 
   unsigned long capabilities() 
@@ -312,7 +309,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
   CMPIString* new_string(const char *s) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIStatus* result;
+    CMPIString* result;
 
     result = CMNewString($self, s, &st);
     RAISE_IF(st);
