@@ -44,8 +44,6 @@
 /* Needed for kill() */
 #include <signal.h>
 
-#include <Python.h>
-
 /* A simple stderr logging/tracing facility. */
 #ifndef _SBLIM_TRACE
 #define _SBLIM_TRACE(tracelevel,args) _logstderr args 
@@ -59,6 +57,11 @@ void _logstderr(char *fmt,...)
 }
 #endif
 
+
+SWIGEXPORT void SWIG_init(void);
+#define _CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
+
+
 /*
 **==============================================================================
 **
@@ -66,20 +69,6 @@ void _logstderr(char *fmt,...)
 **
 **==============================================================================
 */
-
-static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER; 
-static int _PY_INIT = 0; // acts as a boolean - is Python Initialized
-static int _MI_COUNT = 0; 
-static PyThreadState* cmpiMainPyThreadState = NULL; 
-static PyObject* _PYPROVMOD = NULL; 
-
-
-typedef struct __PyProviderMIHandle
-{
-    char *miName;
-    PyObject *pyMod;
-    const CMPIBroker* broker;
-} PyProviderMIHandle;
 
 static char* fmtstr(const char* fmt, ...)
 {
@@ -104,6 +93,48 @@ static char* fmtstr(const char* fmt, ...)
 }
 
 
+/*
+**==============================================================================
+** Python
+**==============================================================================
+*/
+
+/*
+**==============================================================================
+**
+** Local definitions:
+**
+**==============================================================================
+*/
+
+#include <Python.h>
+
+
+static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER; 
+static int _PY_INIT = 0; // acts as a boolean - is Python Initialized
+static int _MI_COUNT = 0; 
+static PyThreadState* cmpiMainPyThreadState = NULL; 
+static PyObject* _PYPROVMOD = NULL; 
+
+/*
+ * per-MI struct to keep
+ * - name of MI
+ * - pointer to (Python) instrumentation
+ * - pointer to Broker
+ */
+
+typedef struct __PyProviderMIHandle
+{
+    char *miName;
+    PyObject *pyMod;
+    const CMPIBroker* broker;
+} PyProviderMIHandle;
+
+/*
+ * string2py
+ * char* -> PyString
+ */
+
 static PyObject *
 string2py(const char *s)
 {
@@ -120,6 +151,38 @@ string2py(const char *s)
 }
 
 
+/*
+ * proplist2py
+ * char** -> PyList
+ */
+
+static PyObject*
+proplist2py(const char** cplist)
+{
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+    if (cplist == NULL)
+    {
+        Py_INCREF(Py_None);
+        SWIG_PYTHON_THREAD_END_BLOCK; 
+        return Py_None; 
+    }
+    PyObject* pl;
+ 
+    pl = PyList_New(0); 
+    for (; (cplist!=NULL && *cplist != NULL); ++cplist)
+    {
+        PyList_Append(pl, PyString_FromString(*cplist)); 
+    }
+    SWIG_PYTHON_THREAD_END_BLOCK; 
+ 
+    return pl; 
+}
+
+
+/*
+ * print Python exception trace
+ * 
+ */
 
 #define TB_ERROR(str) {tbstr = str; goto cleanup;}
 static CMPIString*
@@ -218,9 +281,14 @@ cleanup:
 }
 
 
-SWIGEXPORT void SWIG_init(void);
-#define PY_CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
-static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
+/*
+ * Global Python initializer
+ * loads the Python interpreter
+ * init threads
+ */
+
+static int
+PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
   _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() called", getpid(), pthread_self()));
   
@@ -248,7 +316,7 @@ static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 	  CMPIString* trace = get_exc_trace(broker);
       _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), 
 				  CMGetCharsPtr(trace, NULL)));
-      PY_CMPI_SETFAIL(trace); 
+      _CMPI_SETFAIL(trace); 
       abort();
       return -1; 
     }
@@ -260,7 +328,13 @@ static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 }
 
 
-static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
+/*
+ * local (per MI) Python initializer
+ * keeps track of reference count
+ */
+
+static int
+PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
 {
   int rc = 0; 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
@@ -286,7 +360,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   if (provclass == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      PY_CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
+      _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
       return -1; 
     }
   PyObject* broker = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
@@ -301,7 +375,7 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   if (provinst == NULL)
     {
       SWIG_PYTHON_THREAD_END_BLOCK; 
-      PY_CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
+      _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
       return -1; 
     }
   
@@ -312,31 +386,14 @@ static int PyInitialize(PyProviderMIHandle* hdl, CMPIStatus* st)
   return 0; 
 }
 
-
+/* on-demand init */
 #define PY_CMPI_INIT { if (((PyProviderMIHandle*)(self->hdl))->pyMod == NULL) if (PyInitialize(((PyProviderMIHandle*)(self->hdl)), &status) != 0) return status; }
 
-static PyObject*
-proplist2py(const char** cplist)
-{
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-    if (cplist == NULL)
-    {
-        Py_INCREF(Py_None);
-        SWIG_PYTHON_THREAD_END_BLOCK; 
-        return Py_None; 
-    }
-    PyObject* pl;
- 
-    pl = PyList_New(0); 
-    for (; (cplist!=NULL && *cplist != NULL); ++cplist)
-    {
-        PyList_Append(pl, PyString_FromString(*cplist)); 
-    }
-    SWIG_PYTHON_THREAD_END_BLOCK; 
- 
-    return pl; 
-}
 
+/*
+ * call_py_provider
+ * 
+ */
 
 static int 
 call_py_provider(PyProviderMIHandle* hdl, CMPIStatus* st, 
@@ -455,6 +512,10 @@ cleanup:
 }
 
 
+/*
+ * Cleanup
+ * 
+ */
 
 static CMPIStatus Cleanup(
         PyProviderMIHandle * miHdl,
@@ -515,8 +576,12 @@ static CMPIStatus Cleanup(
 **==============================================================================
 */
 
-static CMPIStatus InstCleanup(
-        CMPIInstanceMI * self,      
+/*
+ * InstCleanup
+ */
+
+static CMPIStatus
+InstCleanup(CMPIInstanceMI * self,      
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
@@ -525,8 +590,13 @@ static CMPIStatus InstCleanup(
     return st;
 }
 
-static CMPIStatus AssocCleanup(
-        CMPIAssociationMI * self,   
+
+/*
+ * AssocCleanup
+ */
+
+static CMPIStatus
+AssocCleanup(CMPIAssociationMI * self,   
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
@@ -535,8 +605,13 @@ static CMPIStatus AssocCleanup(
     return st;
 }
 
-static CMPIStatus MethodCleanup(
-        CMPIMethodMI * self,    
+
+/*
+ * MethodCleanup
+ */
+
+static CMPIStatus
+MethodCleanup(CMPIMethodMI * self,    
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
@@ -545,8 +620,13 @@ static CMPIStatus MethodCleanup(
     return st;
 }
 
-static CMPIStatus IndicationCleanup(
-        CMPIIndicationMI * self,    
+
+/*
+ * IndicationCleanup
+ */
+
+static CMPIStatus
+IndicationCleanup(CMPIIndicationMI * self,    
         const CMPIContext * context,
         CMPIBoolean terminating)
 {
@@ -558,9 +638,11 @@ static CMPIStatus IndicationCleanup(
 // ----------------------------------------------------------------------------
 
 
-/* EnumInstanceNames() - return a list of all the instances names (i.e. return their object paths only) */
-static CMPIStatus EnumInstanceNames(
-        CMPIInstanceMI * self,      
+/*
+ * EnumInstanceNames() - return a list of all the instances names (i.e. return their object paths only)
+ */
+static CMPIStatus
+EnumInstanceNames(CMPIInstanceMI * self,      
         const CMPIContext * context,
         const CMPIResult * result,
         const CMPIObjectPath * reference)
@@ -591,9 +673,11 @@ static CMPIStatus EnumInstanceNames(
 // ----------------------------------------------------------------------------
 
 
-/* EnumInstances() - return a list of all the instances (i.e. return all the instance data) */
-static CMPIStatus EnumInstances(
-        CMPIInstanceMI * self,  
+/*
+ * EnumInstances() - return a list of all the instances (i.e. return all the instance data)
+ */
+static CMPIStatus
+EnumInstances(CMPIInstanceMI * self,  
         const CMPIContext * context,
         const CMPIResult * result,
         const CMPIObjectPath * reference,
@@ -627,9 +711,11 @@ static CMPIStatus EnumInstances(
 // ----------------------------------------------------------------------------
 
 
-/* GetInstance() -  return the instance data for the specified instance only */
-static CMPIStatus GetInstance(
-        CMPIInstanceMI * self,
+/*
+ * GetInstance() -  return the instance data for the specified instance only
+ */
+static CMPIStatus
+GetInstance(CMPIInstanceMI * self,
         const CMPIContext * context,
         const CMPIResult * results,
         const CMPIObjectPath * reference,
@@ -662,9 +748,11 @@ static CMPIStatus GetInstance(
 // ----------------------------------------------------------------------------
 
 
-/* CreateInstance() - create a new instance from the specified instance data. */
-static CMPIStatus CreateInstance(
-        CMPIInstanceMI * self,
+/*
+ * CreateInstance() - create a new instance from the specified instance data.
+ */
+static CMPIStatus
+CreateInstance(CMPIInstanceMI * self,
         const CMPIContext * context,
         const CMPIResult * results,
         const CMPIObjectPath * reference,
@@ -702,9 +790,11 @@ static CMPIStatus CreateInstance(
 #define SetInstance ModifyInstance
 #endif
 
-/* SetInstance() - save modified instance data for the specified instance. */
-static CMPIStatus SetInstance(
-        CMPIInstanceMI * self,
+/*
+ * SetInstance() - save modified instance data for the specified instance.
+ */
+static CMPIStatus
+SetInstance(CMPIInstanceMI * self,
         const CMPIContext * context,
         const CMPIResult * results, 
         const CMPIObjectPath * reference,
@@ -738,12 +828,14 @@ static CMPIStatus SetInstance(
    return status;
 }
 
-// ----------------------------------------------------------------------------
 
+/* ---------------------------------------------------------------------------- */
 
-/* DeleteInstance() - delete/remove the specified instance. */
-static CMPIStatus DeleteInstance(
-        CMPIInstanceMI * self,  
+/*
+ * DeleteInstance() - delete/remove the specified instance.
+ */
+static CMPIStatus
+DeleteInstance(CMPIInstanceMI * self,  
         const CMPIContext * context,
         const CMPIResult * results, 
         const CMPIObjectPath * reference)
@@ -769,12 +861,14 @@ static CMPIStatus DeleteInstance(
    return status;
 }
 
-// ----------------------------------------------------------------------------
 
+/* ---------------------------------------------------------------------------- */
 
-/* ExecQuery() - return a list of all the instances that satisfy the desired query filter. */
-static CMPIStatus ExecQuery(
-        CMPIInstanceMI * self,
+/*
+ * ExecQuery() - return a list of all the instances that satisfy the desired query filter.
+ */
+static CMPIStatus
+ExecQuery(CMPIInstanceMI * self,
         const CMPIContext * context,
         const CMPIResult * results,
         const CMPIObjectPath * reference,
@@ -809,12 +903,16 @@ static CMPIStatus ExecQuery(
 }
 
 
-// ----------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------- 
+ * CMPI external API
+ * ---------------------------------------------------------------------------- */
 
-//  associatorMIFT
-//
+/*
+ * associatorMIFT
+ */
 
-CMPIStatus associatorNames(
+CMPIStatus
+associatorNames(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
         const CMPIResult* rslt,
@@ -870,8 +968,12 @@ CMPIStatus associatorNames(
    return status;
 }
 
-/***************************************************************************/
-CMPIStatus associators(
+/*
+ * associators
+ */
+
+CMPIStatus
+associators(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
         const CMPIResult* rslt,
@@ -930,8 +1032,12 @@ CMPIStatus associators(
    return status;
 }
 
-/***************************************************************************/
-CMPIStatus referenceNames(
+/*
+ * referenceNames
+ */
+
+CMPIStatus
+referenceNames(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
         const CMPIResult* rslt,
@@ -974,8 +1080,12 @@ CMPIStatus referenceNames(
 }
 
 
-/***************************************************************************/
-CMPIStatus references(
+/*
+ * references
+ */
+
+CMPIStatus
+references(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
         const CMPIResult* rslt,
@@ -1019,8 +1129,11 @@ CMPIStatus references(
    return status;
 }
 
-/***************************************************************************/
-CMPIStatus invokeMethod(
+/*
+ * invokeMethod
+ */
+CMPIStatus
+invokeMethod(
         CMPIMethodMI* self,
         const CMPIContext* ctx,
         const CMPIResult* rslt,
@@ -1056,7 +1169,11 @@ CMPIStatus invokeMethod(
    return status;
 }
 
-/***************************************************************************/
+
+/*
+ * authorizeFilter
+ */
+
 CMPIStatus authorizeFilter(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
@@ -1090,7 +1207,11 @@ CMPIStatus authorizeFilter(
    return status;
 }
 
-/***************************************************************************/
+
+/*
+ * activateFilter
+ */
+
 CMPIStatus activateFilter(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
@@ -1124,7 +1245,11 @@ CMPIStatus activateFilter(
    return status;
 }
 
-/***************************************************************************/
+
+/*
+ * deActivateFilter
+ */
+
 CMPIStatus deActivateFilter(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
@@ -1159,10 +1284,13 @@ CMPIStatus deActivateFilter(
 }
 
 
-/***************************************************************************/
-// Note: sfcb doesn't support mustPoll. :(
-// http://sourceforge.net/mailarchive/message.php?msg_id=OFF38FF3F9.39FD2E1F-ONC1257385.004A7122-C1257385.004BB0AF%40de.ibm.com
-CMPIStatus mustPoll(
+/*
+ * mustPoll
+ * Note: sfcb doesn't support mustPoll. :(
+ * http://sourceforge.net/mailarchive/message.php?msg_id=OFF38FF3F9.39FD2E1F-ONC1257385.004A7122-C1257385.004BB0AF%40de.ibm.com
+ */
+CMPIStatus
+mustPoll(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
         //const CMPIResult* rslt, TODO: figure out who is right: spec. vs. sblim
@@ -1197,8 +1325,12 @@ CMPIStatus mustPoll(
 }
 
 
-/***************************************************************************/
-CMPIStatus enableIndications(
+/*
+ * enableIndications
+ */
+
+CMPIStatus
+enableIndications(
         CMPIIndicationMI* self,
         const CMPIContext* ctx)
 {
@@ -1219,8 +1351,13 @@ CMPIStatus enableIndications(
 
 }
 
-/***************************************************************************/
-CMPIStatus disableIndications(
+
+/*
+ * disableIndications
+ */
+
+CMPIStatus 
+disableIndications(
         CMPIIndicationMI* self,
         const CMPIContext* ctx)
 {
@@ -1244,6 +1381,7 @@ CMPIStatus disableIndications(
 
 /***************************************************************************/
 
+/* MI function tables */
 
 static CMPIMethodMIFT MethodMIFT__={ 
     CMPICurrentVersion, 
@@ -1294,7 +1432,9 @@ static CMPIInstanceMIFT InstanceMIFT__={
     ExecQuery, 
 }; 
 
-static void createInit(const CMPIBroker* broker, 
+
+static void
+createInit(const CMPIBroker* broker, 
         const CMPIContext* context, const char* miname, CMPIStatus* st)
 {
     _SBLIM_TRACE(1,("\n>>>>> createInit(Python) called, miname= %s (ctx=%p)\n", miname, context));
@@ -1306,6 +1446,7 @@ static void createInit(const CMPIBroker* broker,
     * MIFT function
     */ 
 }
+
 
 #define SWIG_CMPI_MI_FACTORY(ptype) \
 CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
@@ -1333,3 +1474,5 @@ SWIG_CMPI_MI_FACTORY(Instance)
 SWIG_CMPI_MI_FACTORY(Method)
 SWIG_CMPI_MI_FACTORY(Association)
 SWIG_CMPI_MI_FACTORY(Indication)
+
+#undef _CMPI_SETFAIL
