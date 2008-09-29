@@ -222,8 +222,6 @@ SWIGEXPORT void SWIG_init(void);
 #define PY_CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
 static int PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
-  int rc = 0; 
-
   _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() called", getpid(), pthread_self()));
   
   if (_PY_INIT)
