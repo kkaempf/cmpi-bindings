@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Sep 29 22:52:31 CEST 2008 - kkaempf@suse.de
+
+- refactor cmpi_provider_{python,ruby}.c,
+  move common lines (75%) to cmpi_provider.c and target language
+  specific lines (25%) to target_{python,ruby}.c 
+
+-------------------------------------------------------------------
 Fri Sep 19 13:57:43 CEST 2008 - kkaempf@suse.de
 
 - rename .py filename to reflect 'pywbem' dependency.

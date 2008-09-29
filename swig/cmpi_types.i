@@ -331,6 +331,7 @@ FIXME: if clone() is exposed, release() must also
    * value: Address of value structure.
    * type: Value type.
    */
+#if 0 /* TODO: FIXME: No global _BROKER */
 #if defined(SWIGRUBY)
   %alias set "[]=";
   /*
@@ -381,6 +382,7 @@ FIXME: if clone() is exposed, release() must also
     }
     return CMAddKey( $self, name, value, type );
   }
+#endif
 #endif
   CMPIStatus add_key( const char *name, const CMPIValue * value, const CMPIType type) {
     return CMAddKey( $self, name, value, type );
@@ -510,6 +512,7 @@ FIXME: if clone() is exposed, release() must also
    * value: Address of value structure.
    * type: Value type.
    */
+#if 0 /* TODO: FIXME: No global _BROKER */
 #if defined(SWIGRUBY)
   %alias set "[]=";
   /*
@@ -560,6 +563,7 @@ FIXME: if clone() is exposed, release() must also
     }
     return CMSetProperty( $self, name, value, type );
   }
+#endif
 #endif
   CMPIStatus set_property(const char *name, const CMPIValue * value, const CMPIType type) {
     return CMSetProperty( $self, name, value, type );

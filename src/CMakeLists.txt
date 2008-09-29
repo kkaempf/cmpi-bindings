@@ -5,7 +5,7 @@ SET( CMPI_LIBRARY_DIR /usr/lib/cmpi )
 SET( CMPI_INCLUDE_DIR /usr/include/cmpi )
 SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
 
-SET(cmpi_provider_SRCS cmpi_provider_python.c cmpi_provider_ruby.c)
+SET(cmpi_provider_SRCS cmpi_provider.c)
 ADD_DEFINITIONS(-DCMPI_PLATFORM_LINUX_GENERIC_GNU -DCMPI_VERSION=200)
 
 ADD_LIBRARY(cmpi_provider SHARED ${cmpi_provider_SRCS})
@@ -14,7 +14,7 @@ INCLUDE_DIRECTORIES( ${CMPI_INCLUDE_DIR} )
 
 
 #
-# Ruby
+# Ruby: build standalone module, just for testing
 #
 
 ADD_DEFINITIONS(-DTARGET_RUBY)
