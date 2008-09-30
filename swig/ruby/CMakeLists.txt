@@ -50,6 +50,6 @@ TARGET_LINK_LIBRARIES( ${NAME} ${RUBY_LIBRARY} )
 INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 
 #
-# rcmpi_instance.rb: provider implementation
+# cmpi_rbwbem_bindings: provider implementation
 #
-INSTALL(FILES rcmpi_instance.rb DESTINATION ${RUBY_LIB_DIR})
+INSTALL(FILES cmpi_rbwbem_bindings.rb DESTINATION ${RUBY_LIB_DIR})

@@ -29,8 +29,10 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include <pthread.h>
 
 /* Include the required CMPI macros, data types, and API function headers */
@@ -79,7 +81,7 @@ SWIGEXPORT void SWIG_init(void);
 typedef struct __ProviderMIHandle
 {
     char *miName;
-    Target_Type tgMod;
+    Target_Type instance;
     const CMPIBroker* broker;
 } ProviderMIHandle;
 
@@ -165,10 +167,23 @@ fmtstr(const char* fmt, ...)
 **==============================================================================
 */
 
-static int _MI_COUNT = 0; 
+
+/*
+ * There is one target interpreter, serving multiple MIs
+ * The number of MIs using the interpreter is counted in _MI_COUNT,
+ * when the last user goes aways, the target interpreter is unloaded.
+ * 
+ * _CMPI_INIT_MUTEX protects this references counter from concurrent access.
+ * 
+ */
+
+static int _TARGET_INIT = 0; /* acts as a boolean - is target initialized? */
+static int _MI_COUNT = 0;    /* use count, number of MIs */
+static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER;  /* mutex around _MI_COUNT */
+static Target_Type _TARGET_MODULE = Target_Null;  /* The target module (aka namespace) */
 
 /* on-demand init */
-#define TARGET_CMPI_INIT { if (((ProviderMIHandle*)(self->hdl))->tgMod == Target_Null) if (TargetInitialize(((ProviderMIHandle*)(self->hdl)), &status) != 0) return status; }
+#define TARGET_CMPI_INIT { if (((ProviderMIHandle*)(self->hdl))->instance == Target_Null) if (TargetInitialize(((ProviderMIHandle*)(self->hdl)), &status) != 0) return status; }
 
 #if defined(SWIGPYTHON)
 #include "target_python.c"
@@ -1095,7 +1110,7 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
     _SBLIM_TRACE(1, ("\n>>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname)); \
     ProviderMIHandle *hdl = (ProviderMIHandle*)malloc(sizeof(ProviderMIHandle)); \
     if (hdl) { \
-        hdl->tgMod = Target_Null; \
+        hdl->instance = Target_Null; \
         hdl->miName = strdup(miname); \
         hdl->broker = broker; \
     } \
