@@ -193,10 +193,10 @@ static void _raise_ex(const CMPIStatus* st)
 #include "../src/cmpi_provider.c"
 
 /* RAISE exception IF status argument has a nonzero rc member */
-#define RAISE_IF(ST) \
+#define RAISE_IF(EXPR) \
     do \
     { \
-        CMPIStatus __st__ = (ST); \
+        CMPIStatus __st__ = (EXPR); \
         if (__st__.rc) \
             _raise_ex(&__st__); \
     } \

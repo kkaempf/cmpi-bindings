@@ -110,21 +110,25 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 %rename(CMPIException) CMPIException;
 typedef struct _CMPIException {} CMPIException;
 
-%extend CMPIException {
-
-  CMPIException() {
+%extend CMPIException 
+{
+  CMPIException() 
+  {
       return (CMPIException*)calloc(1, sizeof(CMPIException));
   }
 
-  ~CMPIException() {
+  ~CMPIException() 
+  {
       free($self->description);
   }
 
-  int get_error_code() {
+  int get_error_code() 
+  {
     return $self->error_code;
   }
 
-  const char* get_description() {
+  const char* get_description() 
+  {
     return $self->description;
   }
 }
@@ -136,7 +140,8 @@ typedef struct _CMPIException {} CMPIException;
 #-----------------------------------------------------
 
 #ifdef SWIGPYTHON
-%exception {
+%exception 
+{
     _clr_raised();
     $action
     if (_get_raised())
@@ -153,75 +158,76 @@ typedef struct _CMPIException {} CMPIException;
 # CMPIError
 #
 
-%extend _CMPIError {
+%extend _CMPIError 
+{
   ~CMPIError() { }
   /* Gets the type of this Error */
   CMPIErrorType type() {
-    return CMGetErrorType( $self, NULL );
+    return CMGetErrorType($self, NULL);
   }
   /* Sets the error type of this error object. */
 #if defined(SWIGRUBY)
   %rename("type=") set_type(const CMPIErrorType et);
 #endif
   void set_type(const CMPIErrorType et) {
-    CMSetErrorType( $self, et );
+    CMSetErrorType($self, et);
   }
   /* Returns a string which describes the alternate error type. */
   const char *other_type() {
-    return CMGetCharPtr( CMGetOtherErrorType( $self, NULL ) );
+    return CMGetCharPtr(CMGetOtherErrorType($self, NULL));
   }
   /* Sets the 'other' error type of this error object. */
 #if defined(SWIGRUBY)
   %rename("other_type=") set_other_type(const char *ot);
 #endif
   void set_other_type(const char *ot) {
-    CMSetOtherErrorType( $self, ot );
+    CMSetOtherErrorType($self, ot);
   }
   /* Returns a string which describes the owning entity. */
   const char *owning_entity() {
-    return CMGetCharPtr( CMGetOwningEntity( $self, NULL ) );
+    return CMGetCharPtr(CMGetOwningEntity($self, NULL));
   }
   /* Returns a string which is the message ID. */
   const char *message_id() {
-    return CMGetCharPtr( CMGetMessageID( $self, NULL ) );
+    return CMGetCharPtr(CMGetMessageID($self, NULL));
   }
   /* Returns a string comnating an error message. */
   const char *message() {
-    return CMGetCharPtr( CMGetErrorMessage( $self, NULL ) );
+    return CMGetCharPtr(CMGetErrorMessage($self, NULL));
   }
   /* Returns the perceieved severity of this error. */
   CMPIErrorSeverity severity() {
-    return CMGetPerceivedSeverity( $self, NULL );
+    return CMGetPerceivedSeverity($self, NULL);
   }
   /* Returns the probable cause of this error. */
   CMPIErrorProbableCause probable_cause() {
-    return CMGetProbableCause( $self, NULL );
+    return CMGetProbableCause($self, NULL);
   }
   /* Sets the description of the probable cause. */
 #if defined(SWIGRUBY)
   %rename("probable_cause=") set_probable_cause(const char *pcd);
 #endif
   void set_probable_cause(const char *pcd) {
-    CMSetProbableCauseDescription( $self, pcd );
+    CMSetProbableCauseDescription($self, pcd);
   }
   /* Returns a string which describes the probable cause. */
   const char *probable_cause_description() {
-    return CMGetCharPtr( CMGetProbableCauseDescription( $self, NULL ) );
+    return CMGetCharPtr(CMGetProbableCauseDescription($self, NULL));
   }
   /* Returns an array of strings which describes recomended actions. */
   CMPIArray *recommended_actions() {
-    return CMGetRecommendedActions( $self, NULL );
+    return CMGetRecommendedActions($self, NULL);
   }
   /* Sets the recomended actions array. */
 #if defined(SWIGRUBY)
   %rename("recommended_actions=") set_recommended_actions(const CMPIArray* ra);
 #endif
   void set_recommended_actions(const CMPIArray* ra) {
-    CMSetRecommendedActions( $self, ra );
+    CMSetRecommendedActions($self, ra);
   }
   /* Returns a string which describes the Error source. */
   const char *source() {
-    return CMGetCharPtr( CMGetErrorSource( $self, NULL ) );
+    return CMGetCharPtr(CMGetErrorSource($self, NULL));
   }
   /* Specifies a string which specifes The identifying information of
      the entity (i.e., the instance) generating the error. */
@@ -229,56 +235,56 @@ typedef struct _CMPIException {} CMPIException;
   %rename("source=") set_source(const char *es);
 #endif
   void set_source(const char *es) {
-    CMSetErrorSource( $self, es );
+    CMSetErrorSource($self, es);
   }
   /* Returns a the format that the error src is in. */
   CMPIErrorSrcFormat source_format() {
-    return CMGetErrorSourceFormat( $self, NULL );
+    return CMGetErrorSourceFormat($self, NULL);
   }
   /* Sets the source format of the error object. */
 #if defined(SWIGRUBY)
   %rename("source_format=") set_source_format(const CMPIErrorSrcFormat esf);
 #endif
   void set_source_format(const CMPIErrorSrcFormat esf) {
-    CMSetErrorSourceFormat( $self, esf );
+    CMSetErrorSourceFormat($self, esf);
   }
   /* Returns a string which describes the 'other' format, only
      available if the error source is OTHER. */
   const char *other_format() {
-    return CMGetCharPtr( CMGetOtherErrorSourceFormat( $self, NULL ) );
+    return CMGetCharPtr(CMGetOtherErrorSourceFormat($self, NULL));
   }
   /* specifies A string defining "Other" values for ErrorSourceFormat */
 #if defined(SWIGRUBY)
   %rename("other_format=") set_other_format(const char *oesf);
 #endif
   void set_other_format(const char *oesf) {
-    CMSetOtherErrorSourceFormat( $self, oesf );
+    CMSetOtherErrorSourceFormat($self, oesf);
   }
   /* Returns the status code of this error. */
   CMPIrc status_code() {
-    return CMGetCIMStatusCode( $self, NULL );
+    return CMGetCIMStatusCode($self, NULL);
   }
   /* Returns a string which describes the status code error. */
   const char *status_description() {
-    return CMGetCharPtr( CMGetCIMStatusCodeDescription( $self, NULL ) );
+    return CMGetCharPtr(CMGetCIMStatusCodeDescription($self, NULL));
   }
   /* Sets the description of the status code. */
 #if defined(SWIGRUBY)
   %rename("status_description=") set_status_description(const char *cd);
 #endif
   void set_status_description(const char *cd) {
-    CMSetCIMStatusCodeDescription( $self, cd );
+    CMSetCIMStatusCodeDescription($self, cd);
   }
   /* Returns an array which contains the dynamic content of the message. */
   CMPIArray *message_arguments() {
-    return CMGetMessageArguments( $self, NULL );
+    return CMGetMessageArguments($self, NULL);
   }
   /* Sets an array of strings for the dynamic content of the message. */
 #if defined(SWIGRUBY)
   %rename("message_arguments=") set_message_arguments(CMPIArray* ma);
 #endif
   void set_message_arguments(CMPIArray* ma) {
-    CMSetMessageArguments( $self, ma );
+    CMSetMessageArguments($self, ma);
   }
 }
 
@@ -287,25 +293,39 @@ typedef struct _CMPIException {} CMPIException;
 # CMPIResult
 #
 
-%extend _CMPIResult {
+%extend _CMPIResult 
+{
   /* no con-/destructor, the broker handles this */
   
-  const char* to_s(const CMPIBroker* broker) {
-    CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+  const char* to_s(const CMPIBroker* broker) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIString* result;
+    
+    result = CDToString(broker, $self, &st);
+    RAISE_IF(st);
+
+    return CMGetCharPtr(result);
   }
 
-  void return_instance(CMPIInstance *instance) {
-    CMReturnInstance( $self, instance );
+  void return_instance(CMPIInstance *instance) 
+  {
+    RAISE_IF(CMReturnInstance($self, instance));
   }
-  void return_objectpath(CMPIObjectPath *path) {
-    CMReturnObjectPath( $self, path );
+
+  void return_objectpath(CMPIObjectPath *path) 
+  {
+    RAISE_IF(CMReturnObjectPath($self, path));
   }
-  void return_data(const CMPIValue* value, const CMPIType type) {
-    CMReturnData( $self, value, type); 
+
+  void return_data(const CMPIValue* value, const CMPIType type) 
+  {
+    RAISE_IF(CMReturnData($self, value, type));
   }
-  void done() {
-    CMReturnDone( $self );
+
+  void done() 
+  {
+    RAISE_IF(CMReturnDone($self));
   }
 }
 
@@ -314,15 +334,19 @@ typedef struct _CMPIException {} CMPIException;
 # CMPIObjectPath
 #
 
-%extend _CMPIObjectPath {
+%extend _CMPIObjectPath 
+{
   /* no ctor.  use method on broker instead.  */
-  ~CMPIObjectPath( ) { }
+  ~CMPIObjectPath() 
+  { 
+  }
+
   /**
    * Create an independent copy of this ObjectPath object. The resulting
    *          object must be released explicitly.
 FIXME: if clone() is exposed, release() must also
   CMPIObjectPath *clone() {
-    return $self->ft->clone( $self, NULL );
+    return $self->ft->clone($self, NULL);
   }
    */     
 
@@ -345,54 +369,67 @@ FIXME: if clone() is exposed, release() must also
     CMPIValue *value = (CMPIValue *)malloc(sizeof(CMPIValue));
     CMPIType type;
     if (SYMBOL_P(property)) {
-      name = rb_id2name( SYM2ID( property ) );
+      name = rb_id2name(SYM2ID(property));
     }
     else {
-      name = StringValuePtr( property );
+      name = StringValuePtr(property);
     }
     switch (TYPE(data)) {
       case T_FLOAT:
         value->Float = RFLOAT(data)->value;
-	type = CMPI_real32;
+        type = CMPI_real32;
       break;
       case T_STRING:
         value->string = CMNewString(_BROKER, StringValuePtr(data), NULL);
-	type = CMPI_string;
+        type = CMPI_string;
       break; 
       case T_FIXNUM:
         value->Int = FIX2ULONG(data);
-	type = CMPI_uint32;
+        type = CMPI_uint32;
       break;
       case T_TRUE:
         value->boolean = 1;
-	type = CMPI_boolean;
+        type = CMPI_boolean;
       break;
       case T_FALSE:
         value->boolean = 0;
-	type = CMPI_boolean;
+        type = CMPI_boolean;
       break;
       case T_SYMBOL:
-        value->string = CMNewString(_BROKER, rb_id2name(SYM2ID( data )), NULL);
-	type = CMPI_string;
+        value->string = CMNewString(_BROKER, rb_id2name(SYM2ID(data)), NULL);
+        type = CMPI_string;
       break;
       default:
         value->chars = NULL;
-	type = CMPI_null;
+        type = CMPI_null;
         break;
     }
-    return CMAddKey( $self, name, value, type );
+    return CMAddKey($self, name, value, type);
   }
 #endif
 #endif
-  CMPIStatus add_key( const char *name, const CMPIValue * value, const CMPIType type) {
-    return CMAddKey( $self, name, value, type );
+
+  void add_key(
+      const char *name, 
+      const CMPIValue* value, 
+      const CMPIType type) 
+  {
+    RAISE_IF(CMAddKey($self, name, value, type));
   }
+
   /* Gets a named key property value.
    * name: Key property name.
    */
-  CMPIData get_key( const char *name ) {
-    return CMGetKey( $self, name, NULL );
+  CMPIData get_key(const char *name) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+    result = CMGetKey($self, name, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Gets a key property value defined by its index.
    * name: [out] Key property name
    */
@@ -402,16 +439,24 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
-  get_key_at( int index ) {
+  get_key_at(int index) {
     CMPIString *s = NULL;
-    CMPIData data = CMGetKeyAt( $self, index, &s, NULL );
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData data = CMGetKeyAt($self, index, &s, &st);
 
 #if defined (SWIGRUBY)
     VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
-    return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
+    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
 #if defined (SWIGPYTHON)
+
+    if (st.rc)
+    {
+        RAISE_IF(st);
+        return NULL;
+    }
+
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
 
@@ -422,80 +467,156 @@ FIXME: if clone() is exposed, release() must also
     return pl;
 #endif
   }
+
   /* Gets the number of key properties contained in this ObjectPath. */
-  int key_count() {
-    return CMGetKeyCount( $self, NULL );
+  int key_count() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    int result;
+
+    result = CMGetKeyCount($self, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Set/replace namespace and classname components from &lt;src&gt;. */
-  void replace_from( const CMPIObjectPath * src ) {
-    CMSetNameSpaceFromObjectPath( $self, src );
+  void replace_from(const CMPIObjectPath * src) 
+  {
+    RAISE_IF(CMSetNameSpaceFromObjectPath($self, src));
   }
-  /* Set/replace hostname, namespace and classname components from &lt;src&gt;. */
-  void replace_all_from( const CMPIObjectPath * src ) {
-    CMSetHostAndNameSpaceFromObjectPath( $self, src );
+
+  /* Set/replace hostname, namespace and classname components from &lt;src&gt;. 
+  */
+  void replace_all_from(const CMPIObjectPath * src) 
+  {
+    RAISE_IF(CMSetHostAndNameSpaceFromObjectPath($self, src));
   }
+
   /* Get class qualifier value.
    * qName: Qualifier name.
    */
-  CMPIData qualifier( const char *qname ) {
-    return CMGetClassQualifier( $self, qname, NULL );
+  CMPIData qualifier(const char *qname) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CMGetClassQualifier($self, qname, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Get property qualifier value.
    * pName Property name.
    * qName Qualifier name.
    */
-  CMPIData property_qualifier( const char *pName, const char *qName ) {
-    return CMGetPropertyQualifier( $self, pName, qName, NULL );
+  CMPIData property_qualifier(const char *pName, const char *qName) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CMGetPropertyQualifier($self, pName, qName, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Get method qualifier value.
    * mName: Method name.
    * qName: Qualifier name.
    */
-  CMPIData method_qualifier(const char *methodName, const char *qName) {
-    return CMGetMethodQualifier( $self, methodName, qName, NULL);
+  CMPIData method_qualifier(const char *methodName, const char *qName) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CMGetMethodQualifier($self, methodName, qName, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Get method parameter qualifier value.
    * mName: Method name.
    * pName: Parameter name.
    * qName: Qualifier name.
    */
-  CMPIData parameter_qualifier( const char *mName, const char *pName, const char *qName ) {
-    return CMGetParameterQualifier( $self, mName, pName, qName, NULL );
+  CMPIData parameter_qualifier(
+      const char *mName, 
+      const char *pName, 
+      const char *qName) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CMGetParameterQualifier($self, mName, pName, qName, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Get the namespace component. */
-  const char *namespace() {
-    return CMGetCharPtr( CMGetNameSpace( $self, NULL ) );
+  const char *namespace() 
+  {
+    const char* result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetCharPtr(CMGetNameSpace($self, &st));
+
+    return result;
   }
+
   /* Set/replace the namespace component. */
 #if defined(SWIGRUBY)
   %rename("namespace=") set_namespace(const char *nm);
 #endif
-  void set_namespace( const char *nm ) {
-    CMSetNameSpace( $self, nm );
+  void set_namespace(const char *nm) 
+  {
+    RAISE_IF(CMSetNameSpace($self, nm));
   }
+
   /* Set/replace the hostname component. */
 #if defined(SWIGRUBY)
   %rename("hostname=") set_hostname(const char *hostname);
 #endif
-  void set_hostname( const char *hostname ) {
-    CMSetHostname( $self, hostname );
+  void set_hostname(const char *hostname) 
+  {
+    RAISE_IF(CMSetHostname($self, hostname));
   }
+
   /* Get the hostname component. */
-  const char *hostname() {
-    return CMGetCharPtr(CMGetHostname($self, NULL));
+  const char *hostname() 
+  {
+    const char* result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetCharPtr(CMGetHostname($self, NULL));
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Set/replace the classname component. */
 #if defined(SWIGRUBY)
   %rename("classname=") set_classname(const char *classname);
 #endif
-  void set_classname( const char *classname ) {
-    CMSetClassName( $self, classname );
+  void set_classname(const char *classname) 
+  {
+    RAISE_IF(CMSetClassName($self, classname));
   }
+
   /* Get the classname component. */
-  const char *classname() {
-    return CMGetCharPtr(CMGetClassName($self, NULL));
+  const char *classname() 
+  {
+    const char* result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetCharPtr(CMGetClassName($self, &st));
+    RAISE_IF(st);
+
+    return result;
   }
-  
 }
 
 #-----------------------------------------------------
@@ -503,9 +624,12 @@ FIXME: if clone() is exposed, release() must also
 # CMPIInstance
 #
 
-%extend _CMPIInstance {
+%extend _CMPIInstance 
+{
   /* path: ObjectPath containing namespace and classname. */
-  ~CMPIInstance() { }
+  ~CMPIInstance() 
+  { 
+  }
 
   /* Adds/replaces a named Property.
    * name: Entry name.
@@ -526,10 +650,10 @@ FIXME: if clone() is exposed, release() must also
     CMPIValue *value = (CMPIValue *)malloc(sizeof(CMPIValue));
     CMPIType type;
     if (SYMBOL_P(property)) {
-      name = rb_id2name( SYM2ID( property ) );
+      name = rb_id2name(SYM2ID(property));
     }
     else {
-      name = StringValuePtr( property );
+      name = StringValuePtr(property);
     }
     switch (TYPE(data)) {
       case T_FLOAT:
@@ -553,7 +677,7 @@ FIXME: if clone() is exposed, release() must also
     type = CMPI_boolean;
       break;
       case T_SYMBOL:
-        value->string = CMNewString(_BROKER, rb_id2name(SYM2ID( data )), NULL);
+        value->string = CMNewString(_BROKER, rb_id2name(SYM2ID(data)), NULL);
     type = CMPI_string;
       break;
       default:
@@ -561,13 +685,19 @@ FIXME: if clone() is exposed, release() must also
     type = CMPI_null;
         break;
     }
-    return CMSetProperty( $self, name, value, type );
+    return CMSetProperty($self, name, value, type);
   }
 #endif
 #endif
-  CMPIStatus set_property(const char *name, const CMPIValue * value, const CMPIType type) {
-    return CMSetProperty( $self, name, value, type );
+
+  void set_property(
+      const char *name, 
+      const CMPIValue * value, 
+      const CMPIType type) 
+  {
+    RAISE_IF(CMSetProperty($self, name, value, type));
   }
+
   /* get a named property value */
 #if defined(SWIGRUBY)
   %alias get "[]";
@@ -580,23 +710,32 @@ FIXME: if clone() is exposed, release() must also
   CMPIData get(VALUE property)
   {
     if (FIXNUM_P(property)) {
-      return CMGetPropertyAt( $self, FIX2ULONG(property), NULL, NULL );
+      return CMGetPropertyAt($self, FIX2ULONG(property), NULL, NULL);
     }
     else {
       const char *name;
       if (SYMBOL_P(property)) {
-        name = rb_id2name( SYM2ID( property ) );
+        name = rb_id2name(SYM2ID(property));
       }
       else {
-        name = StringValuePtr( property );
+        name = StringValuePtr(property);
       }
-      return CMGetProperty( $self, name, NULL );
+      return CMGetProperty($self, name, NULL);
     }
   }
 #endif
-  CMPIData get_property(const char *name) {
-    return CMGetProperty( $self, name, NULL );
+
+  CMPIData get_property(const char *name) 
+  {
+    CMPIData result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetProperty($self, name, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /** Gets a Property value defined by its index.
    * index: Position in the internal Data array.
    */
@@ -606,16 +745,25 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
-  get_property_at(int index) {
+  get_property_at(int index) 
+  {
     CMPIString *s = NULL;
-    CMPIData data = CMGetPropertyAt( $self, index, &s, NULL );
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData data = CMGetPropertyAt($self, index, &s, &st);
 
 #if defined (SWIGRUBY)
     VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
-    return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
+    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
 #if defined (SWIGPYTHON)
+
+    if (st.rc)
+    {
+        RAISE_IF(st);
+        return NULL;
+    }
+
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
 
@@ -626,21 +774,37 @@ FIXME: if clone() is exposed, release() must also
     return pl;
 #endif
   }
+
   /* Gets the number of properties contained in this Instance. */
 #if defined(SWIGRUBY)
   %alias property_count "size";
 #endif
-  int property_count() {
-    return CMGetPropertyCount( $self, NULL );
+  int property_count() 
+  {
+    int result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetPropertyCount($self, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Generates an ObjectPath out of the namespace, classname and
    *  key propeties of this Instance.
    */
-  CMPIObjectPath *objectpath() {
-    CMPIObjectPath *path = CMGetObjectPath( $self, NULL );
-/*    fprintf(stderr, "<%p>.objectpath = %p\n", $self, path ); */
-    return path;
+  CMPIObjectPath *objectpath() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIObjectPath* result;
+
+    result = CMGetObjectPath($self, &st);
+    RAISE_IF(st);
+    /* fprintf(stderr, "<%p>.objectpath = %p\n", $self, result); */
+
+    return result;
   }
+
   /* Replaces the ObjectPath of the instance.
    *  The passed objectpath shall contain the namespace, classname,
    *   as well as all keys for the specified instance.
@@ -648,17 +812,21 @@ FIXME: if clone() is exposed, release() must also
 #if defined(SWIGRUBY)
   %alias set_objectpath "objectpath=";
 #endif
-  CMPIStatus set_objectpath(const CMPIObjectPath *path) {
-    return CMSetObjectPath( $self, path );
+  void set_objectpath(const CMPIObjectPath *path) 
+  {
+    RAISE_IF(CMSetObjectPath($self, path));
   }
+
   /* Directs CMPI to ignore any setProperty operations for this
    *        instance for any properties not in this list.
    * properties: If not NULL, the members of the array define one
    *         or more Property names to be accepted by setProperty operations.
    */
-  CMPIStatus set_property_filter( const char **properties ) {
-    return CMSetPropertyFilter( $self, properties, NULL );
+  void set_property_filter(const char **properties) 
+  {
+    RAISE_IF(CMSetPropertyFilter($self, properties, NULL));
   }
+
   /* Add/replace a named Property value and origin
    * name: is a string containing the Property name.
    * value: points to a CMPIValue structure containing the value
@@ -667,10 +835,13 @@ FIXME: if clone() is exposed, release() must also
    * origin: specifies the instance origin.  If NULL, then
              no origin is attached to  the property
    */
-  CMPIStatus set_property_with_origin(const char *name,
-     const CMPIValue * value, CMPIType type, const char * origin)
+  void set_property_with_origin(
+      const char *name,
+     const CMPIValue *value, 
+     CMPIType type, 
+     const char* origin)
   {
-    return CMSetPropertyWithOrigin( $self, name, value, type, origin );
+    RAISE_IF(CMSetPropertyWithOrigin($self, name, value, type, origin));
   }
 }
 
@@ -678,20 +849,33 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIArgs
 
-%extend _CMPIArgs {
-  ~CMPIArgs() { }
+%extend _CMPIArgs 
+{
+  ~CMPIArgs() 
+  { 
+  }
   
   /* Adds/replaces a named argument. */
-  void set( char *name, const CMPIValue * value, const CMPIType type) {
-    CMAddArg( $self, name, value, type );
+  void set(char *name, const CMPIValue * value, const CMPIType type) 
+  {
+    RAISE_IF(CMAddArg($self, name, value, type));
   }
+
   /* Gets a named argument value. */
 #if defined(SWIGRUBY)
   %alias get "[]";
 #endif
-  CMPIData get( const char *name ) {
-    return CMGetArg( $self, name, NULL );
+  CMPIData get(const char *name) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CMGetArg($self, name, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Gets a Argument value defined by its index.
    */
 #if defined (SWIGRUBY)
@@ -700,16 +884,26 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
-  get_arg_at(int index) {
+  get_arg_at(int index) 
+  {
     CMPIString *s = NULL;
-    CMPIData data = CMGetArgAt( $self, index, &s, NULL );
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData data = CMGetArgAt($self, index, &s, &st);
 
 #if defined (SWIGRUBY)
     VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
-    return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
+    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
 #if defined (SWIGPYTHON)
+
+    RAISE_IF(st);
+
+    if (st.rc)
+    {
+        return NULL;
+    }
+
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
     PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
 
@@ -720,12 +914,19 @@ FIXME: if clone() is exposed, release() must also
     return pl;
 #endif
   }
+
   /* Gets the number of arguments contained in this Args. */
 
-  int arg_count() {
-    return CMGetArgCount($self, NULL);
-  }
+  int arg_count() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    int result;
 
+    result = CMGetArgCount($self, &st);
+    RAISE_IF(st);
+
+    return result;
+  }
 }
 
 #-----------------------------------------------------
@@ -738,7 +939,7 @@ FIXME: if clone() is exposed, release() must also
    */
   ~CMPISelectExp() { }
   const char* to_s() {
-    return CMGetCharPtr( CMGetSelExpString( $self, NULL ) );
+    return CMGetCharPtr(CMGetSelExpString($self, NULL));
   }
 }
 
@@ -775,36 +976,69 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIEnumeration
 
-%extend _CMPIEnumeration {
+%extend _CMPIEnumeration 
+{
 #if defined(SWIGRUBY)
   %alias length "size";
 #endif
-  int length() {
+  int length() 
+  {
     int l = 0;
-    while (CMHasNext( $self, NULL ) ) {
+    while (CMHasNext($self, NULL)) {
       ++l;
-      CMGetNext( $self, NULL );
+      CMGetNext($self, NULL);
     }
     return l;
   }
-  CMPIData next() {
-    return CMGetNext( $self, NULL );
+
+  CMPIData next() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+
+    result = CMGetNext($self, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
 #if defined(SWIGRUBY)
   %alias hasNext "empty?";
 #endif
-  int hasNext() {
-    return CMHasNext( $self, NULL );
+  int hasNext() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    int result;
+
+    result = CMHasNext($self, NULL);
+    RAISE_IF(st);
+
+    return result;
   }
+
 #if defined(SWIGRUBY)
   %alias toArray "to_ary";
 #endif
-  CMPIArray *toArray() {
-    return CMToArray( $self, NULL );
+  CMPIArray *toArray() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIArray* result;
+
+    result = CMToArray($self, NULL);
+    RAISE_IF(st);
+
+    return result;
   }
-  const char* to_s(const CMPIBroker* broker) {
-    CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+
+  const char* to_s(const CMPIBroker* broker) 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIString *result;
+    
+    result = CDToString(broker, $self, &st);
+    RAISE_IF(st);
+
+    return CMGetCharPtr(result);
   }
 }
 
@@ -812,34 +1046,57 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIArray
 
-%extend _CMPIArray {
-  const char* to_s(const CMPIBroker* broker) {
+%extend _CMPIArray 
+{
+  const char* to_s(const CMPIBroker* broker) 
+  {
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
-  int size() {
-    return CMGetArrayCount( $self, NULL );
+
+  int size() 
+  {
+    return CMGetArrayCount($self, NULL);
   }
+
   /* Gets the element type.  */
-  CMPIType cmpi_type() {
-    return CMGetArrayType( $self, NULL );
+  CMPIType cmpi_type() 
+  {
+    CMPIType result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetArrayType($self, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Gets an element value defined by its index. */
 #if defined(SWIGRUBY)
   %alias at "[]";
 #endif
-  CMPIData at( int index ) {
-    return CMGetArrayElementAt( $self, index, NULL );
+  CMPIData at(int index) 
+  {
+    CMPIData result;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+
+    result = CMGetArrayElementAt($self, index, &st);
+    RAISE_IF(st);
+
+    return result;
   }
+
   /* Sets an element value defined by its index. */
 #if defined(SWIGRUBY)
   %alias set "[]=";
 #endif
-  void set(int index, const CMPIValue * value, CMPIType type) {
-    CMSetArrayElementAt( $self, index, value, type );
+  void set(int index, const CMPIValue * value, CMPIType type) 
+  {
+    RAISE_IF(CMSetArrayElementAt($self, index, value, type));
   }
-  
 }
+
+#BOOKMARK
 
 #-----------------------------------------------------
 #
@@ -875,14 +1132,14 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
-  get_entry_at( int index ) {
+  get_entry_at(int index) {
     CMPIString *s = NULL;
-    CMPIData data = CMGetContextEntryAt( $self, index, &s, NULL );
+    CMPIData data = CMGetContextEntryAt($self, index, &s, NULL);
 
 #if defined (SWIGRUBY)
     VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
-    return rb_ary_push( rb_ary_push( rl, rbdata ), rb_str_new2(CMGetCharPtr(s) ) );
+    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
 #if defined (SWIGPYTHON)
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
@@ -910,17 +1167,17 @@ FIXME: if clone() is exposed, release() must also
 %extend _CMPIDateTime {
   ~CMPIDateTime() { }
   const char* to_s() {
-    return CMGetCharPtr( CMGetStringFormat( $self, NULL ) );
+    return CMGetCharPtr(CMGetStringFormat($self, NULL));
   }
   uint64_t to_i() {
-    return CMGetBinaryFormat( $self, NULL );
+    return CMGetBinaryFormat($self, NULL);
   }
   /* Tests whether DateTime is an interval value. */
 #if defined(SWIGRUBY)
   %rename("interval?") is_interval;
 #endif
   int is_interval() {
-    return CMIsInterval( $self, NULL );
+    return CMIsInterval($self, NULL);
   }
 }
 
