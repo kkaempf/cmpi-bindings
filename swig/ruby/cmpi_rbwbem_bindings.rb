@@ -1,55 +1,31 @@
 #
+# Module RbCmpi
 #
+# Main entry point for cmpi-bindings-ruby, Ruby based CIM Providers
 #
-STDERR.puts "Hello, from rcmpi_instance.rb"
 
-require "pp"
-
-class Cmpi_Instance
-  def initialize name
-    STDERR.puts "Creating Cmpi_Instance #{name}"
-  end
-  def enum_instance_names context, results, reference
-    STDERR.puts "Running Cmpi_Instance:enum_instance_names"
-    begin
-      nm = reference.namespace
-      object_path = Cmpi::CMPIObjectPath.new nm
-      
-      object_path["hello"] = "Hello,"
-      results.return_objectpath object_path
-      
-      object_path["hello"] = "world!"
-      results.return_objectpath object_path
-      
-      results.done
-    rescue Exception
-      STDERR.puts "Exception: #{$!.message}"
+module Cmpi
+  STDERR.puts "Hello from cmpi-bindings-ruby"
+  # init
+  RBCIMPATH = "/usr/lib/rbcim/"
+  
+  # look for .rb files below RBCIMPATH
+  # and load them
+  if File.directory?(RBCIMPATH) then
+    $:.unshift RBCIMPATH # add to load path
+    STDERR.puts "Looking into #{RBCIMPATH}"
+    Dir.foreach( RBCIMPATH ) do |entry|
+      STDERR.puts "Found #{entry}"
+      split = entry.split '.'
+      if split[1] == 'rb' then
+	begin
+	  STDERR.puts "Loading #{split[0]}"
+	  require split[0]
+	rescue Exception => e
+	  STDERR.puts "Loading #{split[0]} failed: #{e}"
+	end
+      end
     end
-  end
-  def enum_instances context, results, reference, properties
-    STDERR.puts "Running Cmpi_Instance:enum_instances"
-    begin
-#      pp "Context #{context}"
-#      pp "Result #{results}"
-#      pp "Reference #{reference}"
-#      pp "Properties #{properties}"
-      
-      nm = reference.namespace
-      pp "nm #{nm}"
-      
-      object_path = Cmpi::CMPIObjectPath.new nm
-      
-      instance = Cmpi::CMPIInstance.new object_path
-      instance[:hello] = "Hello,"
-      results.return_instance instance
-      
-      instance = Cmpi::CMPIInstance.new object_path
-      instance["hello"] = "world!"
-      results.return_instance instance
-      
-      results.done
-    rescue Exception
-      STDERR.puts "Exception: #{$!.message}"
-    end
+    $:.shift # take load path away
   end
 end

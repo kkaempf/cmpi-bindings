@@ -1,0 +1,5 @@
+[Test_Atom]   
+   provider: TestAtomProvider
+   location: rbCmpiProvider
+   type: instance
+   namespace: root/cimv2

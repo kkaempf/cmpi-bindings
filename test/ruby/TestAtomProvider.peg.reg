@@ -1,0 +1,28 @@
+// Provider registration for TestAtom
+instance of PG_ProviderModule
+{
+   Name = "TestAtom_Module";
+   Location = "pyCmpiProvider";
+   Vendor = "Novell";
+   Version = "1.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   Name = "TestAtomProvider";
+   ProviderModuleName = "TestAtom_Module";
+};
+
+instance of PG_ProviderCapabilities
+{
+   ProviderModuleName = "TestAtom_Module";
+   ProviderName = "TestAtomProvider";
+   ClassName = "Test_Atom";
+   ProviderType = { 2 };
+   Namespaces = {"root/cimv2"};
+   SupportedProperties = NULL;
+   SupportedMethods = NULL;
+   CapabilityID = "TestAtom-Prov-1";
+};
