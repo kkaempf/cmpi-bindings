@@ -106,6 +106,34 @@ class ExceptionClassWrapper:
 
 ##==============================================================================
 ##
+## _mwrap()
+##
+##     Wrap a method in a try block.
+##
+##==============================================================================
+
+def _mwrap(obj, meth, *args, **kwds):
+    try:
+        return obj.meth(*args, **kwds)
+    except cmpi.CMPIException,e:
+        raise _exception_to_error(e)
+
+##==============================================================================
+##
+## _fwrap()
+##
+##     Wrap a function in a try block.
+##
+##==============================================================================
+
+def _fwrap(meth, *args, **kwds):
+    try:
+        return meth(*args, **kwds)
+    except cmpi.CMPIException,e:
+        raise _exception_to_error(e)
+
+##==============================================================================
+##
 ##
 ##
 ##==============================================================================
@@ -366,7 +394,7 @@ def get_cmpi_proxy_provider(miname, broker):
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                         'New broker not the same as cached broker!')
     except KeyError:
-        prox = CMPIProxyProvider(miname, broker)
+        prox = ExceptionClassWrapper(CMPIProxyProvider(miname, broker))
         g_proxies[miname] = prox
     return prox
 
