@@ -296,7 +296,7 @@ typedef struct _CMPIException {} CMPIException;
 %extend _CMPIResult 
 {
   /* no con-/destructor, the broker handles this */
-  
+
   const char* to_s(const CMPIBroker* broker) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -336,7 +336,12 @@ typedef struct _CMPIException {} CMPIException;
 
 %extend _CMPIObjectPath 
 {
-  /* no ctor.  use method on broker instead.  */
+  CMPIObjectPath(const CMPIBroker * mb, const char *ns, const char *cn)
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    return CMNewObjectPath( mb, ns, cn, &st );
+  }
+
   ~CMPIObjectPath() 
   { 
   }
@@ -350,6 +355,17 @@ FIXME: if clone() is exposed, release() must also
   }
    */     
 
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char *string()
+  {
+    return CMGetCharPtr($self->ft->toString($self, NULL));
+  }
+  
   /* Adds/replaces a named key property.
    * name: Key property name.
    * value: Address of value structure.
