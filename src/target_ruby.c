@@ -20,40 +20,27 @@
 static VALUE
 load_module()
 {
-  _SBLIM_TRACE(1,("Ruby: require '%s'...", RB_BINDINGS_FILE));
-
-  rb_require(RB_BINDINGS_FILE);
-  
-  _SBLIM_TRACE(1,("Ruby: ... done"));
-  
-  return Qnil;
+  ruby_script(RB_BINDINGS_FILE);
+  return rb_require(RB_BINDINGS_FILE);
 }
 
 
 /*
- * create_mi
- * call constructor for MI implementation class
+ * create_mi (called from rb_protect)
+ * load Ruby provider and create provider instance
  *
  * I args : pointer to array of 2 values
- *          values[0] = broker, passed to constructor
- *          values[1] = id of class (rb_intern(<classname>))
+ *          values[0] = classname (String)
+ *          values[1] = broker, passed to constructor
  */
 
 static VALUE
 create_mi(VALUE args)
 {
   VALUE *values = (VALUE *)args;
-  _SBLIM_TRACE(1,("Ruby: %s.new ...", rb_id2name(values[1])));
-  VALUE klass = rb_const_get(_TARGET_MODULE, values[1]);
-  _SBLIM_TRACE(1,("Ruby: ... klass -> %ld", klass));
-  if (NIL_P(klass))
-    {
-      _SBLIM_TRACE(1,("Ruby: ... klass is NULL"));
-      return klass;
-    }
-  VALUE instance = rb_class_new_instance(1, values, klass);
-  _SBLIM_TRACE(1,("Ruby: ... done -> %ld", instance));
-  return instance;
+
+  _SBLIM_TRACE(1,("Ruby: %s.new ...", StringValuePtr(values[0])));
+  return rb_funcall2(_TARGET_MODULE, rb_intern("create_provider"), 2, values);
 }
 
 
@@ -78,6 +65,25 @@ call_mi(VALUE args)
 
 
 /*
+ * get Ruby exception trace -> CMPIString
+ * 
+ */
+
+#define TB_ERROR(str) {tbstr = str; goto cleanup;}
+static CMPIString *
+get_exc_trace(const CMPIBroker* broker)
+{
+    VALUE exception = rb_gv_get("$!"); /* get last exception */
+    VALUE reason = rb_funcall(exception, rb_intern("to_s"), 0 );
+    VALUE trace = rb_gv_get("$@"); /* get last exception trace */
+    VALUE backtrace = rb_funcall(trace, rb_intern("join"), 1, rb_str_new("\n\t", 2));
+
+    char* tmp = fmtstr("%s\n\t%s", StringValuePtr(reason), StringValuePtr(backtrace)); 
+    return broker->eft->newString(broker, tmp, NULL); 
+}
+
+
+/*
  * Global Ruby initializer
  * loads the Ruby interpreter
  * init threads
@@ -88,11 +94,8 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
   int error;
 
-  _SBLIM_TRACE(1,("<%d> RbGlobalInitialize() called", getpid()));
-  
   if (_TARGET_INIT)
     {
-      _SBLIM_TRACE(1,("<%d> RbGlobalInitialize() returning: already initialized", getpid()));
       return 0; 
     }
   _TARGET_INIT=1;//true
@@ -101,14 +104,16 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   
   ruby_init();
   ruby_init_loadpath();
-  ruby_script("cmpi_swig");
+  ruby_script("cmpi_swig_ruby");
   SWIG_init();
 
   /* load module */
   rb_protect(load_module, Qnil, &error);
   if (error)
     {
-      _SBLIM_TRACE(1,("<%d> Ruby: import '%s' failed, error %d", getpid(), RB_BINDINGS_FILE, error));
+      CMPIString *trace = get_exc_trace(broker);
+
+      _SBLIM_TRACE(1,("<%d> Ruby: import '%s' failed: %s", getpid(), RB_BINDINGS_FILE, CMGetCharPtr(trace)));
 /*      _CMPI_SETFAIL(<CMPIString *>); */ 
       abort();
       return -1; 
@@ -155,15 +160,17 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 
   _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s'", getpid(), hdl->miName));
 
-  args[0] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
-  args[1] = rb_intern(hdl->miName);
+  args[0] = rb_str_new2(hdl->miName);
+  args[1] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
   hdl->instance = rb_protect(create_mi, (VALUE)args, &error);
   if (error)
     {
-      _SBLIM_TRACE(1,("Ruby: FAILED creating %s, error %d", hdl->miName, error));
+      CMPIString *trace = get_exc_trace(hdl->broker);
+      _SBLIM_TRACE(1,("Ruby: FAILED creating %s:", hdl->miName, CMGetCharPtr(trace)));
       if (st != NULL)
 	{
 	  st->rc = CMPI_RC_ERR_INVALID_CLASS;
+	  st->msg = trace;
 	}
     }
   else
@@ -189,17 +196,6 @@ call_provider(ProviderMIHandle* hdl, CMPIStatus* st,
   VALUE *args, result, op = rb_intern(opname);
   va_list vargs; 
 
-  _SBLIM_TRACE(1,("call_provider %s[%d]", opname, nargs));
-
-  if (!rb_respond_to(hdl->instance, op))
-    {
-      char* str = fmtstr("Ruby provider does not implement \"%s\"", opname); 
-      _SBLIM_TRACE(1,("%s", str)); 
-      st->rc = CMPI_RC_ERR_FAILED; 
-      st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-      return 1;
-    }
-  
   /* add hdl->instance, op and nargs to the args array, so rb_protect can be called */
   nargs += 3;
   args = (VALUE *)malloc(nargs * sizeof(VALUE));
@@ -228,8 +224,9 @@ call_provider(ProviderMIHandle* hdl, CMPIStatus* st,
 
   if (i)
     {
-      char* str = fmtstr("Ruby provider call to \"%s\" failed", opname); 
-      _SBLIM_TRACE(1,("%s", str)); 
+      CMPIString *trace = get_exc_trace(hdl->broker);
+      char* str = fmtstr("Ruby: calling '%s' failed: %s", opname, CMGetCharPtr(trace)); 
+      _SBLIM_TRACE(1,("%s", str));
       st->rc = CMPI_RC_ERR_FAILED; 
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
       return 1;
