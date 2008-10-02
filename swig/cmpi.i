@@ -72,10 +72,11 @@
 #define Target_True (&PL_sv_yes)
 #define Target_False (&PL_sv_no)
 #define Target_Null NULL
+#define Target_Void NULL
 #define Target_Type SV *
 #define Target_Bool(x) (x)
-#define Target_Int(x) 0 /* should be Target_From_long(x), but Swig declares it too late. FIXME */
-#define Target_String(x) "" /* Target_FromCharPtr(x), also */
+#define Target_Int(x) NULL /* should be Target_From_long(x), but Swig declares it too late. FIXME */
+#define Target_String(x) NULL /* Target_FromCharPtr(x), also */
 #define Target_Array(x) NULL
 #define Target_Append(x,y) av_create_and_push(&x, y)
 #define TARGET_THREAD_BEGIN_BLOCK
