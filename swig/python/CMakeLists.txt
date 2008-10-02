@@ -1,11 +1,11 @@
 #
-# CMakeLists.txt for cmpi-bindings
+# CMakeLists.txt for cmpi-bindings/swig/ruby
 #
+
 enable_testing()
 add_subdirectory(tests)
 
 SET (BUILD_SHARED_LIBS ON)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
 
 FIND_PACKAGE(PythonInterp REQUIRED)
 
