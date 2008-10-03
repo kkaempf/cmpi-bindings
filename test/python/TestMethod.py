@@ -47,13 +47,11 @@ class TestMethodProvider(CIMProvider2):
         '''
         ch = env.get_cimom_handle()
         try:
-            e = ch.EnumerateInstanceNames("root/cimv2", "TestAssoc_Userx")
+            e = ch.EnumerateInstanceNames("root/cimv2", "TestAssoc_User")
             for i in e:
                 print i
         except pywbem.CIMError, e:
-            print "ABCDEFG"
             print e
-            print "HIJKLMNOP"
         '''
 
         '''
