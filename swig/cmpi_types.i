@@ -518,12 +518,11 @@ FIXME: if clone() is exposed, release() must also
 #if defined(SWIGPYTHON)
       %pythoncode %{
         def keys(self):
-          r = range(0,self.key_count())
-	  while r:
-	    yield self.get_key_at(r.pop(0))
+            for i in xrange(0, self.key_count()):
+                yield self.get_key_at(i)
       %}
 #endif
-						  
+
   /* Set/replace namespace and classname components from &lt;src&gt;. */
   void replace_from(const CMPIObjectPath * src) 
   {
