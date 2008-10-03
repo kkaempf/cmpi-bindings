@@ -4,9 +4,9 @@
 #
 
 %nodefault CMPIData;
-#%ignore _CMPIData::type;
-#%ignore _CMPIData::state;
-#%ignore _CMPIData::value;
+%ignore _CMPIData::type;
+%ignore _CMPIData::state;
+%ignore _CMPIData::value;
 %rename(CMPIData) _CMPIData;
 
 %nodefault CMPIStatus;
@@ -75,14 +75,65 @@
 #
 
 %extend CMPIData {
-  CMPIData()
+  CMPIData(CMPIData *data)
   {
-    CMPIData *data = (CMPIData *)calloc(1, sizeof(CMPIData));
-    return data;
+    return data_clone(data);
   }
   ~CMPIData()
   {
-    free( $self );
+    free($self);
+  }
+
+#ifdef SWIGRUBY
+  VALUE to_s()
+  {
+    Target_Type value = data_value($self);
+    return rb_funcall(value, rb_intern("to_s"), 0);
+  }
+#endif
+
+#if defined(SWIGRUBY)
+  %rename("null?") is_null;
+#endif
+
+  int is_null()
+  {
+    return CMIsNullValue((*($self)));
+  }
+#if defined(SWIGRUBY)
+  %rename("key?") is_key;
+#endif
+  int is_key()
+  {
+    return CMIsKeyValue((*($self)));
+  }
+#if defined(SWIGRUBY)
+  %rename("array?") is_array;
+#endif
+  int is_array()
+  {
+    return CMIsArray((*($self)));
+  }
+  int _type()
+  {
+    return $self->type;
+  }
+  int _state()
+  {
+    return $self->state;
+  }
+#if defined(SWIGRUBY)
+  VALUE
+#endif
+#if defined(SWIGPYTHON)
+  PyObject *
+#endif
+#if defined(SWIGPERL5)
+  SV *
+#endif
+  _value()
+  {
+    return data_value($self);
   }
 }
 
@@ -114,4 +165,3 @@
     return CMGetCharPtr(s);
   }
 }
-

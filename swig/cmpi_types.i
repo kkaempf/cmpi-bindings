@@ -461,7 +461,7 @@ FIXME: if clone() is exposed, release() must also
     CMPIData data = CMGetKeyAt($self, index, &s, &st);
 
 #if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
     return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
@@ -474,7 +474,7 @@ FIXME: if clone() is exposed, release() must also
     }
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
+    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
@@ -495,7 +495,35 @@ FIXME: if clone() is exposed, release() must also
 
     return result;
   }
-
+  /* iterate over keys as [<value>,<name>] pairs */
+#if defined(SWIGRUBY)
+  void keys()
+  {
+    int i;
+    int count = CMGetKeyCount($self, NULL);
+    CMPIString *name;
+    for (i = 0; i < count; ++i )
+    {
+      VALUE yield = rb_ary_new2(2);
+      name = NULL;
+      CMPIData data = CMGetKeyAt($self, i, &name, NULL);
+      VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
+      rb_ary_push(yield, rbdata);
+      rb_ary_push(yield, rb_str_new2(CMGetCharPtr(name)));
+      
+      rb_yield(yield);
+    }
+  }
+#endif
+#if defined(SWIGPYTHON)
+      %pythoncode %{
+        def keys(self):
+          r = range(0,self.key_count())
+	  while r:
+	    yield self.get_key_at(r.pop(0))
+      %}
+#endif
+						  
   /* Set/replace namespace and classname components from &lt;src&gt;. */
   void replace_from(const CMPIObjectPath * src) 
   {
@@ -768,7 +796,7 @@ FIXME: if clone() is exposed, release() must also
     CMPIData data = CMGetPropertyAt($self, index, &s, &st);
 
 #if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
     return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
@@ -781,7 +809,7 @@ FIXME: if clone() is exposed, release() must also
     }
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
+    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
@@ -907,7 +935,7 @@ FIXME: if clone() is exposed, release() must also
     CMPIData data = CMGetArgAt($self, index, &s, &st);
 
 #if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
     return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
@@ -921,7 +949,7 @@ FIXME: if clone() is exposed, release() must also
     }
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
+    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
@@ -1153,13 +1181,13 @@ FIXME: if clone() is exposed, release() must also
     CMPIData data = CMGetContextEntryAt($self, index, &s, NULL);
 
 #if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 0);
+    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
     VALUE rl = rb_ary_new2(2);
     return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
 #endif
 #if defined (SWIGPYTHON)
     SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) clone_data(&data), SWIGTYPE_p__CMPIData, 1);
+    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
 
     PyObject* pl = PyTuple_New(2);
     PyTuple_SetItem(pl, 0, pydata);
