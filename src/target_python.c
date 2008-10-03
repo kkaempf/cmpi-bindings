@@ -138,6 +138,7 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   
   Py_SetProgramName("cmpi_swig");
   Py_Initialize();
+  SWIGEXPORT void SWIG_init(void);
   SWIG_init();
   cmpiMainPyThreadState = PyGILState_GetThisThreadState();
   PyEval_ReleaseThread(cmpiMainPyThreadState); 

@@ -59,11 +59,6 @@ void _logstderr(char *fmt,...)
 }
 #endif
 
-
-#if 0
-SWIGEXPORT void SWIG_init(void);
-#endif
-
 #define _CMPI_SETFAIL(msgstr) {if (st != NULL) st->rc = CMPI_RC_ERR_FAILED; st->msg = msgstr; }
 
 /*

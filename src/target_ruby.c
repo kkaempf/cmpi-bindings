@@ -105,6 +105,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   ruby_init();
   ruby_init_loadpath();
   ruby_script("cmpi_swig_ruby");
+  extern void SWIG_init();
   SWIG_init();
 
   /* load module */
