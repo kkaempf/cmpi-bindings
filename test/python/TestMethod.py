@@ -44,7 +44,7 @@ class TestMethodProvider(CIMProvider2):
         logger.log_debug('Entering %s.enum_instances()' \
                 % self.__class__.__name__)
 
-        #'''
+        '''
         ch = env.get_cimom_handle()
         try:
             e = ch.EnumerateInstanceNames("root/cimv2", "TestAssoc_Userx")
@@ -54,7 +54,7 @@ class TestMethodProvider(CIMProvider2):
             print "ABCDEFG"
             print e
             print "HIJKLMNOP"
-        #'''
+        '''
 
         '''
         ch = env.get_cimom_handle()
@@ -65,6 +65,10 @@ class TestMethodProvider(CIMProvider2):
             print e
         '''
 
+        l = env.get_logger()
+        l.log_debug("hello");
+
+        #except CIMError, e:
 
         for key in g_insts.keys():
             model['id'] = key

@@ -359,16 +359,16 @@ class BrokerCIMOMHandle(object):
 
 class Logger(object):
     def __init__(self, broker):
+        #self.broker = ExceptionClassWrapper(broker)
         self.broker = broker
-    def log_debug(self, msg):
-        print msg
-    def log_info(self, msg):
-        pass
     def log_error(self, msg):
-        pass
-    def log_fatal(self, msg):
-        pass
-
+        self.broker.LogMessage(1, "ERROR", msg);
+    def log_info(self, msg):
+        self.broker.LogMessage(2, "INFO", msg);
+    def log_warn(self, msg):
+        self.broker.LogMessage(3, "WARN", msg);
+    def log_debug(self, msg):
+        self.broker.LogMessage(4, "DEBUG", msg);
 
 class ProviderEnvironment(object):
     def __init__(self, proxy, ctx):
