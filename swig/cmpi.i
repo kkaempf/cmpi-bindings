@@ -9,7 +9,7 @@
  */
 %}
 
-	   
+   
 %module cmpi
 %feature("autodoc","1");
 
@@ -199,11 +199,11 @@ value_value(const CMPIValue *value, const CMPIType type)
       break;
       case CMPI_charsptr:     /* ((16+10)<<8) */
          /* FIXME: unused ? */
-	result = Target_Null;
+        result = Target_Null;
       break;
       default:
         /* FIXME: raise ! */
-	result = Target_Null;
+        result = Target_Null;
       break;
     }
   Target_INCREF(result);
