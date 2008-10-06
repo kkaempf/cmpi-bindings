@@ -14,7 +14,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     const char *id, 
     const char *text) 
   {
-    CMLogMessage($self, severity, id, text, NULL);
+    RAISE_IF(CMLogMessage($self, severity, id, text, NULL)); 
   }
 
   unsigned long capabilities() 

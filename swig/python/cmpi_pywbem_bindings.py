@@ -37,6 +37,7 @@ import cmpi
 from pywbem.cim_provider2 import ProviderProxy
 import pywbem
 import types
+import syslog
 
 ##==============================================================================
 ##
@@ -357,25 +358,40 @@ class BrokerCIMOMHandle(object):
     def bummer(self):
         self.broker.bummer()
 
+_log_pri_map = {
+        cmpi.CMPI_SEV_ERROR    :syslog.LOG_ERR,
+        cmpi.CMPI_SEV_INFO     :syslog.LOG_INFO,
+        cmpi.CMPI_SEV_WARNING  :syslog.LOG_WARNING,
+        cmpi.CMPI_DEV_DEBUG    :syslog.LOG_DEBUG,
+        }
+
 class Logger(object):
-    def __init__(self, broker):
+    def __init__(self, broker, miname):
         #self.broker = ExceptionClassWrapper(broker)
         self.broker = broker
+        self.miname = miname
+    def __log_message(self, severity, msg):
+        try:
+            self.broker.LogMessage(severity, self.miname, msg);
+        except cmpi.CMPIException, e:
+            if e.get_error_code() == cmpi.CMPI_RC_ERR_NOT_SUPPORTED: 
+                syslog.syslog(syslog.LOG_DAEMON | _log_pri_map[severity], 
+                        '%s: %s' % (self.miname, msg))
     def log_error(self, msg):
-        self.broker.LogMessage(1, "ERROR", msg);
+        self.__log_message(cmpi.CMPI_SEV_ERROR, msg);
     def log_info(self, msg):
-        self.broker.LogMessage(2, "INFO", msg);
+        self.__log_message(cmpi.CMPI_SEV_INFO, msg);
     def log_warn(self, msg):
-        self.broker.LogMessage(3, "WARN", msg);
+        self.__log_message(cmpi.CMPI_SEV_WARNING, msg);
     def log_debug(self, msg):
-        self.broker.LogMessage(4, "DEBUG", msg);
+        self.__log_message(cmpi.CMPI_DEV_DEBUG, msg);
 
 class ProviderEnvironment(object):
     def __init__(self, proxy, ctx):
         self.proxy = proxy
         self.ctx = ContextWrap(proxy, ctx)
     def get_logger(self):
-        return Logger(self.proxy.broker)
+        return Logger(self.proxy.broker, self.proxy.miname)
     def get_cimom_handle(self):
         return BrokerCIMOMHandle(self.proxy, self.ctx.cmpicontext)
     def get_user_name(self):
@@ -411,8 +427,6 @@ class CMPIProxyProvider(object):
         #print '*** broker.name()', broker.name()
         #print '*** broker.capabilities()', broker.capabilities()
         #print '*** broker.version()', broker.version()
-        #broker.LogMessage(1, 'LogID', 
-        #        '** This should go through broker.LogMessage()')
 
     def enum_instance_names(self, ctx, rslt, objname):
         print 'provider.py: In enum_instance_names()' 
