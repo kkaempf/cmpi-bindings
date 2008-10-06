@@ -4,9 +4,9 @@
 #
 
 %nodefault CMPIData;
-%ignore _CMPIData::type;
-%ignore _CMPIData::state;
-%ignore _CMPIData::value;
+#%ignore _CMPIData::type;
+#%ignore _CMPIData::state;
+#%ignore _CMPIData::value;
 %rename(CMPIData) _CMPIData;
 
 %nodefault CMPIStatus;
@@ -113,14 +113,6 @@
   int is_array()
   {
     return CMIsArray((*($self)));
-  }
-  int _type()
-  {
-    return $self->type;
-  }
-  int _state()
-  {
-    return $self->state;
   }
 #if defined(SWIGRUBY)
   VALUE
