@@ -120,7 +120,7 @@
 #if defined(SWIGPYTHON)
   PyObject *
 #endif
-#if defined(SWIGPERL5)
+#if defined(SWIGPERL)
   SV *
 #endif
   _value()

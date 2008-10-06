@@ -175,7 +175,11 @@ fmtstr(const char* fmt, ...)
  * 
  */
 
+#if defined(SWIGPERL)
+static PerlInterpreter * _TARGET_INIT = 0; /* acts as a boolean - is target initialized? */
+#else
 static int _TARGET_INIT = 0; /* acts as a boolean - is target initialized? */
+#endif
 static int _MI_COUNT = 0;    /* use count, number of MIs */
 static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER;  /* mutex around _MI_COUNT */
 static Target_Type _TARGET_MODULE = Target_Null;  /* The target module (aka namespace) */
@@ -189,6 +193,10 @@ static Target_Type _TARGET_MODULE = Target_Null;  /* The target module (aka name
 
 #if defined(SWIGRUBY)
 #include "target_ruby.c"
+#endif
+
+#if defined(SWIGPERL)
+#include "target_perl.c"
 #endif
 
 /*
