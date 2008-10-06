@@ -5,6 +5,7 @@ PROJECT(cmpi-bindings)
 
 cmake_minimum_required(VERSION 2.4)
 
+include(CTest)
 enable_testing()
 #
 # cmake2.6: backward compatibility to cmake 2.4

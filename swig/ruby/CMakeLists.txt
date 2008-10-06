@@ -2,6 +2,9 @@
 # CMakeLists.txt for cmpi-bindings/swig/ruby
 #
 
+enable_testing()
+ADD_SUBDIRECTORY(tests)
+
 EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorarchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
 EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorlibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
 
