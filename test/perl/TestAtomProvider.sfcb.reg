@@ -1,0 +1,5 @@
+[Test_Atom]   
+   provider: TestAtomProvider
+   location: plCmpiProvider
+   type: instance
+   namespace: root/cimv2

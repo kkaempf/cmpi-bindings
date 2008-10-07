@@ -455,33 +455,33 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
+#if defined (SWIGPERL)
+  SV* 
+#endif
   get_key_at(int index) {
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetKeyAt($self, index, &s, &st);
-
-#if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
-    VALUE rl = rb_ary_new2(2);
-    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
-#endif
-#if defined (SWIGPYTHON)
-
+    Target_Type result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
-        return NULL;
+        return result;
     }
 
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
-
-    PyObject* pl = PyTuple_New(2);
-    PyTuple_SetItem(pl, 0, pydata);
-    PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    return pl;
+    TARGET_THREAD_BEGIN_BLOCK;
+    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
+#if defined (SWIGPYTHON)
+    result = PyTuple_New(2);
+    PyTuple_SetItem(result, 0, tdata);
+    PyTuple_SetItem(result, 1, PyString_FromString(CMGetCharPtr(s)));
+#else
+    result = Target_SizedArray(2);
+    Target_Append(result, tdata);
+    Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
+    TARGET_THREAD_END_BLOCK;
+    return result;
   }
 
   /* Gets the number of key properties contained in this ObjectPath. */
@@ -788,34 +788,34 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
+#if defined (SWIGPERL)
+  SV * 
+#endif
   get_property_at(int index) 
   {
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetPropertyAt($self, index, &s, &st);
-
-#if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
-    VALUE rl = rb_ary_new2(2);
-    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
-#endif
-#if defined (SWIGPYTHON)
-
+    Target_Type result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
-        return NULL;
+        return result;
     }
+    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
-
-    PyObject* pl = PyTuple_New(2);
-    PyTuple_SetItem(pl, 0, pydata);
-    PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    return pl;
+    TARGET_THREAD_BEGIN_BLOCK;
+#if defined (SWIGPYTHON)
+    result = PyTuple_New(2);
+    PyTuple_SetItem(result, 0, tdata);
+    PyTuple_SetItem(result, 1, PyString_FromString(CMGetCharPtr(s)));
+#else
+    result = Target_SizedArray(2);
+    Target_Append(result, tdata);
+    Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
+    TARGET_THREAD_END_BLOCK;
+    return result;
   }
 
   /* Gets the number of properties contained in this Instance. */
@@ -927,35 +927,35 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
+#if defined (SWIGPERL)
+  SV * 
+#endif
   get_arg_at(int index) 
   {
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetArgAt($self, index, &s, &st);
 
-#if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
-    VALUE rl = rb_ary_new2(2);
-    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
-#endif
-#if defined (SWIGPYTHON)
-
-    RAISE_IF(st);
-
+    Target_Type result = Target_Null;
     if (st.rc)
     {
-        return NULL;
+        RAISE_IF(st);
+        return result;
     }
+    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
-
-    PyObject* pl = PyTuple_New(2);
-    PyTuple_SetItem(pl, 0, pydata);
-    PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    return pl;
+    TARGET_THREAD_BEGIN_BLOCK;
+#if defined (SWIGPYTHON)
+    result = PyTuple_New(2);
+    PyTuple_SetItem(result, 0, tdata);
+    PyTuple_SetItem(result, 1, PyString_FromString(CMGetCharPtr(s)));
+#else
+    result = Target_SizedArray(2);
+    Target_Append(result, tdata);
+    Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
+    TARGET_THREAD_END_BLOCK;
+    return result;
   }
 
   /* Gets the number of arguments contained in this Args. */
@@ -1033,7 +1033,10 @@ FIXME: if clone() is exposed, release() must also
     }
     return l;
   }
-
+#if defined(SWIGPERL)
+/* Warning(314): 'next' is a perl keyword */
+%rename("_next") next;
+#endif
   CMPIData next() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1175,25 +1178,34 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPYTHON)
   PyObject* 
 #endif
+#if defined (SWIGPERL)
+  SV* 
+#endif
   get_entry_at(int index) {
     CMPIString *s = NULL;
-    CMPIData data = CMGetContextEntryAt($self, index, &s, NULL);
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData data = CMGetContextEntryAt($self, index, &s, &st);
 
-#if defined (SWIGRUBY)
-    VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 0);
-    VALUE rl = rb_ary_new2(2);
-    return rb_ary_push(rb_ary_push(rl, rbdata), rb_str_new2(CMGetCharPtr(s)));
-#endif
+    Target_Type result = Target_Null;
+    if (st.rc)
+    {
+        RAISE_IF(st);
+        return result;
+    }
+    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+
+    TARGET_THREAD_BEGIN_BLOCK;
 #if defined (SWIGPYTHON)
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK; 
-    PyObject* pydata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
-
-    PyObject* pl = PyTuple_New(2);
-    PyTuple_SetItem(pl, 0, pydata);
-    PyTuple_SetItem(pl, 1, PyString_FromString(CMGetCharPtr(s)));
-    SWIG_PYTHON_THREAD_END_BLOCK; 
-    return pl;
+    result = PyTuple_New(2);
+    PyTuple_SetItem(result, 0, tdata);
+    PyTuple_SetItem(result, 1, PyString_FromString(CMGetCharPtr(s)));
+#else
+    result = Target_SizedArray(2);
+    Target_Append(result, tdata);
+    Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
+    TARGET_THREAD_END_BLOCK;
+    return result;
   }
 
   CMPICount get_entry_count(void) {
