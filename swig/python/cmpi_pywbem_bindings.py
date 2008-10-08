@@ -53,7 +53,7 @@ def _exception_to_error(ex):
     desc = ex.get_description()
 
     if code < 0 or code > 17:
-        code = pywbem.CIM_ERR_ERR_FAILED
+        code = pywbem.CIM_ERR_FAILED
 
     return pywbem.CIMError(code, desc)
 
