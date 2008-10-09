@@ -459,6 +459,7 @@ FIXME: if clone() is exposed, release() must also
   SV* 
 #endif
   get_key_at(int index) {
+    Target_Type tdata;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetKeyAt($self, index, &s, &st);
@@ -470,7 +471,7 @@ FIXME: if clone() is exposed, release() must also
     }
 
     TARGET_THREAD_BEGIN_BLOCK;
-    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
@@ -793,16 +794,18 @@ FIXME: if clone() is exposed, release() must also
 #endif
   get_property_at(int index) 
   {
+    Target_Type tdata;
+    Target_Type result;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetPropertyAt($self, index, &s, &st);
-    Target_Type result = Target_Null;
+    result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
         return result;
     }
-    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 
     TARGET_THREAD_BEGIN_BLOCK;
 #if defined (SWIGPYTHON)
@@ -932,17 +935,19 @@ FIXME: if clone() is exposed, release() must also
 #endif
   get_arg_at(int index) 
   {
+    Target_Type tdata;
+    Target_Type result;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetArgAt($self, index, &s, &st);
 
-    Target_Type result = Target_Null;
+    result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
         return result;
     }
-    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 
     TARGET_THREAD_BEGIN_BLOCK;
 #if defined (SWIGPYTHON)
@@ -1182,17 +1187,19 @@ FIXME: if clone() is exposed, release() must also
   SV* 
 #endif
   get_entry_at(int index) {
+    Target_Type tdata;
+    Target_Type result;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetContextEntryAt($self, index, &s, &st);
 
-    Target_Type result = Target_Null;
+    result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
         return result;
     }
-    Target_Type tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 
     TARGET_THREAD_BEGIN_BLOCK;
 #if defined (SWIGPYTHON)
