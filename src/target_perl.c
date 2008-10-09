@@ -37,6 +37,7 @@ PlGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
   int error;
   char *embedding[] = { "", "-e", "0" };
+  extern void SWIG_init(PerlInterpreter* my_perl, CV* cv);
 
   if (_TARGET_INIT)
     {
@@ -49,8 +50,6 @@ PlGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   perl_construct(_TARGET_INIT);
   perl_parse(_TARGET_INIT, NULL, 3, embedding, NULL);
   perl_run(_TARGET_INIT);
-  
-  extern void SWIG_init(PerlInterpreter* my_perl, CV* cv);
       
   SWIG_init(_TARGET_INIT, NULL);
 
