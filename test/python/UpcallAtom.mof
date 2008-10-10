@@ -7,9 +7,17 @@ class Test_UpcallAtom
 	//return a string array of log messages
 	);
 	[Description("Send an export_indication")]
-	string send_indication(
-	//return a string array of log messages
+	uint16 send_indications(
+	//return number of indications sent
 	);
+    [Description("Reset indication count")]
+    uint16 reset_indication_count(
+    // return 0
+    );
+    [Description("Get number of indications sent")]
+    uint16 get_indication_send_count(
+    // return number of indications sent since last reset
+    );
 };
 [ Indication ]
 class UpcallAtom_Indication : CIM_ProcessIndication

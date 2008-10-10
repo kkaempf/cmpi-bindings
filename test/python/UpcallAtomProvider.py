@@ -12,6 +12,7 @@ Instruments the CIM class UpcallAtom
 import os,time,socket
 import pywbem
 from pywbem.cim_provider2 import CIMProvider2
+from socket import getfqdn
 
 
 _inst_paths = []
@@ -22,6 +23,86 @@ _indication_names = { "jon": False,
                       "bart": False, 
                       "kenny": False, 
                       "brad": False }
+
+
+
+# start indication support methods                      
+
+def _createFilter(ch, query='select * from CIM_ProcessIndication',
+                  ns='root/interop',
+                  querylang='WQL',
+                  src_ns='root/cimv2',
+                  in_name=None):
+    name = in_name or 'cimfilter%s'%time.time()
+    filterinst=pywbem.CIMInstance('CIM_IndicationFilter')
+    filterinst['CreationClassName']='CIM_IndicationFilter'
+    filterinst['SystemCreationClassName']='CIM_ComputerSystem'
+    filterinst['SystemName']=getfqdn()
+    filterinst['Name']=name
+    filterinst['Query']=query
+    filterinst['QueryLanguage']=querylang
+    filterinst['SourceNamespace']=src_ns
+    cop = pywbem.CIMInstanceName('CIM_IndicationFilter')
+    cop.keybindings = { 'CreationClassName':'CIM_IndicationFilter',
+                        'SystemClassName':'CIM_ComputerSystem',
+                        'SystemName':getfqdn(),
+                        'Name':name }
+    cop.namespace=ns
+    filterinst.path = cop
+    filtercop = ch.CreateInstance(cop, filterinst)
+    return filtercop
+
+def _createDest(ch, destination='http://localhost:5998',
+                ns='root/interop',
+                in_name=None):
+    name = in_name or 'cimlistener%s'%time.time()
+    destinst=pywbem.CIMInstance('CIM_ListenerDestinationCIMXML')
+    destinst['CreationClassName']='CIM_ListenerDestinationCIMXML'
+    destinst['SystemCreationClassName']='CIM_ComputerSystem'
+    destinst['SystemName']=getfqdn()
+    print "destname=",name
+    destinst['Name']=name
+    destinst['Destination']=destination
+    cop = pywbem.CIMInstanceName('CIM_ListenerDestinationCIMXML')
+    cop.keybindings = { 'CreationClassName':'CIM_ListenerDestinationCIMXML',
+                        'SystemClassName':'CIM_ComputerSystem',
+                        'SystemName':getfqdn(),
+                        'Name':name }
+    cop.namespace=ns
+    destinst.path = cop
+    destcop = ch.CreateInstance(cop, destinst)
+    return destcop
+
+def _createSubscription(ch, ns='root/interop'):
+    replace_ns = ch.default_namespace
+    ch.default_namespace=ns
+    indfilter=_createFilter(ch)
+    indhandler=_createDest(ch)
+    subinst=pywbem.CIMInstance('CIM_IndicationSubscription')
+    subinst['Filter']=indfilter
+    subinst['Handler']=indhandler
+    cop = pywbem.CIMInstanceName('CIM_IndicationSubscription')
+    cop.keybindings = { 'Filter':indfilter,
+                        'Handler':indhandler }
+    cop.namespace=ns
+    subinst.path = cop
+    subcop = ch.CreateInstance(cop, subinst)
+    ch.default_namespace=replace_ns
+    return subcop
+
+
+def _deleteSubscription(ch, subcop):
+    indfilter = subcop['Filter']
+    indhandler= subcop['Handler']
+    ch.DeleteInstance(subcop)
+    ch.DeleteInstance(indfilter)
+    ch.DeleteInstance(indhandler)
+
+# end indication support methods                      
+
+
+        
+                      
 ################################################################################
 _atoms = {'Hydrogen': 1,
          'Helium': 2,
@@ -33,24 +114,6 @@ _atoms = {'Hydrogen': 1,
          'Oxygen': 8,
          'Fluorine': 9,
          'Neon': 10 }
-
-################################################################################
-# Note: consume_indication is called on OpenPegasus because this is an 
-#       indication consumer in that environment.
-def consume_indication(env, destinationPath, indicationInstance):
-    print '#### consume_indication called. pid:',os.getpid()
-    global _indication_names,_indication_count
-    if indicationInstance['Description'] in _indication_names.keys():
-        print '#### consume_indication: My Indication :-)!'
-        _indication_names[indicationInstance['Description']] = True
-        _indication_count += 1
-
-
-################################################################################
-# Note: handle_indication is called on OpenWBEM because this is an 
-#       indication handler in that environment.
-def handle_indication(env, ns, handlerInstance, indicationInstance):
-    consume_indication(env, None, indicationInstance)
 
 ################################################################################
 def _compare_values(instance, time, logger):
@@ -264,6 +327,9 @@ def _create_test_instance(ch, name_of_atom, number, time):
 
 ################################################################################
 def _setup(ch, time, env):
+    global _inst_paths
+    if len(_inst_paths):
+        raise '_inst_paths was not empty (%d elements) calling into setup: %s'%(len(_inst_paths),_inst_paths)
     insts = []
     log = ''
     logger = env.get_logger()
@@ -280,13 +346,17 @@ def _setup(ch, time, env):
     return insts 
 
 ################################################################################
-def _cleanup(ch):
+def _cleanup(ch, delobjs=True):
     global _inst_paths
-    for ipath in _inst_paths:
-        try:
-            ch.DeleteInstance(ipath)
-        except pywbem.CIMError,arg:
-            raise '#### Delete Instance failed'
+        
+    if delobjs:
+        for ipath in _inst_paths:
+            try:
+                ch.DeleteInstance(ipath)
+            except pywbem.CIMError,arg:
+                raise '#### Delete Instance failed on %s: %s'%(ipath, arg)
+            except:
+                raise
     _inst_paths = []
 
 ##############################################################################
@@ -303,6 +373,13 @@ def activate_filter(env, filter, namespace, classes, firstActivation):
         # theIndicationThread = MainMonitorThread(...)
         # theIndicationThread.start()
 
+    '''
+    #start an irecv thread here to count the indications received back
+    global indThread
+    indThread=IndThread()
+    indThread.start()
+    '''
+
 
 ##############################################################################
 def deactivate_filter(env, filter, namespace, classes, lastActivation):
@@ -317,6 +394,12 @@ def deactivate_filter(env, filter, namespace, classes, lastActivation):
         # do thread teardown here
         # theIndicationThread.shutdown()
         # theIndicationThread = None
+
+    '''
+    #delete the irecv thread
+    global indThread
+    indThread.stop()
+    '''
 
 ##############################################################################
 def authorize_filter(env, filter, namespace, classes, owner):
@@ -375,6 +458,7 @@ class UpcallAtomProvider(CIMProvider2):
         CIM_ERR_FAILED (some other unspecified error occurred)
 
         """
+        global _inst_paths 
         log = []
         insts = []
         time = pywbem.CIMDateTime.now()
@@ -390,42 +474,68 @@ class UpcallAtomProvider(CIMProvider2):
 #       'CreateInstance', 'DeleteInstance', 'GetInstance', 'ModifyInstance',
 #       'EnumerateInstanceNames', 'EnumerateInstances', 'InvokeMethod', 
 #       'DeliverIndication' ]
-        #test_1_upcalls
-        print "####### test_1_upcalls #######"
-        #Written to test associators of Linux_UnixProcess class
+
+        print "####### test_1_context #######"
+        ## Test context
+        if not isinstance(env.ctx['CMPIInvocationFlags'], pywbem.Uint32):
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
+                    'context is broken (1): ' + `env.ctx`)
+
+        oldlen = len(env.ctx)
+        env.ctx['foo'] = 'bar'
+        if env.ctx['foo'] != 'bar':
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
+                    'context is broken (2): ' + `env.ctx`)
+
+        if oldlen + 1 != len(env.ctx):
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
+                    'context is broken (3): ' + `env.ctx`)
+
+        if not 'foo' in env.ctx:
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
+                    'context is broken (4): ' + `env.ctx`)
+
+        if 'foobar' in env.ctx:
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
+                    'context is broken (5): ' + `env.ctx`)
+
+        env.ctx.update(foobar='foobar')
+        if env.ctx['foobar'] != 'foobar':
+            raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
+                    'context is broken (6): ' + `env.ctx`)
+
+        ## end context tests
+
+
+        #Written to test associators of TestAssoc_User/TestAssoc_Group/TestAssoc_MemberOfGroup classes
         # 
         try:
-            print "####### test_1A_associatorNames #######"
-            # NOTE:  AssociatorNames upcall is currently broken in sfcb
-            #        This test will get no assoc_names, but will not fail
-            proc_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
-            if proc_list:
+            user_list = ch.EnumerateInstanceNames(ch.default_namespace, "TestAssoc_User")
+            if user_list:
+                print "####### test_1A_associatorNames #######"
+                # NOTE:  AssociatorNames upcall is currently broken in sfcb
+                #        This test will get no assoc_names, but will not fail
+                
                 # Use the first entry
-                proc_entry=proc_list.next()
-                assoc_names = ch.AssociatorNames(proc_entry,\
-                        assocClass="Linux_OSProcess") #AssocNames
-                #Linux_UnixProcess has an association through Linux_OSProcess
-                #1. Linux_OperatingSystem
+                user_entry=user_list.next()
+                assoc_names = ch.AssociatorNames(user_entry,\
+                        assocClass="TestAssoc_MemberOfGroup") #AssocNames
+                #TestAssoc_User has an association through TestAssoc_MemberOfGroup
+                # to TestAssoc_Group
                 for name in assoc_names:
-                    if name['CSCreationClassName'] != 'Linux_ComputerSystem' \
-                      and name['CreationClassName'] != 'Linux_OperatingSystem':
+                    if name.classname.lower() != 'TestAssoc_Group':
                         raise "AssociatorName Error: %s" %str(name)
 
-            print "####### test_1B_associators #######"
-            # NOTE:  Associators upcall is currently broken in sfcb
-            #        This test will get no assocs, but will not fail
-            proc_list = ch.EnumerateInstanceNames(ch.default_namespace, "Linux_UnixProcess")
-            if proc_list:
-                # Use the first entry
-                proc_entry=proc_list.next()
-                assocs = ch.Associators(proc_entry,\
-                        assocClass="Linux_OSProcess") #Assocs
-                #Linux_UnixProcess has an association through Linux_OSProcess
-                #1. Linux_OperatingSystem
-                for assoc in assoc_names:
+                print "####### test_1B_associators #######"
+                # NOTE:  Associators upcall is currently broken in sfcb
+                #        This test will get no assocs, but will not fail
+                assocs = ch.Associators(user_entry,\
+                        assocClass="TestAssoc_MemberOfGroup") #Assocs
+                #TestAssoc_User has an association through TestAssoc_MemberOfGroup
+                # to TestAssoc_Group
+                for assoc in assocs:
                     name = assoc.path
-                    if name['CSCreationClassName'] != 'Linux_ComputerSystem' \
-                      and name['CreationClassName'] != 'Linux_OperatingSystem':
+                    if name.classname.lower() != 'TestAssoc_Group':
                         raise "Associator Error: %s" %str(name)
 
 #
@@ -514,7 +624,7 @@ class UpcallAtomProvider(CIMProvider2):
             for inst in insts:
                 rval = _compare_values(inst, time, logger)
                 if not rval:
-                    raise "Return Value is false"
+                    raise "Object compare failed: Return Value is false"
             _cleanup(ch)
         except pywbem.CIMError, arg:
             raise "**** CreateInstance Failed ****"
@@ -603,10 +713,8 @@ class UpcallAtomProvider(CIMProvider2):
 
         if inst:
             for prop in inst.properties.keys():
-                if prop not in propertylist:
-                    raise "Property Not Found in PropertyList: %s" % prop
-                    #print "Property Not Found in PropertyList: %s" % prop
-                    #continue
+                if prop not in propertylist and prop not in inst.keys():
+                    raise "Property %s Not Found in PropertyList: %s... checking: %s" % (prop, propertylist, inst.properties.keys())
         _cleanup(ch)
 
 ################################################################################
@@ -696,53 +804,70 @@ class UpcallAtomProvider(CIMProvider2):
                     if arg[0] != pywbem.CIM_ERR_NOT_FOUND:
                          raise 'Unexpected exception on delete: %s' % str(arg)
 
-
+        _cleanup(ch, delobjs=False) #cuz they're already deleted, that's what this test is
         out_params = {}
         rval = "Finished testing Upcalls..." # TODO (type pywbem.Sint32)
         return (rval, out_params)
 
-    def cim_method_send_indication(self, env, object_name):
+    def cim_method_reset_indication_count(self, env, object_name):
+        _indication_count = 0
+        return (pywbem.Uint16(0), {})
+
+    def cim_method_get_indication_send_count(self, env, object_name):
+        rval = pywbem.Uint16(_indication_count)
+        return (rval, {})
+
+
+    def cim_method_send_indications(self, env, object_name):
         """
         Method to test the upcalls to the cimom handle for DeliverIndications.
+        return number of indications sent
         """
-        global _indication_names,_indication_count
-        cimtime = pywbem.CIMDateTime.now()
-        ch = env.get_cimom_handle()
-        ch.default_namespace = "root/cimv2"
-        logger = env.get_logger()
-
-
-
-        for name in _indication_names:
-            alert_ind = pywbem.CIMInstance("UpcallAtom_Indication")
-            alert_ind['AlertType'] = pywbem.Uint16(2)
-            alert_ind['Description'] = name
-            alert_ind['PerceivedSeverity'] = pywbem.Uint16(1)
-            alert_ind['PorbablyCause'] = pywbem.Uint16(1)
-            alert_ind['IndicationTime'] = cimtime
-            alert_ind['SystemName'] = socket.getfqdn()
-            
+        try:
             try:
-                print '### Exporting indication. pid:',os.getpid()
-                ch.DeliverIndication(ch.default_namespace, alert_ind)
-                print '### Done exporting indication'
-            except pywbem.CIMError, arg:
-                print '### Caught exception exporting indication'
+                global _indication_names,_indication_count
+                cimtime = pywbem.CIMDateTime.now()
+                ch = env.get_cimom_handle()
+                ch.default_namespace = "root/cimv2"
+                logger = env.get_logger()
+
+                subcop=_createSubscription(ch)
+
+
+                for name in _indication_names:
+                    alert_ind = pywbem.CIMInstance("UpcallAtom_Indication")
+                    alert_ind['AlertType'] = pywbem.Uint16(2)
+                    alert_ind['Description'] = name
+                    alert_ind['PerceivedSeverity'] = pywbem.Uint16(1)
+                    alert_ind['PorbablyCause'] = pywbem.Uint16(1)
+                    alert_ind['IndicationTime'] = cimtime
+                    alert_ind['SystemName'] = socket.getfqdn()
+                    
+                    try:
+                        print '### Exporting indication. pid:',os.getpid()
+                        ch.DeliverIndication(ch.default_namespace, alert_ind)
+                        print '### Done exporting indication'
+                    except pywbem.CIMError, arg:
+                        print '### Caught exception exporting indication'
+                        raise
+
+                indcount = len(_indication_names)
+                st = time.time()
+                while _indication_count < indcount:
+                    time.sleep(.01)
+                    if (time.time() - st) > 10.00:
+                        raise "Only received %d. expected %d" % (_indication_count, indcount)
+
+                for name,received in _indication_names.items():
+                    if not received:
+                        raise "Indication Not received for: %s" % str(name)
+            except:
                 raise
-
-        indcount = len(_indication_names)
-        st = time.time()
-        while _indication_count < indcount:
-            time.sleep(.01)
-            if (time.time() - st) > 10.00:
-                raise "Only received %d. expected %d" % (_indication_count, indcount)
-
-        for name,received in _indication_names.items():
-            if not received:
-                raise "Indication Not received for: %s" % str(name)
+        finally:
+            _deleteSubscription(ch, subcop)
 
         out_params = {}
-        rval = "Sending indication finished..." # 
+        rval = pywbem.Uint16(indcount) 
         return (rval, out_params)
 
 
