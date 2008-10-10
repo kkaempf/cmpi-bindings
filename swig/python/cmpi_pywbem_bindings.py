@@ -298,21 +298,14 @@ class BrokerCIMOMHandle(object):
             yield piname
 
     def InvokeMethod(self, path, method, **params):
-        if isinstance(path, pywbem.StringTypes):
-            # path is a String type:  convert to CIMClassName
-            objpath = pywbem.CIMClassName(path, namespace=ns)
-        elif isinstance(path, pywbem.CIMInstanceName):
-            if path.namespace is None:
-                # TODO: Where does default namespace come from?
-                #    will likely either have to pass in a ns, or make
-                #    path always be an objectpath and not support just a 
-                #    string for a classname (to creata a CIMClassName)
-                ns = 'root/cimv2'
-                path.namespace = ns
-            objpath = path
-        else:
-            raise pywbem.CIMError(pywbem.CIM_INVALIDPARAMETER)
-        cop = self.proxy.pywbem2cmpi_instname(objpath)
+        if not isinstance(path, pywbem.CIMClassName) and \
+                not isinstance(path, pywbem.CIMInstanceName):
+            # invalid parameter
+            raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_PARAMETER)
+        if path.namespace is None:
+            # must have namespace
+            raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE)
+        cop = self.proxy.pywbem2cmpi_instname(path)
         inargs=self.proxy.pywbem2cmpi_args(params)
         poutargs = self.broker.new_args()
         rc=self.broker.invokeMethod(self.ctx, cop, method, inargs, poutargs)
