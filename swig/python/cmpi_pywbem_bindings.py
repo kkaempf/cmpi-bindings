@@ -38,6 +38,7 @@ from pywbem.cim_provider2 import ProviderProxy
 import pywbem
 import types
 import syslog
+import sys
 
 ##==============================================================================
 ##
@@ -76,7 +77,10 @@ class ExceptionMethodWrapper:
         try:
             return self.meth(*args, **kwds)
         except cmpi.CMPIException,e:
-            raise _exception_to_error(e)
+            exc_class, exc, tb = sys.exc_info()
+            new_exc = _exception_to_error(e)
+            raise new_exc.__class__, new_exc, tb
+
 
 ##==============================================================================
 ##
@@ -713,6 +717,9 @@ class CMPIProxyProvider(object):
         if pinst.property_list is not None:
             cinst.set_property_filter(pinst.property_list)
         for prop in pinst.properties.values():
+        #    if pinst.property_list and \
+        #            prop.name.lower() not in pinst.property_list:
+        #        continue
             data, _type = self.pywbem2cmpi_value(prop.value, _type=prop.type)
             ctype = _pywbem2cmpi_typemap[_type]
             if isinstance(prop.value, list):
