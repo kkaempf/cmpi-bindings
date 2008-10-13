@@ -745,7 +745,7 @@ class TestMethodProvider(CIMProvider2):
 
         insts = []
         for kn, val in g_insts.items():
-            inst = pywbem.CIMInstance('TestMethod', 
+            inst = pywbem.CIMInstance('Test_Method', 
                     properties={'id':kn, 'p_str':val[0], 'p_sint32':val[1]})
             insts.append(inst)
 
