@@ -805,9 +805,8 @@ FIXME: if clone() is exposed, release() must also
         RAISE_IF(st);
         return result;
     }
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
-
     TARGET_THREAD_BEGIN_BLOCK;
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
@@ -947,9 +946,8 @@ FIXME: if clone() is exposed, release() must also
         RAISE_IF(st);
         return result;
     }
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
-
     TARGET_THREAD_BEGIN_BLOCK;
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
@@ -1199,9 +1197,8 @@ FIXME: if clone() is exposed, release() must also
         RAISE_IF(st);
         return result;
     }
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
-
     TARGET_THREAD_BEGIN_BLOCK;
+    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
