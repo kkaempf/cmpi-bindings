@@ -25,6 +25,11 @@ _indication_names = { "jon": False,
                       "brad": False }
 
 
+def log_debug(msg, logger=None):
+    print msg
+    if logger is not None:
+        logger.log_debug(msg)
+
 
 # start indication support methods                      
 
@@ -52,7 +57,7 @@ def _createFilter(ch, query='select * from CIM_ProcessIndication',
     filtercop = ch.CreateInstance(cop, filterinst)
     return filtercop
 
-def _createDest(ch, destination='http://localhost:5998',
+def _createDest(ch, destination='http://localhost:5988',
                 ns='root/interop',
                 in_name=None):
     name = in_name or 'cimlistener%s'%time.time()
@@ -158,18 +163,18 @@ def _compare_values(instance, time, logger):
             #Date Property
             elif prop == 'dateprop':
                 if str(instance[prop]) != str(time):
-                    logger.log_debug("DateProp NOT EQUAL")
+                    log_debug("DateProp NOT EQUAL", logger)
                     return false 
             #Name or stringProp
             elif prop == 'name' or prop == 'stringprop':
                 if instance['name'] not in _atoms or \
                    instance['stringProp'] not in _atoms:
-                    logger.log_debug("Atom name NOT FOUND: %s" & instance['name'])
+                    log_debug("Atom name NOT FOUND: %s" & instance['name'], logger)
                     return false
             #boolProp
             elif prop == 'boolprop':
                 if instance[prop] !=  False:
-                    logger.log_debug("False NOT EQUAL False")
+                    log_debug("False NOT EQUAL False", logger)
                     return false
             #All values not in lists
             elif (instance.properties[prop].type == types.get(prop)) and \
@@ -177,10 +182,10 @@ def _compare_values(instance, time, logger):
                   type(instance.properties[prop].value) != type([]):
                 if prop == 'uint8prop':
                     if pywbem.Uint8(atoms_value) != instance[prop]:
-                        logger.log_debug("%s Error: %s" % (prop, instance[prop]))
+                        log_debug("%s Error: %s" % (prop, instance[prop]), logger)
                         return false
                 elif atoms_value != value:
-                    logger.log_debug("%s == %s"%(atoms_value,value))
+                    log_debug("%s == %s"%(atoms_value,value), logger)
                     return false
             #All list values
             elif type(instance.properties[prop].value) == type([]) and \
@@ -188,18 +193,18 @@ def _compare_values(instance, time, logger):
                 if prop == 'stringpropa':
                     if value[0] != 'proton' and value[1] != 'electron' \
                        and value[2] != 'neutron':
-                        logger.log_debug("String Array NOT EQUAL")
+                        log_debug("String Array NOT EQUAL", logger)
                         return false
                 elif prop == 'uint8':
                     for val in instance.properties[prop].value:
                         if pywbem.uint8(atoms_value) != val:
-                            logger.log_debug("Uint8 Values NOT EQUAL")
+                            log_debug("Uint8 Values NOT EQUAL", logger)
                             return false 
                 else:
                     for a_prop in instance.properties[prop].value:
                         if a_prop != atoms_value:
-                            logger.log_debug("%s NOT EQUAL %s" % (atoms_value\
-                                        , value))
+                            log_debug("%s NOT EQUAL %s" % (atoms_value\
+                                        , value), logger)
                             return false
             else:
                 print '!! instance.properties[prop].type:', str(instance.properties[prop].type)
@@ -207,10 +212,10 @@ def _compare_values(instance, time, logger):
                 print '!! type(instance.properties[prop].value):', str(type(instance.properties[prop].value))
                 print "!! prop:",prop
                 print "!! Test Atom %s NOT EQUAL %s" % (atoms_value, value)
-                logger.log_debug("%s NOT EQUAL %s" % (atoms_value, value))
+                log_debug("%s NOT EQUAL %s" % (atoms_value, value), logger)
                 return False
     else:
-        logger.log_debug("Instance of TestAtom not Found: %s" % (instance['Name']))
+        log_debug("Instance of TestAtom not Found: %s" % (instance['Name']), logger)
         return false
 
     return True
@@ -365,10 +370,10 @@ def activate_filter(env, filter, namespace, classes, firstActivation):
     print '#### Python firstActivation: %d' % firstActivation
 
     logger = env.get_logger()
-    logger.log_debug('#### Python activate_filter called. filter: %s' % filter)
-    logger.log_debug('#### Python firstActivation: %d' % firstActivation)
+    log_debug('#### Python activate_filter called. filter: %s' % filter, logger)
+    log_debug('#### Python firstActivation: %d' % firstActivation, logger)
     if firstActivation: # and not theIndicationThread
-        logger.log_debug('#### Got first activation')
+        log_debug('#### Got first activation', logger)
         # do thread setup here
         # theIndicationThread = MainMonitorThread(...)
         # theIndicationThread.start()
@@ -387,10 +392,10 @@ def deactivate_filter(env, filter, namespace, classes, lastActivation):
     print '#### Python lastActivation: %d' % lastActivation
 
     logger = env.get_logger()
-    logger.log_debug('#### Python deactivate_filter called. filter: %s' % filter)
-    logger.log_debug('#### Python lastActivation: %d' % lastActivation)
+    log_debug('#### Python deactivate_filter called. filter: %s' % filter, logger)
+    log_debug('#### Python lastActivation: %d' % lastActivation, logger)
     if lastActivation == 1: # and theIndicationThread
-        logger.log_debug('#### Got last deactivation')
+        log_debug('#### Got last deactivation', logger)
         # do thread teardown here
         # theIndicationThread.shutdown()
         # theIndicationThread = None
@@ -406,8 +411,8 @@ def authorize_filter(env, filter, namespace, classes, owner):
     print '#### Python authorize_filter called. filter: %s' % filter
     print '#### Python authorize_filter owner: %s' % owner
     logger = env.get_logger()
-    logger.log_debug('#### Python authorize_filter called. filter: %s' % filter)
-    logger.log_debug('#### Python authorize_filter owner: %s' % owner)
+    log_debug('#### Python authorize_filter called. filter: %s' % filter, logger)
+    log_debug('#### Python authorize_filter owner: %s' % owner, logger)
     # if not authorized
     #    raise pywbem.CIM_ERR_ACCESS_DENIED
     return
@@ -423,22 +428,22 @@ class UpcallAtomProvider(CIMProvider2):
     def __init__ (self, env):
         print '#### UpcallAtomProvider CTOR'
         logger = env.get_logger()
-        logger.log_debug('Initializing provider %s from %s' \
-                % (self.__class__.__name__, __file__))
+        log_debug('Initializing provider %s from %s' \
+                % (self.__class__.__name__, __file__), logger)
         # If you will be filtering instances yourself according to 
         # property_list, role, result_role, and result_class_name 
         # parameters, set self.filter_results to False
         # self.filter_results = False
 
-    def cim_method_starttest(self, env, object_name):
-        """Implements UpcallAtom.starttest()
+    def cim_method_test_all_upcalls(self, env, object_name):
+        """Implements UpcallAtom.test_all_upcalls()
 
         Kickoff the method provider test
         
         Keyword arguments:
         env -- Provider Environment (pycimmb.ProviderEnvironment)
         object_name -- A pywbem.CIMInstanceName or pywbem.CIMCLassName 
-            specifying the object on which the method starttest() 
+            specifying the object on which the method test_all_upcalls() 
             should be invoked.
         method -- A pywbem.CIMMethod representing the method meta-data
 
@@ -466,8 +471,8 @@ class UpcallAtomProvider(CIMProvider2):
         ch = env.get_cimom_handle()
         ch.default_namespace = "root/cimv2"
         logger = env.get_logger()
-        logger.log_debug('Entering %s.cim_method_starttest()' \
-                % self.__class__.__name__)
+        log_debug('Entering %s.cim_method_test_all_upcalls()' \
+                % self.__class__.__name__, logger)
 
 
 #       ch methods =['AssociatorNames', 'Associators', 'References', 'ReferenceNames'
@@ -475,7 +480,7 @@ class UpcallAtomProvider(CIMProvider2):
 #       'EnumerateInstanceNames', 'EnumerateInstances', 'InvokeMethod', 
 #       'DeliverIndication' ]
 
-        print "####### test_1_context #######"
+        log_debug("####### test_1_context #######", logger)
         ## Test context
         if not isinstance(env.ctx['CMPIInvocationFlags'], pywbem.Uint32):
             raise pywbem.CIMError(pywbem.CIM_ERR_FAILED,
@@ -512,38 +517,50 @@ class UpcallAtomProvider(CIMProvider2):
         try:
             user_list = ch.EnumerateInstanceNames(ch.default_namespace, "TestAssoc_User")
             if user_list:
-                print "####### test_1A_associatorNames #######"
+                log_debug("####### test_1A_associatorNames #######", logger)
                 # NOTE:  AssociatorNames upcall is currently broken in sfcb
                 #        This test will get no assoc_names, but will not fail
                 
                 # Use the first entry
                 user_entry=user_list.next()
+                log_debug("     >>>>> Using: %s"%user_entry, logger)
                 assoc_names = ch.AssociatorNames(user_entry,\
                         assocClass="TestAssoc_MemberOfGroup") #AssocNames
                 #TestAssoc_User has an association through TestAssoc_MemberOfGroup
                 # to TestAssoc_Group
                 for name in assoc_names:
-                    if name.classname.lower() != 'TestAssoc_Group':
-                        raise "AssociatorName Error: %s" %str(name)
+                    if name.classname.lower() != 'testassoc_group':
+                        raise "AssociatorName Error: %s: %s != %s" %(str(name), name.classname.lower(), 'testassoc_group')
 
-                print "####### test_1B_associators #######"
+                log_debug("####### test_1B_associators #######", logger)
                 # NOTE:  Associators upcall is currently broken in sfcb
                 #        This test will get no assocs, but will not fail
+                log_debug("####### test_1B_associators : pre-call #######", logger)
                 assocs = ch.Associators(user_entry,\
                         assocClass="TestAssoc_MemberOfGroup") #Assocs
+                log_debug("####### test_1B_associators : post-call #######", logger)
                 #TestAssoc_User has an association through TestAssoc_MemberOfGroup
                 # to TestAssoc_Group
-                for assoc in assocs:
-                    name = assoc.path
-                    if name.classname.lower() != 'TestAssoc_Group':
-                        raise "Associator Error: %s" %str(name)
+                if assocs:
+                    log_debug("#*)$*%)#  Got assocs ")
+                    for assoc in assocs:
+                        log_debug("Got an assoc")
+                        log_debug("  ", logger)
+                        log_debug("  >>> assoc: %s"%str(assoc), logger)
+                        log_debug("  ", logger)
+                        name = assoc.path
+                        log_debug("  ", logger)
+                        log_debug("  >>> name: "%str(name), logger)
+                        log_debug("  ", logger)
+                        if assoc.classname.lower() != 'testassoc_group':
+                            raise "Associator Error: %s" %str(assoc)
 
 #
 #InvokeMethod
 #            
-            print "####### test_1C_InvokeMethod #######"
+            log_debug( "####### test_1C_InvokeMethod #######", logger)
             try:
-                logger.log_debug("**** Testing InvokeMethod ****")
+                log_debug("**** Testing InvokeMethod ****", logger)
 
                 new_instance = pywbem.CIMInstance('Test_Method')
                 new_instance['id'] = 'One'
@@ -559,7 +576,7 @@ class UpcallAtomProvider(CIMProvider2):
 
                     #temporary workaround to known provider init bug
                     #must invoke the method provider too, then start over
-                    (numinsts,outArgs) = ch.InvokeMethod('Test_Method', 'numinsts')
+                    (numinsts,outArgs) = ch.InvokeMethod(cop, 'numinsts')
                 except pywbem.CIMError, arg:
                     print "exception: %s" %arg
 
@@ -573,9 +590,9 @@ class UpcallAtomProvider(CIMProvider2):
                 
 
             except pywbem.CIMError, arg:
-                logger.log_debug("**** CIMError: ch.InvokeMethod ****")
+                log_debug("**** CIMError: ch.InvokeMethod ****", logger)
 #ReferenceNames
-            print "####### test_1D_referenceNames #######"
+            log_debug("####### test_1D_referenceNames #######", logger)
             # NOTE:  ReferenceNames upcall is currently broken in sfcb
             #        This test will get no refs, but will not fail
             try:
@@ -589,10 +606,10 @@ class UpcallAtomProvider(CIMProvider2):
                             raise "**** ReferenceNames returned were incorrect ****"
 
             except pywbem.CIMError, arg:
-                logger.log_debug("**** CIMError: ch.ReferenceNames ****")
+                log_debug("**** CIMError: ch.ReferenceNames ****", logger)
 
 #Reference
-            print "####### test_1E_references #######"
+            log_debug( "####### test_1E_references #######", logger)
             # NOTE:  References upcall is currently broken in sfcb
             #        This test will get no refs, but will not fail
             try:
@@ -606,7 +623,7 @@ class UpcallAtomProvider(CIMProvider2):
                             raise "**** References returned were incorrect ****"
 
             except pywbem.CIMError, arg:
-                logger.log_debug("**** CIMError: ch.Reference ****")
+                log_debug("**** CIMError: ch.Reference ****", logger)
 
 #DeliverIndication
             # Separate test for indications
@@ -618,7 +635,7 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
 #        #test_2_create_instance
-        print "####### test_2_create_instance #######"
+        log_debug( "####### test_2_create_instance #######", logger)
         try:
             insts = _setup(ch, time, env)
             for inst in insts:
@@ -633,7 +650,7 @@ class UpcallAtomProvider(CIMProvider2):
         #test_3_enum_instances
         #Test enumeration of instances and then compare them with the local
         # storage dictionary
-        print "####### test_3_enum_instances #######"
+        log_debug("####### test_3_enum_instances #######", logger)
         insts = _setup(ch, time, env)
         
         ta_list = ch.EnumerateInstances(ch.default_namespace, 'Test_Atom')
@@ -663,7 +680,7 @@ class UpcallAtomProvider(CIMProvider2):
 ################################################################################
         #test_4_enum_instance_names
         #Test enumeration of names
-        print "####### test_4_enum_instance_names ########"
+        log_debug( "####### test_4_enum_instance_names ########", logger)
         insts = _setup(ch, time, env)
 
         try: 
@@ -697,7 +714,7 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
         #test_5_get_instance_with_property_list
-        print "####### test_5_get_instance_with_property_list ########"
+        log_debug("####### test_5_get_instance_with_property_list ########", logger)
 
         rinst= _create_test_instance(ch, 'Carbon', 6, time)
         if not rinst:
@@ -786,7 +803,7 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
         #test_7_delete
-        print "######## test_7_delete #######"
+        log_debug("######## test_7_delete #######", logger)
         #Testing the delete upcall for TestAtom
         insts = _setup(ch, time, env)
 
@@ -806,7 +823,7 @@ class UpcallAtomProvider(CIMProvider2):
 
         _cleanup(ch, delobjs=False) #cuz they're already deleted, that's what this test is
         out_params = {}
-        rval = "Finished testing Upcalls..." # TODO (type pywbem.Sint32)
+        rval = "Success!" # TODO (type pywbem.Sint32)
         return (rval, out_params)
 
     def cim_method_reset_indication_count(self, env, object_name):
@@ -823,6 +840,7 @@ class UpcallAtomProvider(CIMProvider2):
         Method to test the upcalls to the cimom handle for DeliverIndications.
         return number of indications sent
         """
+        subcop=None
         try:
             try:
                 global _indication_names,_indication_count
@@ -852,6 +870,7 @@ class UpcallAtomProvider(CIMProvider2):
                         raise
 
                 indcount = len(_indication_names)
+                '''
                 st = time.time()
                 while _indication_count < indcount:
                     time.sleep(.01)
@@ -861,10 +880,12 @@ class UpcallAtomProvider(CIMProvider2):
                 for name,received in _indication_names.items():
                     if not received:
                         raise "Indication Not received for: %s" % str(name)
+                '''
             except:
                 raise
         finally:
-            _deleteSubscription(ch, subcop)
+            if subcop is not None:
+                _deleteSubscription(ch, subcop)
 
         out_params = {}
         rval = pywbem.Uint16(indcount) 

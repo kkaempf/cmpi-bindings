@@ -2,8 +2,8 @@
 class Test_UpcallAtom
 {
 
-	[Description("Kickoff the method provider test")]
-	string starttest(
+	[Description("Kickoff the upcall test")]
+	string test_all_upcalls(
 	//return a string array of log messages
 	);
 	[Description("Send an export_indication")]
