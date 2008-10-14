@@ -275,7 +275,7 @@ class BrokerCIMOMHandle(object):
         while e and e.hasNext():
             data = e.next()
             assert(data.type == cmpi.CMPI_ref)
-            piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
+            piname=self.proxy.cmpi2pywbem_instname(data.value.ref)
             yield piname
 
     def References(self, path, resultClass=None, role=None, props=None):
@@ -294,7 +294,7 @@ class BrokerCIMOMHandle(object):
         while e and e.hasNext():
             data = e.next()
             assert(data.type == cmpi.CMPI_ref)
-            piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
+            piname=self.proxy.cmpi2pywbem_instname(data.value.ref)
             yield piname
 
     def InvokeMethod(self, path, method, **params):
