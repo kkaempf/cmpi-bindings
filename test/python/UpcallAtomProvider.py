@@ -17,13 +17,6 @@ from socket import getfqdn
 
 _inst_paths = []
 _indication_count = 0
-_indication_names = { "jon": False,
-                      "norm": False,
-                      "matt": False, 
-                      "bart": False, 
-                      "kenny": False, 
-                      "brad": False }
-
 
 def log_debug(msg, logger=None):
     print msg
@@ -32,7 +25,7 @@ def log_debug(msg, logger=None):
 
 
 # start indication support methods                      
-
+'''
 def _createFilter(ch, query='select * from CIM_ProcessIndication',
                   ns='root/interop',
                   querylang='WQL',
@@ -102,7 +95,7 @@ def _deleteSubscription(ch, subcop):
     ch.DeleteInstance(subcop)
     ch.DeleteInstance(indfilter)
     ch.DeleteInstance(indhandler)
-
+'''
 # end indication support methods                      
 
 
@@ -416,6 +409,32 @@ def authorize_filter(env, filter, namespace, classes, owner):
     # if not authorized
     #    raise pywbem.CIM_ERR_ACCESS_DENIED
     return
+
+
+
+##############################################################################
+def enable_indications(env):
+    """Enable indications.
+        Arguments:
+        env -- Provider Environment (pycimmb.ProviderEnvironment)
+        """
+
+    logger = env.get_logger()
+    logger.log_debug('Entering enable_indications()' )
+    #just fall through for success
+       
+        
+##############################################################################
+def disable_indications(env):
+    """Disable indications.
+        Arguments:
+        env -- Provider Environment (pycimmb.ProviderEnvironment)
+        """
+
+    logger = env.get_logger()
+    logger.log_debug('Entering disable_indications()' )
+    #just fall through for success
+
 
 ################################################################################
 class UpcallAtomProvider(CIMProvider2):
@@ -826,74 +845,92 @@ class UpcallAtomProvider(CIMProvider2):
         rval = "Success!" # TODO (type pywbem.Sint32)
         return (rval, out_params)
 
-    def cim_method_reset_indication_count(self, env, object_name):
-        _indication_count = 0
-        return (pywbem.Uint16(0), {})
 
+
+################################################################################
+####          INDICATION TEST METHODS    
+################################################################################
+
+    def cim_method_reset_indication_count(self, env, object_name):
+        global _indication_count
+        _indication_count = 0
+        rval = pywbem.Uint16(_indication_count)
+        return (rval, {})
+
+    
+################################################################################
     def cim_method_get_indication_send_count(self, env, object_name):
+        global _indication_count
         rval = pywbem.Uint16(_indication_count)
         return (rval, {})
 
 
-    def cim_method_send_indications(self, env, object_name):
+################################################################################
+    def cim_method_send_indications(self, env, object_name, param_num_to_send):
         """
         Method to test the upcalls to the cimom handle for DeliverIndications.
         return number of indications sent
         """
+        global _indication_count
+
         subcop=None
+        ch = env.get_cimom_handle()
+        ch.default_namespace = "root/cimv2"
+        logger = env.get_logger()
+        cur_ind_count = 0
+
         try:
-            try:
-                global _indication_names,_indication_count
+
+            alert_ind = pywbem.CIMInstance("UpcallAtom_Indication")
+            alert_ind['AlertType'] = pywbem.Uint16(2)
+            alert_ind['PerceivedSeverity'] = pywbem.Uint16(1)
+            alert_ind['ProbableCause'] = pywbem.Uint16(1)
+            alert_ind['SystemName'] = socket.getfqdn()
+            
+            for x in xrange(param_num_to_send):
                 cimtime = pywbem.CIMDateTime.now()
-                ch = env.get_cimom_handle()
-                ch.default_namespace = "root/cimv2"
-                logger = env.get_logger()
-
-                subcop=_createSubscription(ch)
-
-
-                for name in _indication_names:
-                    alert_ind = pywbem.CIMInstance("UpcallAtom_Indication")
-                    alert_ind['AlertType'] = pywbem.Uint16(2)
-                    alert_ind['Description'] = name
-                    alert_ind['PerceivedSeverity'] = pywbem.Uint16(1)
-                    alert_ind['PorbablyCause'] = pywbem.Uint16(1)
-                    alert_ind['IndicationTime'] = cimtime
-                    alert_ind['SystemName'] = socket.getfqdn()
-                    
-                    try:
-                        print '### Exporting indication. pid:',os.getpid()
-                        ch.DeliverIndication(ch.default_namespace, alert_ind)
-                        print '### Done exporting indication'
-                    except pywbem.CIMError, arg:
-                        print '### Caught exception exporting indication'
-                        raise
-
-                indcount = len(_indication_names)
-                '''
-                st = time.time()
-                while _indication_count < indcount:
-                    time.sleep(.01)
-                    if (time.time() - st) > 10.00:
-                        raise "Only received %d. expected %d" % (_indication_count, indcount)
-
-                for name,received in _indication_names.items():
-                    if not received:
-                        raise "Indication Not received for: %s" % str(name)
-                '''
-            except:
-                raise
-        finally:
-            if subcop is not None:
-                _deleteSubscription(ch, subcop)
+                alert_ind['Description'] = "%s"%x
+                alert_ind['IndicationTime'] = cimtime
+                
+                try:
+                    print '### Exporting indication. pid:',os.getpid()
+                    ch.DeliverIndication(ch.default_namespace, alert_ind)
+                    print '### Done exporting indication'
+                    _indication_count += 1
+                    cur_ind_count += 1
+                except pywbem.CIMError, arg:
+                    print '### Caught exception exporting indication'
+                    raise
+        except:
+            raise
 
         out_params = {}
-        rval = pywbem.Uint16(indcount) 
+        rval = pywbem.Uint16(cur_ind_count) 
         return (rval, out_params)
 
 
 ## end of class UpcallAtomProvider
 
+
+################################################################################
+class UpcallAtomIndicationProvider(CIMProvider2):
+    """Instrument the CIM class UpcallAtom 
+
+    Testing up-calls into the CIMOM from a provider
+    
+    """
+
+    def __init__ (self, env):
+        print '#### UpcallAtomProvider CTOR'
+        logger = env.get_logger()
+        log_debug('Initializing provider %s from %s' \
+                % (self.__class__.__name__, __file__), logger)
+
+## end of class UpcallAtomIndicationProvider
+
+    
 def get_providers(env): 
     upcallatom_prov = UpcallAtomProvider(env)  
-    return {'Test_UpcallAtom': upcallatom_prov} 
+    upcallatom_ind_prov = UpcallAtomIndicationProvider(env)
+    return {'Test_UpcallAtom': upcallatom_prov, \
+            'UpcallAtom_Indication':upcallatom_ind_prov }

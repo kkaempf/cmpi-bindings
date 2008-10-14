@@ -8,6 +8,8 @@ class Test_UpcallAtom
 	);
 	[Description("Send an export_indication")]
 	uint16 send_indications(
+        // number of indications to send
+        [in] uint16 num_to_send
 	//return number of indications sent
 	);
     [Description("Reset indication count")]
@@ -19,46 +21,9 @@ class Test_UpcallAtom
     // return number of indications sent since last reset
     );
 };
+
+
 [ Indication ]
 class UpcallAtom_Indication : CIM_ProcessIndication
 {
 };
-//class UpcallAtom_Indication_Handler : CIM_ListenerDestination
-//{
-//};
-
-
-
-
-
-
-// Filter Instance
-//INSTANCE OF CIM_IndicationFilter as $filter
-//{
-//    SystemCreationClassName = "OMC_UnitaryComputerSystem";
-//    SystemName = "127.0.0.1";
-//    CreationClassName = "CIM_IndicationFilter";
-//    Name = "/UpcallAtom_Indication_Handler";
-//    SourceNamespace = "root/cimv2";
-//    Query = "select * from UpcallAtom_Indication";
-//    QueryLanguage = "wql1";
-//};
-
-// Listener Destination Instance
-//INSTANCE OF UpcallAtom_Indication_Handler as $dest
-//{
-//    SystemCreationClassName = "Linux_ComputerSystem";
-//    SystemName = "npaxton1.provo.novell.com";
-//    CreationClassName = "UpcallAtom_Indication_Handler";
-//    Name = "/UpcallAtom_Indication_Handler";
-//};
-
-// Subscription Instance Tie together the indication filter
-// and the indication handler
-//INSTANCE OF CIM_IndicationSubscription
-//{
-//    Filter=$filter;
-//    Handler=$dest;
-//    AlertOnStateChange=false;
-//};
-
