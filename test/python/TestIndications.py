@@ -20,7 +20,7 @@ import time
 from lib import wbem_connection
 
 _port = 5309
-_lock = threading.RLock()
+_num_to_send = pywbem.Uint16(42)
 
 class CIMListener(resource.Resource):
     """ CIM Listener
@@ -123,6 +123,9 @@ def deleteSubscription(ch, subcop):
 
 #log.startLogging(sys.stdout)
 
+_lock = threading.RLock()
+_shutdown = False
+_insts_received = 0
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
@@ -140,30 +143,48 @@ if __name__ == '__main__':
     conn = wbem_connection.WBEMConnFromOptions(parser)
     
     def cb(inst):
+        global _lock
+        global _shutdown
+        global _insts_received
+        global _num_to_send
         print inst['IndicationTime'], inst['Description']
+        _lock.acquire()
+        _insts_received+= 1
+        if _num_to_send == _insts_received:
+            _shutdown = True
+        _lock.release()
+
     cl = CIMListener(callback=cb, http_port=5309)
 
     def threadfunc():
         time.sleep(1)
         numrcv = 0
         subcop = createSubscription(conn)
-        num_to_send = pywbem.Uint16(7)
         time.sleep(1)
         conn.InvokeMethod('reset_indication_count', 'Test_UpcallAtom')
         countsent,outs = conn.InvokeMethod('send_indications', 
-                'Test_UpcallAtom', num_to_send=num_to_send)
+                'Test_UpcallAtom', num_to_send=_num_to_send)
         numsent,outs = conn.InvokeMethod('get_indication_send_count', 
                 'Test_UpcallAtom')
         deleteSubscription(conn, subcop)
         if (countsent != numsent):
             print("send_indications NumSent(%d) doesn't match get_indication_send_count NumSent(%d)"%(countsent, numsent));
             sys.exit(1)
-        time.sleep(4)
+        for i in xrange(10):
+            _lock.acquire()
+            if _shutdown:
+                reactor.stop()
+            _lock.release()
+            if not reactor.running:
+                break
+            time.sleep(.5)
         if reactor.running:
             reactor.stop()
-        #self.fail("number received(%d) doesn't match number sent(%d)"%(numrcv,numsent));
 
     thread = threading.Thread(target=threadfunc)
     thread.start()
     reactor.run()
+    if _num_to_send != _insts_received:
+        print 'Expected %s exceptions, got %s' % (_num_to_send, _insts_received)
+        sys.exit(1)
 
