@@ -147,7 +147,7 @@ if __name__ == '__main__':
         global _shutdown
         global _insts_received
         global _num_to_send
-        print inst['IndicationTime'], inst['Description']
+        sys.stdout.write('.'); sys.stdout.flush()
         _lock.acquire()
         _insts_received+= 1
         if _num_to_send == _insts_received:
@@ -162,15 +162,16 @@ if __name__ == '__main__':
         subcop = createSubscription(conn)
         time.sleep(1)
         conn.InvokeMethod('reset_indication_count', 'Test_UpcallAtom')
+        print 'Waiting for %s indications...' % _num_to_send
         countsent,outs = conn.InvokeMethod('send_indications', 
                 'Test_UpcallAtom', num_to_send=_num_to_send)
         numsent,outs = conn.InvokeMethod('get_indication_send_count', 
                 'Test_UpcallAtom')
         deleteSubscription(conn, subcop)
         if (countsent != numsent):
-            print("send_indications NumSent(%d) doesn't match get_indication_send_count NumSent(%d)"%(countsent, numsent));
+            print("\nsend_indications NumSent(%d) doesn't match get_indication_send_count NumSent(%d)\n"%(countsent, numsent));
             sys.exit(1)
-        for i in xrange(10):
+        for i in xrange(20):
             _lock.acquire()
             if _shutdown:
                 reactor.stop()
@@ -184,7 +185,10 @@ if __name__ == '__main__':
     thread = threading.Thread(target=threadfunc)
     thread.start()
     reactor.run()
+    print ''
     if _num_to_send != _insts_received:
         print 'Expected %s exceptions, got %s' % (_num_to_send, _insts_received)
         sys.exit(1)
+    else:
+        print 'Tests passed' 
 
