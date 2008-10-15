@@ -1,0 +1,7 @@
+#pragma namespace("root/cimv2")
+#pragma include("TestAssoc.mof")
+#pragma include("TestAtom.mof")
+#pragma include("TestMethod.mof")
+#pragma include("UpcallAtom.mof")
+//#pragma include("UpcallAtom-peg.mof")
+
