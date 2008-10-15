@@ -37,6 +37,8 @@ if [ ! -f "$SO" ]; then
     exit 1
 fi
 
+PEGASUS_PROVIDER_DIR=$PEGASUS_HOME/lib
+
 if [ "$1" = "op" ]; then
     if [ ! -d "$PEGASUS_PROVIDER_DIR" ]; then
         echo "Please define PEGASUS_PROVIDER_DIR"

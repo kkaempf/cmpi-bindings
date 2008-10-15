@@ -252,6 +252,22 @@ typedef struct _CMPIBroker {} CMPIBroker;
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIInstance* result;
+    CMPIString* ns;
+    const char* str;
+
+    /* Raise exception if no namespace */
+
+    if (!(ns = CMGetNameSpace(path, &st)) || st.rc ||
+        !(str = CMGetCharsPtr(ns, NULL)) || *str == '\0')
+    {
+        CMSetStatusWithChars($self, &st, CMPI_RC_ERR_FAILED, 
+            "object path has no namespace");
+        _raise_ex(&st);
+printf("EXCEPTION..................................................\n");
+        return NULL;
+    }
+
+printf("NAMESPACE[%s]\n", str);
 
     result = CMNewInstance($self, path, &st); 
     RAISE_IF(st);

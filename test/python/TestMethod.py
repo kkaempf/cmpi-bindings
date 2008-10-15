@@ -747,6 +747,8 @@ class TestMethodProvider(CIMProvider2):
         for kn, val in g_insts.items():
             inst = pywbem.CIMInstance('Test_Method', 
                     properties={'id':kn, 'p_str':val[0], 'p_sint32':val[1]})
+            inst.path = pywbem.CIMInstanceName('Test_Method', 
+                namespace="root/cimv2", keybindings={'id':kn})
             insts.append(inst)
 
         out_params = [pywbem.CIMParameter('insts', 'instance', value=insts)]

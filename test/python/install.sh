@@ -44,10 +44,10 @@ __install TestAssocProvider.py /usr/lib/pycim
 __install TestAtomProvider.py /usr/lib/pycim
 
 if [ "$1" = "op" ]; then
-    cimmof TestMethod.mof
+    cimmof TestMethodPegasus.mof
     cimmof -n root/PG_InterOp TestMethod.peg.reg
     cimmof TestAssoc.mof
-    cimmof -n root/PG_InterOp TestAssocProvider-peg.reg
+    cimmof -n root/PG_InterOp TestAssocProvider.peg.reg
     cimmof TestAtom.mof
     cimmof -n root/PG_InterOp TestAtomProvider.peg.reg
     cimmof UpcallAtom.mof

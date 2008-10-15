@@ -540,14 +540,14 @@ class TestMethods(unittest.TestCase):
         insts = outs['insts']
         self.assertEquals(len(insts), 2)
         insts.sort()
+
         self.assertEquals(insts[0]['id'], 'one')
         self.assertEquals(insts[0]['p_str'], 'str1')
         self.assertEquals(insts[0]['p_sint32'], 1)
-        self.assertEquals(insts[0]['id'], 'two')
+
+        self.assertEquals(insts[1]['id'], 'two')
         self.assertEquals(insts[1]['p_str'], 'str2')
         self.assertEquals(insts[1]['p_sint32'], 2)
-
-        
 
 def get_unit_test():
     return TestMethods
