@@ -9,9 +9,3 @@
    location: pyCmpiProvider
    type: indication
    namespace: root/cimv2
-
-#[UpcallAtom_Indication_Handler]
-#   provider: UpcallAtomProvider
-#   location: pyCmpiProvider
-#   type: instance method
-#   namespace: root/cimv2

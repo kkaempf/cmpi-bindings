@@ -7,6 +7,10 @@ import optparse
 import os
 import time
 from socket import getfqdn
+from subprocess import Popen
+import signal
+import sys
+
 
 conn = None
 
@@ -14,7 +18,7 @@ conn = None
 
 _g_opts = None
 _g_args = None
-
+_g_cwd = None
 
 
 
@@ -119,25 +123,45 @@ class UpcallAtomTest(unittest.TestCase):
             else:
                 print('')
 
-    '''        
     def test_a_upcalls_all(self):
         rv,outs = self.conn.InvokeMethod('test_all_upcalls', 'Test_UpcallAtom')
         self.assertEquals(rv, 'Success!')
         self.assertFalse(outs)
-    '''        
 
     def test_b_indications(self):
+        global _g_cwd
+        dir=_g_cwd
+        listenername=dir+'/UpcallAtomIndListener.py'
+        outputname=dir+'/IndCount.txt'        
+        listenpid=Popen([listenername, "6", outputname]).pid
         numrcv = 0
         self.subcop = createSubscription(self.conn)
         num_to_send = pywbem.Uint16(7)
+        time.sleep(1)
         self.conn.InvokeMethod('reset_indication_count', 'Test_UpcallAtom')
         countsent,outs = self.conn.InvokeMethod('send_indications', 'Test_UpcallAtom', num_to_send=num_to_send)
         numsent,outs = self.conn.InvokeMethod('get_indication_send_count', 'Test_UpcallAtom')
         deleteSubscription(self.conn, self.subcop)
         if (countsent != numsent):
             self.fail("send_indications NumSent(%d) doesn't match get_indication_send_count NumSent(%d)"%(countsent, numsent));
+        time.sleep(1)
+        fd=open(outputname, 'r')
+        countstr=fd.read()
+        fd.close()
+        numrcv=int(countstr)
         if (numrcv != numsent):
+            for i in xrange(10):
+                time.sleep(1)
+                fd=open(outputname, 'r')
+                countstr=fd.read()
+                numrcv=int(countstr)
+                print "read IndCount: ",numrcv
+                fd.close()
+                if (numrcv == numsent):
+                    break;
             self.fail("number received(%d) doesn't match number sent(%d)"%(numrcv,numsent));
+        os.remove(outputname)
+        os.kill(listenpid, signal.SIGTERM)
 
 
 def get_unit_test():
@@ -145,6 +169,9 @@ def get_unit_test():
 
 
 if __name__ == '__main__':
+    global _g_cwd
+    _g_cwd=sys.path[0]
+    print "Current Working Directory: ",_g_cwd
     parser = optparse.OptionParser()
     wbem_connection.getWBEMConnParserOptions(parser)
     parser.add_option('--verbose', '', action='store_true', default=False,
