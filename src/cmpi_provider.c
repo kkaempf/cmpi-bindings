@@ -87,6 +87,8 @@ typedef struct __ProviderMIHandle
 /*
  * string2target
  * char* -> Target_Type
+ * 
+ * *must* be called within TARGET_THREAD_BEGIN_BLOCK/TARGET_THREAD_END_BLOCK
  */
 
 static Target_Type
@@ -97,10 +99,7 @@ string2target(const char *s)
     if (s == NULL)
         return Target_Null;
 
-    TARGET_THREAD_BEGIN_BLOCK;
- 
     obj = Target_String(s);
-    TARGET_THREAD_END_BLOCK; 
  
     return obj;
 }
@@ -109,6 +108,8 @@ string2target(const char *s)
 /*
  * proplist2target
  * char** -> Target_Type
+ * 
+ * *must* be called within TARGET_THREAD_BEGIN_BLOCK/TARGET_THREAD_END_BLOCK
  */
 
 static Target_Type
@@ -116,11 +117,9 @@ proplist2target(const char** cplist)
 {
     Target_Type pl;
 
-    TARGET_THREAD_BEGIN_BLOCK;
     if (cplist == NULL)
     {
         Target_INCREF(Target_Void);
-        TARGET_THREAD_END_BLOCK; 
         return Target_Void; 
     }
  
@@ -129,7 +128,6 @@ proplist2target(const char** cplist)
     {
         Target_Append(pl, Target_String(*cplist)); 
     }
-    TARGET_THREAD_END_BLOCK; 
  
     return pl; 
 }
@@ -372,9 +370,9 @@ EnumInstances(CMPIInstanceMI * self,
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) result, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _properties = proplist2target(properties); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "enum_instances", 4, 
                                                                _context,
                                                                _result, 
@@ -414,9 +412,9 @@ GetInstance(CMPIInstanceMI * self,
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _properties = proplist2target(properties); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "get_instance", 4, 
                                                                _context,
                                                                _result, 
@@ -509,9 +507,9 @@ SetInstance(CMPIInstanceMI * self,
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     _newinst = SWIG_NewPointerObj((void*) newinstance, SWIGTYPE_p__CMPIInstance, 0);
-    TARGET_THREAD_END_BLOCK; 
     plist = proplist2target(properties); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "set_instance", 5, 
                                                                _context,
                                                                _result, 
@@ -590,9 +588,9 @@ ExecQuery(CMPIInstanceMI * self,
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _query = string2target(query); 
     _lang = string2target(language); 
+    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "exec_query", 5, 
                                                                _context,
@@ -645,7 +643,6 @@ associatorNames(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _assocClass = Target_Null; 
     _resultClass = Target_Null; 
     _role = Target_Null; 
@@ -666,6 +663,7 @@ associatorNames(
     { 
         _resultRole = string2target(resultRole); 
     }
+    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "associator_names", 7, 
                                                                _ctx,
@@ -716,7 +714,6 @@ associators(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _props = proplist2target(properties); 
     _assocClass = Target_Null;
     _resultClass = Target_Null;
@@ -738,6 +735,7 @@ associators(
     { 
         _resultRole = string2target(resultRole); 
     }
+    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "associators", 8, 
                                                                _ctx,
@@ -783,7 +781,6 @@ referenceNames(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK;
     _resultClass = Target_Null;
     _role = Target_Null;
     if (role != NULL) 
@@ -794,6 +791,7 @@ referenceNames(
     { 
         _resultClass = string2target(resultClass); 
     }
+    TARGET_THREAD_END_BLOCK;
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "reference_names", 5,
                                                                _ctx,
@@ -839,7 +837,6 @@ references(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK;
     _role = Target_Null;
     _resultClass = Target_Null;
     if (role != NULL) 
@@ -851,6 +848,7 @@ references(
         _resultClass = string2target(resultClass); 
     }
     _props = proplist2target(properties); 
+    TARGET_THREAD_END_BLOCK;
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "references", 6, 
                                                                _ctx,
@@ -896,9 +894,9 @@ invokeMethod(
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
     _in = SWIG_NewPointerObj((void*) in, SWIGTYPE_p__CMPIArgs, 0);
     _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
-    TARGET_THREAD_END_BLOCK; 
     _method = string2target(method); 
 
+    TARGET_THREAD_END_BLOCK;
     call_provider((ProviderMIHandle*)self->hdl, &status, "invoke_method", 6, 
                                                                _ctx,
                                                                _rslt, 
@@ -940,10 +938,10 @@ CMPIStatus authorizeFilter(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _className = string2target(className); 
     _owner = string2target(owner); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "authorize_filter", 5, 
                                                                _ctx,
                                                                _filter, 
@@ -984,9 +982,9 @@ CMPIStatus activateFilter(
     _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _firstActivation = Target_Bool(firstActivation); 
-    TARGET_THREAD_END_BLOCK; 
     _className = string2target(className); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "activate_filter", 5, 
                                                                _ctx,
                                                                _filter, 
@@ -1027,9 +1025,9 @@ CMPIStatus deActivateFilter(
     _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _lastActivation = Target_Bool(lastActivation); 
-    TARGET_THREAD_END_BLOCK; 
     _className = string2target(className); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "deactivate_filter", 5, 
                                                                _ctx,
                                                                _filter, 
@@ -1072,9 +1070,9 @@ mustPoll(
     //Target_Type _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
     _className = string2target(className); 
 
+    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "must_poll", 4, 
                                                                _ctx,
                                                                //_rslt,
