@@ -25,7 +25,7 @@ Summary:        Adapter to write and run CMPI-type CIM providers
 Group:          Development/Libraries/Other
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 # We need swig threads support.
-BuildRequires:  cmake gcc-c++ python-devel ruby-devel swig >= 1.3.34
+BuildRequires:  cmake gcc-c++ python-devel ruby-devel swig >= 1.3.34 perl
 BuildRequires:  sblim-sfcb
 Source:         %{name}-%{version}.tar.bz2
 Prefix:         /usr
@@ -52,6 +52,7 @@ make %{?jobs:-j %jobs}
 %install
 cd build
 make install DESTDIR=$RPM_BUILD_ROOT
+%{__rm} -f $RPM_BUILD_ROOT%{py_sitedir}/cmpi_pywbem_bindings.pyc $RPM_BUILD_ROOT%{py_sitedir}/cmpi.pyc
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -69,9 +70,9 @@ Provides:       %{name} = %{version}-%{release}
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/librbCmpiProvider.so
 %if 0%{?sles_version} == 10 
-%{_libdir}/ruby/site_ruby/%{rb_ver}/rcmpi_instance.rb
+%{_libdir}/ruby/site_ruby/%{rb_ver}/cmpi_rbwbem_bindings.rb
 %else
-%{_libdir}/ruby/vendor_ruby/%{rb_ver}/rcmpi_instance.rb
+%{_libdir}/ruby/vendor_ruby/%{rb_ver}/cmpi_rbwbem_bindings.rb
 %endif
 
 %package -n cmpi-bindings-pywbem
@@ -79,14 +80,37 @@ Summary:        Adapter to write and run CMPI-type CIM providers in Python
 Group:          Development/Languages/Python
 # for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
 Provides:       %{name} = %{version}-%{release}
+%{py_requires}
 
 %description -n cmpi-bindings-pywbem
 -
+
+%post -n cmpi-bindings-pywbem
+python%{py_ver} -m py_compile %{py_sitedir}/cmpi_pywbem_bindings.py %{py_sitedir}/cmpi.py
+
+%preun -n cmpi-bindings-pywbem
+%{__rm} -f %{py_sitedir}/cmpi_pywbem_bindings.pyc %{py_sitedir}/cmpi.pyc
 
 %files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/libpyCmpiProvider.so
 %{py_sitedir}/cmpi_pywbem_bindings.py
 %{py_sitedir}/cmpi.py
+
+%package -n cmpi-bindings-perl
+Requires:       perl = %{perl_version}
+Summary:        Adapter to write and run CMPI-type CIM providers in Perl
+Group:          Development/Languages/Perl
+# for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
+Provides:       %{name} = %{version}-%{release}
+
+%description -n cmpi-bindings-perl
+-
+
+%files -n cmpi-bindings-perl
+%defattr(-,root,root,-)
+%{_libdir}/cmpi/libplCmpiProvider.so
+%{perl_vendorlib}/cmpi_plwbem_bindings.pl
+%{perl_vendorlib}/cmpi.pm
 
 %changelog
