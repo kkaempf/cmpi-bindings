@@ -869,7 +869,77 @@ FIXME: if clone() is exposed, release() must also
    */
   void set_property_filter(const char **properties) 
   {
-    RAISE_IF(CMSetPropertyFilter($self, properties, NULL));
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIObjectPath* cop;
+    CMPICount n;
+    CMPICount i;
+    CMPIData cd;
+    char** props;
+
+    /* Make copy of property list (we may modify it) */
+    
+    props = string_array_clone((char**)properties);
+
+#if 0
+    string_array_print(props);
+#endif
+
+    /* Pegasus requires that the keys be in the property list, else it
+     * throws an exception. To work around, add key properties to property
+     * list.
+     */
+
+    if (!(cop = CMGetObjectPath($self, &st)) || st.rc)
+    {
+        st.rc = CMPI_RC_ERR_FAILED;
+        RAISE_IF(st);
+        string_array_free(props);
+        return;
+    }
+
+    n = CMGetKeyCount(cop, &st);
+
+    if (st.rc)
+    {
+        RAISE_IF(st);
+        string_array_free(props);
+        return;
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        CMPIString* pn = NULL;
+        char* str;
+
+        cd = CMGetKeyAt(cop, i, &pn, &st);
+
+        if (st.rc)
+        {
+            RAISE_IF(st);
+            string_array_free(props);
+            return;
+        }
+
+        str = CMGetCharsPtr(pn, &st);
+
+        if (st.rc)
+        {
+            RAISE_IF(st);
+            string_array_free(props);
+            return;
+        }
+
+        if (string_array_find_ignore_case(props, str) == NULL)
+            props = string_array_append(props, str);
+    }
+
+#if 0
+    string_array_print(props);
+#endif
+
+    RAISE_IF(CMSetPropertyFilter($self, (const char**)props, NULL));
+
+    string_array_free(props);
   }
 
   /* Add/replace a named Property value and origin

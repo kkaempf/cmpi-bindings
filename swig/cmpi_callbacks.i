@@ -263,11 +263,8 @@ typedef struct _CMPIBroker {} CMPIBroker;
         CMSetStatusWithChars($self, &st, CMPI_RC_ERR_FAILED, 
             "object path has no namespace");
         _raise_ex(&st);
-printf("EXCEPTION..................................................\n");
         return NULL;
     }
-
-printf("NAMESPACE[%s]\n", str);
 
     result = CMNewInstance($self, path, &st); 
     RAISE_IF(st);

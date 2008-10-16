@@ -357,6 +357,16 @@ static void _raise_ex(const CMPIStatus* st)
     } \
     while (0)
 
+/*
+**==============================================================================
+**
+** String array implementation functions.
+**
+**==============================================================================
+*/
+
+#include "string_array.h"
+
 %}
 
 %exceptionclass CMPIException;
