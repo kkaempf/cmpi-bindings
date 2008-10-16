@@ -13,6 +13,12 @@ Mon Sep 29 22:52:31 CEST 2008 - kkaempf@suse.de
   specific lines (25%) to target_{python,ruby}.c 
 
 -------------------------------------------------------------------
+Sat Sep 27 11:09:00 MDT 2008 - bwhiteley@suse.de
+
+- Update to latest code.
+- Better error handling. 
+
+-------------------------------------------------------------------
 Fri Sep 19 13:57:43 CEST 2008 - kkaempf@suse.de
 
 - rename .py filename to reflect 'pywbem' dependency.
