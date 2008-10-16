@@ -18,6 +18,7 @@ from twisted.python import log
 
 import time 
 from lib import wbem_connection
+_interop_ns = None
 
 _port = 5309
 _num_to_send = pywbem.Uint16(42)
@@ -51,7 +52,7 @@ class CIMListener(resource.Resource):
         return ''
 
 def createFilter( ch, query='select * from CIM_ProcessIndication',
-                  ns='root/interop',
+                  ns=_interop_ns,
                   querylang='WQL',
                   src_ns='root/cimv2',
                   in_name=None):
@@ -75,7 +76,7 @@ def createFilter( ch, query='select * from CIM_ProcessIndication',
     return filtercop
 
 def createDest( ch, destination='http://localhost:%s' % _port,
-                ns='root/interop',
+                ns=_interop_ns,
                 in_name=None):
     name = in_name or 'cimlistener%s'%time.time()
     destinst=pywbem.CIMInstance('CIM_ListenerDestinationCIMXML')
@@ -94,11 +95,11 @@ def createDest( ch, destination='http://localhost:%s' % _port,
     destcop = ch.CreateInstance(destinst)
     return destcop
 
-def createSubscription(ch, ns='root/interop'):
+def createSubscription(ch, ns=_interop_ns):
     replace_ns = ch.default_namespace
     ch.default_namespace=ns
-    indfilter=createFilter(ch)
-    indhandler=createDest(ch)
+    indfilter=createFilter(ch, ns=ns)
+    indhandler=createDest(ch, ns=ns)
     subinst=pywbem.CIMInstance('CIM_IndicationSubscription')
     subinst['Filter']=indfilter
     subinst['Handler']=indhandler
@@ -141,6 +142,22 @@ if __name__ == '__main__':
             default=2)
     _g_opts, _g_args = parser.parse_args()
     conn = wbem_connection.WBEMConnFromOptions(parser)
+
+    nss = ['root/interop', 'root/cimv2']
+    for ns in nss:
+        try:
+            conn.GetClass('CIM_IndicationSubscription', namespace=ns)
+            _interop_ns = ns
+            break
+        except pywbem.CIMError, arg:
+            if arg[0] in [pywbem.CIM_ERR_INVALID_CLASS,
+                    pywbem.CIM_ERR_INVALID_NAMESPACE]:
+                continue
+            raise
+    else:
+        print 'Unable to find class CIM_IndicationSubscription in namespaces',\
+                nss
+        sys.exit(1)
     
     def cb(inst):
         global _lock
@@ -157,30 +174,35 @@ if __name__ == '__main__':
     cl = CIMListener(callback=cb, http_port=5309)
 
     def threadfunc():
-        time.sleep(1)
-        numrcv = 0
-        subcop = createSubscription(conn)
-        time.sleep(1)
-        conn.InvokeMethod('reset_indication_count', 'Test_UpcallAtom')
-        print 'Waiting for %s indications...' % _num_to_send
-        countsent,outs = conn.InvokeMethod('send_indications', 
-                'Test_UpcallAtom', num_to_send=_num_to_send)
-        numsent,outs = conn.InvokeMethod('get_indication_send_count', 
-                'Test_UpcallAtom')
-        deleteSubscription(conn, subcop)
-        if (countsent != numsent):
-            print("\nsend_indications NumSent(%d) doesn't match get_indication_send_count NumSent(%d)\n"%(countsent, numsent));
-            sys.exit(1)
-        for i in xrange(20):
-            _lock.acquire()
-            if _shutdown:
+        try:
+            time.sleep(1)
+            numrcv = 0
+            subcop = createSubscription(conn, ns=_interop_ns)
+            time.sleep(1)
+            conn.InvokeMethod('reset_indication_count', 'Test_UpcallAtom')
+            print 'Waiting for %s indications...' % _num_to_send
+            countsent,outs = conn.InvokeMethod('send_indications', 
+                    'Test_UpcallAtom', num_to_send=_num_to_send)
+            numsent,outs = conn.InvokeMethod('get_indication_send_count', 
+                    'Test_UpcallAtom')
+            deleteSubscription(conn, subcop)
+            if (countsent != numsent):
+                print("\nsend_indications NumSent(%d) doesn't match get_indication_send_count NumSent(%d)\n"%(countsent, numsent));
+                sys.exit(1)
+            for i in xrange(20):
+                _lock.acquire()
+                if _shutdown:
+                    reactor.stop()
+                _lock.release()
+                if not reactor.running:
+                    break
+                time.sleep(.5)
+            if reactor.running:
                 reactor.stop()
-            _lock.release()
-            if not reactor.running:
-                break
-            time.sleep(.5)
-        if reactor.running:
-            reactor.stop()
+        except:
+            if reactor.running:
+                reactor.stop()
+            raise
 
     thread = threading.Thread(target=threadfunc)
     thread.start()
@@ -188,7 +210,8 @@ if __name__ == '__main__':
     print ''
     if _num_to_send != _insts_received:
         print 'Expected %s exceptions, got %s' % (_num_to_send, _insts_received)
+        print 'Indication Tests failed!' 
         sys.exit(1)
     else:
-        print 'Tests passed' 
+        print 'Indication Tests passed.' 
 

@@ -805,7 +805,9 @@ class UpcallAtomProvider(CIMProvider2):
 
         try:
 
-            alert_ind = pywbem.CIMInstance("UpcallAtom_Indication")
+            alert_ind = pywbem.CIMInstance("UpcallAtom_Indication",
+                    path=pywbem.CIMInstanceName('UpcallAtom_Indication',
+                        namespace=object_name.namespace))
             alert_ind['AlertType'] = pywbem.Uint16(2)
             alert_ind['PerceivedSeverity'] = pywbem.Uint16(1)
             alert_ind['ProbableCause'] = pywbem.Uint16(1)
