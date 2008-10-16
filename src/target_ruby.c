@@ -28,6 +28,9 @@ load_module()
 /*
  * create_mi (called from rb_protect)
  * load Ruby provider and create provider instance
+ * 
+ * Converts ProviderName to provider_name and
+ * tries to load this from /usr/lib/rbcim
  *
  * I args : pointer to array of 2 values
  *          values[0] = classname (String)
@@ -39,7 +42,7 @@ create_mi(VALUE args)
 {
   VALUE *values = (VALUE *)args;
 
-  _SBLIM_TRACE(1,("Ruby: %s.new ...", StringValuePtr(values[0])));
+/*  _SBLIM_TRACE(1,("Ruby: %s.new ...", StringValuePtr(values[0]))); */
   return rb_funcall2(_TARGET_MODULE, rb_intern("create_provider"), 2, values);
 }
 
@@ -115,8 +118,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
       CMPIString *trace = get_exc_trace(broker);
 
       _SBLIM_TRACE(1,("<%d> Ruby: import '%s' failed: %s", getpid(), RB_BINDINGS_FILE, CMGetCharPtr(trace)));
-/*      _CMPI_SETFAIL(<CMPIString *>); */ 
-      abort();
+      _CMPI_SETFAIL(trace); 
       return -1; 
     }
   _TARGET_MODULE = rb_const_get(rb_cModule, rb_intern(RB_BINDINGS_MODULE));
@@ -136,6 +138,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 /*
  * local (per MI) Ruby initializer
  * keeps track of reference count
+ * 
  */
 
 static int
@@ -174,10 +177,6 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 	  st->msg = trace;
 	}
     }
-  else
-    {
-      _SBLIM_TRACE(1,("Ruby: cmpi at %p", hdl->instance));
-    }
 exit:
   _SBLIM_TRACE(1,("Initialize() %s", (error == 0)? "succeeded":"failed"));
   return error;
@@ -186,7 +185,7 @@ exit:
 
 /*
  * call_provider
- * 
+ * Call function 'opname' with nargs arguments within managed interface hdl->instance
  */
 
 static int 
@@ -218,12 +217,18 @@ call_provider(ProviderMIHandle* hdl, CMPIStatus* st,
       va_end(vargs);
     }
 
-
+  
+  /* call the Ruby function
+   * possible results:
+   *   i nonzero: Exception raised
+   *   result == nil: not (or badly) implemented 
+   *   result == true: success
+   *   result == Array: pair of CMPIStatus rc(int) and msg(string)
+   */
   result = rb_protect(call_mi, (VALUE)args, &i);
-
   free( args );
 
-  if (i)
+  if (i) /* exception ? */
     {
       CMPIString *trace = get_exc_trace(hdl->broker);
       char* str = fmtstr("Ruby: calling '%s' failed: %s", opname, CMGetCharPtr(trace)); 
@@ -232,7 +237,40 @@ call_provider(ProviderMIHandle* hdl, CMPIStatus* st,
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
       return 1;
     }
+  
+  if (NIL_P(result)) /* not or wrongly implemented */
+    {
+      st->rc = CMPI_RC_ERR_NOT_SUPPORTED;
+      return 1;
+    }
 
+  if (result != Qtrue)
+    {
+      VALUE resulta = rb_check_array_type(result);
+      VALUE rc, msg;
+      if (NIL_P(resulta))
+	{
+	  char* str = fmtstr("Ruby: calling '%s' returned unknown result", opname); 
+	  st->rc = CMPI_RC_ERR_FAILED;
+	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+	  return 1;
+	}
+  
+      rc = rb_ary_entry(resulta, 0);
+      msg = rb_ary_entry(resulta, 1);
+      if (!FIXNUM_P(rc))
+	{
+	  char* str = fmtstr("Ruby: calling '%s' returned non-numeric rc code", opname); 
+	  st->rc = CMPI_RC_ERR_FAILED;
+	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+	  return 1;
+	}
+      st->rc = FIX2LONG(rc);
+      st->msg = hdl->broker->eft->newString(hdl->broker, StringValuePtr(msg), NULL);
+      return 1;
+    }
+  
+  /* all is fine */
   st->rc = CMPI_RC_OK;
   return 0;
 }
