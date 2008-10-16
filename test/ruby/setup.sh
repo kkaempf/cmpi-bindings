@@ -39,9 +39,10 @@ fi
 ## Install Ruby providers:
 ##
 
-__install TestMethod.rb /usr/lib/rbcim
-__install TestAssocProvider.rb /usr/lib/rbcim
-__install TestAtomProvider.rb /usr/lib/rbcim
+__install test_method_provider.rb /usr/lib/rbcim
+__install Test_Atom.rb /usr/lib/rbcim
+__install test_association_provider.rb /usr/lib/rbcim
+__install test_instance_provider.rb /usr/lib/rbcim
 
 if [ "$1" = "op" ]; then
     cimmof ../python/TestMethod.mof

@@ -6,13 +6,12 @@
 
 module Cmpi
 
-  STDERR.puts "This is test_atom_provider.rb"
   # Instrument the CIM class TestAtom 
   #
   # Model an atom, For use with CIMOM and RbWbem Provider
   #    
 
-  class TestAtomProvider < InstanceProvider
+  class TestInstanceProvider < InstanceProvider
     require 'Test_Atom'
 
     # create new provider instance -> check with .mof file
@@ -31,6 +30,7 @@ module Cmpi
       @instances[reference.to_s] = Test_Atom.new reference.get_key_at(0)[0]._value
       result.return_objectpath reference
       result.done
+      true
     end
     
     def get_instance context, result, objname, plist
@@ -41,11 +41,13 @@ module Cmpi
       instance = @instances[objname]
       result.return_instance instance if instance
       result.done
+      true
     end
     
     def delete_instance context, result, objname
       STDERR.puts "TestAtomProvider.delete_instance: #{objname}"
       @instances.delete objname
+      true
     end
   
   end

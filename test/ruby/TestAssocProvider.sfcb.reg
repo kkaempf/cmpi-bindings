@@ -1,0 +1,17 @@
+[TestAssoc_Group]
+   provider: TestAssociationProvider
+   location: rbCmpiProvider
+   type: instance
+   namespace: root/cimv2
+
+[TestAssoc_User]
+   provider: TestAssociationProvider
+   location: rbCmpiProvider
+   type: instance
+   namespace: root/cimv2
+
+[TestAssoc_MemberOfGroup]
+   provider: TestAssociationProvider
+   location: rbCmpiProvider
+   type: instance association
+   namespace: root/cimv2

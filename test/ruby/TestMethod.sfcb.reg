@@ -1,0 +1,5 @@
+[Test_Method]   
+   provider: TestMethodProvider
+   location: rbCmpiProvider
+   type: instance method
+   namespace: root/cimv2
