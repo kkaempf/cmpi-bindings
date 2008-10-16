@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Oct 16 14:04:32 CEST 2008 - kkaempf@suse.de
+
+- Complete Ruby bindings.
+- Small runtime improvement for Python.
+- Bump version to 0.3.0
+
+-------------------------------------------------------------------
 Mon Sep 29 22:52:31 CEST 2008 - kkaempf@suse.de
 
 - refactor cmpi_provider_{python,ruby}.c,
