@@ -329,15 +329,14 @@ EnumInstanceNames(CMPIInstanceMI * self,
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) result, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "enum_instance_names", 3, 
                                                         _context,
                                                         _result,
                                                         _reference); 
-
-   _SBLIM_TRACE(1,("EnumInstanceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK;
+    _SBLIM_TRACE(1,("EnumInstanceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -372,15 +371,14 @@ EnumInstances(CMPIInstanceMI * self,
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     _properties = proplist2target(properties); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "enum_instances", 4, 
                                                                _context,
                                                                _result, 
                                                                _reference,
                                                                _properties); 
-
-   _SBLIM_TRACE(1,("EnumInstances() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("EnumInstances() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -414,15 +412,14 @@ GetInstance(CMPIInstanceMI * self,
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     _properties = proplist2target(properties); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "get_instance", 4, 
                                                                _context,
                                                                _result, 
                                                                _reference,
                                                                _properties); 
-
-   _SBLIM_TRACE(1,("GetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("GetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -444,7 +441,7 @@ CreateInstance(CMPIInstanceMI * self,
     Target_Type _reference;
     Target_Type _newinst;
 
-   CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};   /* Return status of CIM operations. */
+    CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};   /* Return status of CIM operations. */
 
    
    /* Creating new instances is not supported for this class. */
@@ -458,16 +455,15 @@ CreateInstance(CMPIInstanceMI * self,
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     _newinst = SWIG_NewPointerObj((void*) newinstance, SWIGTYPE_p__CMPIInstance, 0);
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "create_instance", 4, 
                                                                _context,
                                                                _result, 
                                                                _reference,
                                                                _newinst); 
-
-   _SBLIM_TRACE(1,("CreateInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("CreateInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -509,16 +505,15 @@ SetInstance(CMPIInstanceMI * self,
     _newinst = SWIG_NewPointerObj((void*) newinstance, SWIGTYPE_p__CMPIInstance, 0);
     plist = proplist2target(properties); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "set_instance", 5, 
                                                                _context,
                                                                _result, 
                                                                _reference,
                                                                _newinst,
                                                                plist); 
-  
-   _SBLIM_TRACE(1,("SetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("SetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -547,15 +542,14 @@ DeleteInstance(CMPIInstanceMI * self,
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "delete_instance", 3, 
                                                                _context,
                                                                _result, 
                                                                _reference); 
-  
-   _SBLIM_TRACE(1,("DeleteInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("DeleteInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -590,7 +584,6 @@ ExecQuery(CMPIInstanceMI * self,
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     _query = string2target(query); 
     _lang = string2target(language); 
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "exec_query", 5, 
                                                                _context,
@@ -598,11 +591,12 @@ ExecQuery(CMPIInstanceMI * self,
                                                                _reference,
                                                                _query,
                                                                _lang); 
+    TARGET_THREAD_END_BLOCK; 
 
-   /* Query filtering is not supported for this class. */
+    /* Query filtering is not supported for this class. */
 
-   _SBLIM_TRACE(1,("ExecQuery() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    _SBLIM_TRACE(1,("ExecQuery() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -663,7 +657,6 @@ associatorNames(
     { 
         _resultRole = string2target(resultRole); 
     }
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "associator_names", 7, 
                                                                _ctx,
@@ -673,10 +666,9 @@ associatorNames(
                                                                _resultClass,
                                                                _role,
                                                                _resultRole); 
-
-
-   _SBLIM_TRACE(1,("associatorNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("associatorNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 /*
@@ -735,7 +727,6 @@ associators(
     { 
         _resultRole = string2target(resultRole); 
     }
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "associators", 8, 
                                                                _ctx,
@@ -745,11 +736,11 @@ associators(
                                                                _resultClass,
                                                                _role,
                                                                _resultRole,
-                                                               _props); 
+                                                               _props);
 
-
-   _SBLIM_TRACE(1,("associators() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("associators() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 /*
@@ -791,7 +782,6 @@ referenceNames(
     { 
         _resultClass = string2target(resultClass); 
     }
-    TARGET_THREAD_END_BLOCK;
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "reference_names", 5,
                                                                _ctx,
@@ -800,9 +790,9 @@ referenceNames(
                                                                _resultClass,
                                                                _role); 
 
-
-   _SBLIM_TRACE(1,("referenceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK;
+    _SBLIM_TRACE(1,("referenceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -848,7 +838,6 @@ references(
         _resultClass = string2target(resultClass); 
     }
     _props = proplist2target(properties); 
-    TARGET_THREAD_END_BLOCK;
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "references", 6, 
                                                                _ctx,
@@ -857,9 +846,9 @@ references(
                                                                _resultClass,
                                                                _role,
                                                                _props); 
-
-   _SBLIM_TRACE(1,("references() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK;
+    _SBLIM_TRACE(1,("references() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 /*
@@ -896,17 +885,16 @@ invokeMethod(
     _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
     _method = string2target(method); 
 
-    TARGET_THREAD_END_BLOCK;
     call_provider((ProviderMIHandle*)self->hdl, &status, "invoke_method", 6, 
                                                                _ctx,
                                                                _rslt, 
                                                                _objName,
                                                                _method,
                                                                _in,
-                                                               _out); 
-
-   _SBLIM_TRACE(1,("invokeMethod() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+                                                               _out);
+    TARGET_THREAD_END_BLOCK;
+    _SBLIM_TRACE(1,("invokeMethod() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -941,16 +929,15 @@ CMPIStatus authorizeFilter(
     _className = string2target(className); 
     _owner = string2target(owner); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "authorize_filter", 5, 
                                                                _ctx,
                                                                _filter, 
                                                                _className,
                                                                _classPath,
                                                                _owner);
-
-   _SBLIM_TRACE(1,("authorizeFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("authorizeFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -984,16 +971,15 @@ CMPIStatus activateFilter(
     _firstActivation = Target_Bool(firstActivation); 
     _className = string2target(className); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "activate_filter", 5, 
                                                                _ctx,
                                                                _filter, 
                                                                _className,
                                                                _classPath,
                                                                _firstActivation);
-
-   _SBLIM_TRACE(1,("activateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("activateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -1027,16 +1013,15 @@ CMPIStatus deActivateFilter(
     _lastActivation = Target_Bool(lastActivation); 
     _className = string2target(className); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "deactivate_filter", 5, 
                                                                _ctx,
                                                                _filter, 
                                                                _className,
                                                                _classPath,
                                                                _lastActivation);
-
-   _SBLIM_TRACE(1,("deActivateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("deActivateFilter() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -1072,16 +1057,15 @@ mustPoll(
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _className = string2target(className); 
 
-    TARGET_THREAD_END_BLOCK; 
     call_provider((ProviderMIHandle*)self->hdl, &status, "must_poll", 4, 
                                                                _ctx,
                                                                //_rslt,
                                                                _filter, 
                                                                _className,
                                                                _classPath);
-
-   _SBLIM_TRACE(1,("mustPoll() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("mustPoll() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -1103,13 +1087,12 @@ enableIndications(
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "enable_indications", 1, _ctx); 
 
-   _SBLIM_TRACE(1,("enableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
-
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("enableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 }
 
 
@@ -1131,12 +1114,12 @@ disableIndications(
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
-    TARGET_THREAD_END_BLOCK; 
 
     call_provider((ProviderMIHandle*)self->hdl, &status, "disable_indications", 1, _ctx); 
 
-   _SBLIM_TRACE(1,("disableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+    TARGET_THREAD_END_BLOCK; 
+    _SBLIM_TRACE(1,("disableIndications() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+    return status;
 
 }
 

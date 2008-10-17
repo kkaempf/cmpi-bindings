@@ -174,6 +174,7 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 /*
  * call_provider
  * 
+ * ** must be called while holding the threads lock **
  */
 
 static int 
@@ -185,7 +186,6 @@ call_provider(ProviderMIHandle* hdl, CMPIStatus* st,
     PyObject *pyargs = NULL; 
     PyObject *pyfunc = NULL; 
     PyObject *prv = NULL; 
-    TARGET_THREAD_BEGIN_BLOCK;
  
     pyargs = PyTuple_New(nargs); 
     pyfunc = PyObject_GetAttrString(hdl->instance, opname); 
@@ -279,15 +279,17 @@ call_provider(ProviderMIHandle* hdl, CMPIStatus* st,
     }
     else
     {
+        char *msg = PyString_AsString(prstr);
+        TARGET_THREAD_BEGIN_ALLOW;
         st->msg = hdl->broker->eft->newString(hdl->broker, 
-				PyString_AsString(prstr), NULL); 
+				msg, NULL); 
+        TARGET_THREAD_END_ALLOW; 
     }
     rc = pi != 0; 
 cleanup:
     Py_DecRef(pyargs);
     Py_DecRef(pyfunc);
     Py_DecRef(prv);
-    TARGET_THREAD_END_BLOCK; 
  
     return rc; 
 }
