@@ -42,6 +42,7 @@ fi
 __install TestMethod.py /usr/lib/pycim
 __install TestAssocProvider.py /usr/lib/pycim
 __install TestAtomProvider.py /usr/lib/pycim
+__install UpcallAtomProvider.py /usr/lib/pycim
 
 if [ "$1" = "op" ]; then
     cimmof TestMethodPegasus.mof
