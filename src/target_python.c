@@ -125,11 +125,11 @@ cleanup:
 static int
 PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
-  _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() called", getpid(), pthread_self()));
+/*  _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() called", getpid(), pthread_self())); */
   
   if (_TARGET_INIT)
     {
-      _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() returning: already initialized", getpid(), pthread_self()));
+/*      _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() returning: already initialized", getpid(), pthread_self())); */
       return 0; 
     }
   _TARGET_INIT=1;//true
