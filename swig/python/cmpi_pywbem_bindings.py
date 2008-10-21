@@ -314,23 +314,13 @@ class BrokerCIMOMHandle(object):
         rslt = (outrc,outargs)
         return rslt
         
-    def GetClass(self, *args, **kwargs):
-        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
-    
-    def EnumerateClassNames(self, *args, **kwargs):
-        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
-    
-    def EnumerateClasses(self, *args, **kwargs):
-        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
-    
-    def CreateClass(self, *args, **kwargs):
-        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
-    
-    def DeleteClass(self, *args, **kwargs):
-        raise pywbem.CIMError(pywbem.CIM_ERR_NOT_SUPPORTED)
-    
-    def CreateInstance(self, path, instance):
-        cop = self.proxy.pywbem2cmpi_instname(path)
+    def CreateInstance(self, instance):
+        if instance.path is None or not instance.path:
+            # no INVALID_PATH error... INVALID_NAMESPACE is best option
+            raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE)
+        if instance.path.namespace is None or not instance.path.namespace:
+            raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE)
+        cop = self.proxy.pywbem2cmpi_instname(instance.path)
         inst = self.proxy.pywbem2cmpi_inst(instance)
         ciname = self.broker.createInstance(self.ctx, cop, inst)
         if ciname is None:
@@ -341,13 +331,20 @@ class BrokerCIMOMHandle(object):
         cop = self.proxy.pywbem2cmpi_instname(path)
         return self.broker.deleteInstance(self.ctx, cop)
 
+    def ModifyInstance(self, instance):
+        if instance.path is None or not instance.path:
+            # no INVALID_PATH error... INVALID_NAMESPACE is best option
+            raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE)
+        if instance.path.namespace is None or not instance.path.namespace:
+            raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE)
+        cop = self.proxy.pywbem2cmpi_instname(instance.path)
+        inst = self.proxy.pywbem2cmpi_inst(instance)
+        return self.broker.modifyInstance(self.ctx, cop, inst)
+    
     def DeliverIndication(self, ns, instance):
         inst = self.proxy.pywbem2cmpi_inst(instance)
         return self.broker.deliverIndication(self.ctx, ns, inst)
     
-    ### Not sure whether this should be on BrokerCIMOMHandle or
-    ### on ProviderEnvironment
-    ### We may want to move it ?
     def is_subclass(self, ns, super, sub):
         subObjPath=self.broker.new_object_path(ns, sub)
         return bool(self.broker.classPathIsA(subObjPath,super))
@@ -391,12 +388,6 @@ class ProviderEnvironment(object):
         return Logger(self.proxy.broker, self.proxy.miname)
     def get_cimom_handle(self):
         return BrokerCIMOMHandle(self.proxy, self.ctx.cmpicontext)
-    def get_user_name(self):
-        pass
-    def get_context_value(self, key):
-        pass
-    def set_context_value(self, key, value):
-        pass
 
 g_proxies = {}
 

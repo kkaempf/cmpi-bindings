@@ -238,7 +238,7 @@ def _create_test_instance(ch, name_of_atom, number, time):
 
     try:
         msg = ''
-        cipath = ch.CreateInstance(cop, new_instance)
+        cipath = ch.CreateInstance(new_instance)
         new_instance.path = cipath
         _inst_paths.append(cipath)
 
@@ -513,7 +513,7 @@ class UpcallAtomProvider(CIMProvider2):
                 cop['id'] = 'One'
                 new_instance.path = cop
                 try:
-                    cipath=ch.CreateInstance(cop, new_instance)
+                    cipath=ch.CreateInstance(new_instance)
                     new_instance.path = cipath
                     gotinst = ch.GetInstance(cipath)
 
@@ -588,6 +588,27 @@ class UpcallAtomProvider(CIMProvider2):
             _cleanup(ch)
         except pywbem.CIMError, arg:
             raise "**** CreateInstance Failed ****"
+
+            
+        # now make sure throws appropriate exception if path not set
+        try:    
+            new_instance = pywbem.CIMInstance('Test_Atom')
+            new_instance['Name'] = 'Failure'
+            # DO NOT set new_instance.path for this test... expect a failure
+            new_instance['boolProp']     = True
+
+            try:
+                cipath = ch.CreateInstance(new_instance)
+                #if I got here, then it's a failure
+                raise "Expected INVALID_NAMESPACE error but didn't get it"
+
+            except pywbem.CIMError, args:
+                if args[0] != pywbem.CIM_ERR_INVALID_NAMESPACE:
+                    #not what we were looking for
+                    raise
+                #else success
+        except:
+            raise
 
 ################################################################################
         #test_3_enum_instances
@@ -679,7 +700,6 @@ class UpcallAtomProvider(CIMProvider2):
 
 ################################################################################
         #test_6_modify_instance
-        '''
         print "####### test_6_modify_instance ########"
         #Create an instance of "Boron" and then modify it to Helium
         # Once modified, get_instance returns it and then check the values of it
@@ -712,7 +732,7 @@ class UpcallAtomProvider(CIMProvider2):
             mod_instance['Name'] = 'Boron'
 
             try:
-                ch.ModifyInstance(ch.default_namespace, mod_instance)
+                ch.ModifyInstance(mod_instance)
             except pywbem.CIMError, arg:
                 raise 
 
@@ -742,7 +762,7 @@ class UpcallAtomProvider(CIMProvider2):
         else:
             raise "ModifyInstance Failed!!"
         _cleanup(ch)
-        '''
+
 
 ################################################################################
         #test_7_delete

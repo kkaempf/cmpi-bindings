@@ -101,11 +101,13 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
-  /*
-  CMPIStatus setInstance(const CMPIContext* ctx, const CMPIObjectPath* op, const CMPIInstance* inst, const char** properties) { 
-    return CBSetInstance($self, ctx, op, inst, properties);
+  void modifyInstance(
+    const CMPIContext *ctx,
+    const CMPIObjectPath *op,
+    const CMPIInstance *inst)
+  {
+    RAISE_IF(CBModifyInstance($self, ctx, op, inst));
   }
-  */
 
   void deleteInstance(
     const CMPIContext * ctx, 
