@@ -272,7 +272,7 @@ class BrokerCIMOMHandle(object):
             yield pinst
 
     def AssociatorNames(self, path, assocClass = None, resultClass = None, 
-        role = None, resultRole = None, props = None):
+        role = None, resultRole = None):
         cop = self.proxy.pywbem2cmpi_instname(path)
         e = self.broker.associatorNames(self.ctx, cop, assocClass, resultClass,
             role, resultRole)
