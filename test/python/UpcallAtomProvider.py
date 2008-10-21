@@ -824,8 +824,7 @@ class UpcallAtomProvider(CIMProvider2):
         cur_ind_count = 0
 
         try:
-
-            alert_ind = pywbem.CIMInstance("UpcallAtom_Indication",
+            alert_ind = pywbem.CIMInstance('UpcallAtom_Indication',
                     path=pywbem.CIMInstanceName('UpcallAtom_Indication',
                         namespace=object_name.namespace))
             alert_ind['AlertType'] = pywbem.Uint16(2)
