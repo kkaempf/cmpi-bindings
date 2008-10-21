@@ -250,7 +250,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
-  CMPIInstance* new_instance(const CMPIObjectPath* path)
+  CMPIInstance* new_instance(const CMPIObjectPath* path, int allow_null_ns)
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIInstance* result;
@@ -259,13 +259,16 @@ typedef struct _CMPIBroker {} CMPIBroker;
 
     /* Raise exception if no namespace */
 
-    if (!(ns = CMGetNameSpace(path, &st)) || st.rc ||
-        !(str = CMGetCharsPtr(ns, NULL)) || *str == '\0')
+    if (!allow_null_ns)
     {
-        CMSetStatusWithChars($self, &st, CMPI_RC_ERR_FAILED, 
-            "object path has no namespace");
-        _raise_ex(&st);
-        return NULL;
+        if (!(ns = CMGetNameSpace(path, &st)) || st.rc ||
+            !(str = CMGetCharsPtr(ns, NULL)) || *str == '\0')
+        {
+            CMSetStatusWithChars($self, &st, CMPI_RC_ERR_FAILED, 
+                "object path has no namespace");
+            _raise_ex(&st);
+            return NULL;
+        }
     }
 
     result = CMNewInstance($self, path, &st); 

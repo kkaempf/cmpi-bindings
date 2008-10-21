@@ -346,8 +346,17 @@ class BrokerCIMOMHandle(object):
         return self.broker.modifyInstance(self.ctx, cop, inst)
     
     def DeliverIndication(self, ns, instance):
-        inst = self.proxy.pywbem2cmpi_inst(instance)
-        return self.broker.deliverIndication(self.ctx, ns, inst)
+        if self.broker.name() == 'Pegasus':
+            allow_null_ns = False
+        else:
+            allow_null_ns = True
+            if self.broker.name() == 'RequestHandler':
+                # Check sblim bug #2185410.
+                if instance.path is not None:
+                    instance.path.namespace = None
+        inst = self.proxy.pywbem2cmpi_inst(instance, allow_null_ns)
+        rv = self.broker.deliverIndication(self.ctx, ns, inst)
+        return rv
     
     def is_subclass(self, ns, super, sub):
         subObjPath=self.broker.new_object_path(ns, sub)
@@ -696,12 +705,17 @@ class CMPIProxyProvider(object):
         return cargs
 
 
-    def pywbem2cmpi_inst(self, pinst):
+    def pywbem2cmpi_inst(self, pinst, allow_null_ns=False):
         pcop = pinst.path
-        if pcop is None:
-            pcop = pywbem.CIMInstanceName(pinst.classname)
+        if not allow_null_ns:
+            if pcop is None or pcop.namespace is None:
+                raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE, 
+                        "Instance must have a namespace")
+        else:
+            if pcop is None:
+                pcop = pywbem.CIMInstanceName(pinst.classname)
         cop = self.pywbem2cmpi_instname(pcop)
-        cinst = self.broker.new_instance(cop)
+        cinst = self.broker.new_instance(cop, allow_null_ns)
         if pinst.property_list is not None:
             cinst.set_property_filter(pinst.property_list)
         for prop in pinst.properties.values():
