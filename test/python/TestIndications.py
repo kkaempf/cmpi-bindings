@@ -75,6 +75,26 @@ def createFilter( ch, query='select * from CIM_ProcessIndication',
     filtercop = ch.CreateInstance(filterinst)
     return filtercop
 
+def deleteAllSubs(ch, destination='http://localhost:%s' % _port,
+                ns=_interop_ns):
+    subs = ch.EnumerateInstanceNames('CIM_IndicationSubscription', 
+            namespace=ns)
+    num = 0
+    for sub in subs:
+        handler_name = sub['Handler']
+        try:
+            handler = ch.GetInstance(handler_name, PropertyList=['Destination'])
+        except pywbem.CIMError, args:
+            print "** Error fetching handler instance: %s %s" % \
+                    (handler_name, args)
+            continue
+        if handler['Destination'] == destination:
+            deleteSubscription(ch, sub)
+            num+= 1
+    if num > 0:
+        print '** deleted %d subscriptions' % num
+
+
 def createDest( ch, destination='http://localhost:%s' % _port,
                 ns=_interop_ns,
                 in_name=None):
@@ -172,6 +192,8 @@ if __name__ == '__main__':
         _lock.release()
 
     cl = CIMListener(callback=cb, http_port=5309)
+
+    deleteAllSubs(conn, ns=_interop_ns)
 
     def threadfunc():
         try:
