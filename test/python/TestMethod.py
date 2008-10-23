@@ -754,6 +754,15 @@ class TestMethodProvider(CIMProvider2):
         out_params = [pywbem.CIMParameter('insts', 'instance', value=insts)]
         rval = pywbem.Sint32(0)
         return (rval, out_params)
+
+    def cim_method_getbrokername(self, env, object_name):
+        logger = env.get_logger()
+        logger.log_debug('Entering %s.cim_method_getbrokername()' \
+                % self.__class__.__name__)
+
+        out_params = []
+        rval = env.get_cimom_handle().broker.name()
+        return (rval, out_params)
         
 ## end of class TestMethodProvider
 

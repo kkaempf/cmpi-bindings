@@ -270,5 +270,8 @@ class Test_Method
 	sint32 getObjects(
 			[in(false), out, required, EmbeddedInstance("Test_Method")] string insts[]
 	); 
+
+    [ Description("Get the name of the broker"), Static ]
+	string getBrokerName(); 
 };
 

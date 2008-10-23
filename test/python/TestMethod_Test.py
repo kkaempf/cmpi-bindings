@@ -520,6 +520,11 @@ class TestMethods(unittest.TestCase):
 
 
     def test_xembeddedinst_output_params(self):
+        rv,outs = self.conn.InvokeMethod('getBrokerName', 'Test_Method')
+        if rv == 'RequestHandler':
+            print '\n*** Broker detected as SFCB.  Skipping embedded out param test.'
+            print 'Re-enable when SFCB is fixed.' 
+            return
         iname = pywbem.CIMInstanceName('Test_Method', namespace='root/cimv2',
                 keybindings = {'id':'one'})
         inst = pywbem.CIMInstance('Test_Method', path=None, 
