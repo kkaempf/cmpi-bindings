@@ -22,28 +22,30 @@ Setup
   
 
 - Create symlinks for cmpi-bindings
+  (If appropriate, substitute python2.5 with python2.4)
 
   cd build/swig/python
   sudo ln -s `pwd`/libpyCmpiProvider.so /usr/lib/cmpi
   sudo ln -s `pwd`/cmpi.py /usr/lib/python2.5/site-packages
   cd ../../..
   cd swig/python
-  sudo ln -s `pwd`/pycmpi_provider.py /usr/lib/python2.5/site-packages
+  sudo ln -s `pwd`/cmpi_pywbem_bindings.py /usr/lib/python2.5/site-packages
 
 
 - Create symlinks for sfcb mof/reg
 
-  sudo ./setup.sh
-  
+  sudo ./install.sh
   This also runs "sfcbrepos -f"
+  
+  if you are installing to test on Pegasus, use the '--op' option
 
 
-- Restart sfcbd
+- Restart sfcbd or tog-pegasus (cimserver)
 
 
-- now run TestMethod_Test.py, TestAtomProvider_Test.py as root.
+- now run TestMethod_Test.py, TestAtomProvider_Test.py, test_assoc.py, UpcallAtomTest.py, and TestIndications.py as root.
   (they only need to run as root because they use the passwordless local unix connection).
-  those two tests should all pass.
-  test_assoc.py should partially pass.
+  (To run against Pegasus, run with option: '-u /var/run/tog-pegasus/cimxml.socket' to use the local unix connection)
+  They should all pass.
 
   ["Property Not Found in PropertyList: uint64" is an expected error]
