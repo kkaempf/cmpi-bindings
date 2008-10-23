@@ -20,6 +20,9 @@ class Test_UpcallAtom
     uint16 get_indication_send_count(
     // return number of indications sent since last reset
     );
+
+    [ Description("Get the name of the broker"), Static ]
+	string getBrokerName(); 
 };
 
 
