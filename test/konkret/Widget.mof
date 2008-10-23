@@ -1,0 +1,21 @@
+class KC_Widget
+{
+    [Key] String Id;
+    string Color;
+    uint32 Size;
+
+    [Static]
+    uint32 Add([In] uint32 X, [In] uint32 Y);
+};
+
+[Association]
+class KC_Gadget
+{
+    [Key] KC_Widget REF Left;
+    [Key] KC_Widget REF Right;
+};
+
+class KC_Upcall
+{
+    [Key] String Id;
+};

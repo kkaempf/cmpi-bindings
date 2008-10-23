@@ -1,0 +1,96 @@
+/*
+**==============================================================================
+**
+** Widget Module
+**
+**==============================================================================
+*/
+
+instance of PG_ProviderModule
+{
+    Name = "KC_WidgetModule";
+    Vendor = "Pegasus";
+    Version = "2.0.0";
+    InterfaceType = "CMPI";
+    InterfaceVersion = "2.0.0";
+    Location = "WidgetProvider";
+};
+
+/*
+**==============================================================================
+**
+** Widget Provider
+**
+**==============================================================================
+*/
+
+instance of PG_Provider
+{
+    Name = "KC_Widget";
+    ProviderModuleName = "KC_WidgetModule";
+};
+
+instance of PG_ProviderCapabilities
+{
+    CapabilityID = "KC_Widget";
+    ProviderModuleName = "KC_WidgetModule";
+    ProviderName = "KC_Widget";
+    ClassName = "KC_Widget";
+    Namespaces = {"root/cimv2"};
+    ProviderType = { 2 /*instance*/, 5 /*method*/ };
+    supportedProperties = NULL;
+    supportedMethods = NULL;
+};
+
+/*
+**==============================================================================
+**
+** Gadget Provider
+**
+**==============================================================================
+*/
+
+instance of PG_Provider
+{
+    Name = "KC_Gadget";
+    ProviderModuleName = "KC_WidgetModule";
+};
+
+instance of PG_ProviderCapabilities
+{
+    CapabilityID = "KC_Gadget";
+    ProviderModuleName = "KC_WidgetModule";
+    ProviderName = "KC_Gadget";
+    ClassName = "KC_Gadget";
+    Namespaces = {"root/cimv2"};
+    ProviderType = { 2 /*instance*/, 3, /*association*/ 5 /*method*/ };
+    supportedProperties = NULL;
+    supportedMethods = NULL;
+};
+
+/*
+**==============================================================================
+**
+** Upcall Provider
+**
+**==============================================================================
+*/
+
+instance of PG_Provider
+{
+    Name = "KC_Upcall";
+    ProviderModuleName = "KC_WidgetModule";
+};
+
+instance of PG_ProviderCapabilities
+{
+    CapabilityID = "KC_Upcall";
+    ProviderModuleName = "KC_WidgetModule";
+    ProviderName = "KC_Upcall";
+    ClassName = "KC_Upcall";
+    Namespaces = {"root/cimv2"};
+    ProviderType = { 2 /*instance*/, 5 /*method*/ };
+    supportedProperties = NULL;
+    supportedMethods = NULL;
+};
+

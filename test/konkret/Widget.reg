@@ -1,0 +1,18 @@
+[KC_Widget]
+   provider: KC_Widget
+   location: WidgetProvider
+   type: instance method
+   namespace: root/cimv2
+#
+[KC_Gadget]
+   provider: KC_Gadget
+   location: WidgetProvider
+   type: instance association
+   namespace: root/cimv2
+#
+[KC_Upcall]
+   provider: KC_Upcall
+   location: WidgetProvider
+   type: instance method
+   namespace: root/cimv2
+#

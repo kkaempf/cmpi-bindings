@@ -1,0 +1,8 @@
+This directory contains test to reproduce an upcall hang in Pegasus. To
+try, install KonkretCMPI 0.8.7. Build this provider with "make". Use the
+.reg files to register with pegasus. Copy library into place. Then run the
+upcall provider as follows:
+
+    $ cimcli ei KC_Upcall
+
+This hangs in the _references() test.
