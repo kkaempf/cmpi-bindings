@@ -344,7 +344,7 @@ def enable_indications(env):
         """
 
     logger = env.get_logger()
-    logger.log_debug('Entering enable_indications()' )
+    logger.log_debug('Entering enable_indications()')
     #just fall through for success
        
         
@@ -485,15 +485,15 @@ class UpcallAtomProvider(CIMProvider2):
                 #TestAssoc_User has an association through TestAssoc_MemberOfGroup
                 # to TestAssoc_Group
                 if assocs:
-                    log_debug("#*)$*%)#  Got assocs ")
+                    log_debug("#*)$*%)#  Got assocs ", logger)
                     for assoc in assocs:
-                        log_debug("Got an assoc")
+                        log_debug("Got an assoc", logger)
                         log_debug("  ", logger)
                         log_debug("  >>> assoc: %s"%str(assoc), logger)
                         log_debug("  ", logger)
                         name = assoc.path
                         log_debug("  ", logger)
-                        log_debug("  >>> name: "%str(name), logger)
+                        log_debug("  >>> name: %s"%str(name), logger)
                         log_debug("  ", logger)
                         if assoc.classname.lower() != 'testassoc_group':
                             raise "Associator Error: %s" %str(assoc)
