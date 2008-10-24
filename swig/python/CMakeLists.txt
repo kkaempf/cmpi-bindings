@@ -65,4 +65,11 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmpi.py DESTINATION ${PYTHON_SITE_DIR}
 INSTALL(FILES cmpi_pywbem_bindings.py DESTINATION ${PYTHON_SITE_DIR} )
 #INSTALL(FILES Py_UnixProcessProvider.py DESTINATION /usr/lib/pycim )
 
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${PYTHON_SITE_DIR}/cmpi.py \$ENV{DESTDIR}${PYTHON_SITE_DIR}/cmpi_pywbem_bindings.py)")
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c \"from py_compile import compile; compile('\$ENV{DESTDIR}${PYTHON_SITE_DIR}/cmpi.py', dfile='${PYTHON_SITE_DIR}/cmpi.py')\")")
+
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c \"from py_compile import compile; compile('\$ENV{DESTDIR}${PYTHON_SITE_DIR}/cmpi_pywbem_bindings.py', dfile='${PYTHON_SITE_DIR}/cmpi_pywbem_bindings.py')\")")
+
+
+
+
+
