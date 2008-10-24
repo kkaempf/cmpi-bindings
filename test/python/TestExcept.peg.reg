@@ -1,0 +1,25 @@
+// Pegasus Provider registration for Test_Except
+instance of PG_ProviderModule
+{
+    Name = "pyCmpiProvider_Test_Except";
+    InterfaceType = "CMPI";
+    InterfaceVersion = "2.0.0";
+    Location = "pyCmpiProvider"; 
+    UserContext = 2; // Requestor
+    Vendor = "TODO"; // TODO
+    Version = "1.0";
+}; 
+instance of PG_Provider
+{
+    Name = "Test_Except"; 
+    ProviderModuleName = "pyCmpiProvider_Test_Except";
+}; 
+instance of PG_ProviderCapabilities
+{
+    CapabilityID = "Test_Except";
+    ProviderModuleName = "pyCmpiProvider_Test_Except";
+    ProviderName = "Test_Except";
+    ClassName = "Test_Except";
+    Namespaces = {"root/cimv2"};
+    ProviderType = {2}; // Instance
+};

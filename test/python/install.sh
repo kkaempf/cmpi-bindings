@@ -43,6 +43,7 @@ __install TestMethod.py /usr/lib/pycim
 __install TestAssocProvider.py /usr/lib/pycim
 __install TestAtomProvider.py /usr/lib/pycim
 __install UpcallAtomProvider.py /usr/lib/pycim
+__install TestExcept.py /usr/lib/pycim
 
 if [ "$1" = "op" ]; then
     cimmof TestMethodPegasus.mof
@@ -53,15 +54,20 @@ if [ "$1" = "op" ]; then
     cimmof -n root/PG_InterOp TestAtomProvider.peg.reg
     cimmof UpcallAtom.mof
     cimmof -n root/PG_Interop UpcallAtom.peg.reg
+    cimmof TestExcept.mof
+    cimmof -n root/PG_InterOp TestExcept.peg.reg
+
 else
     __install TestMethod.mof /var/lib/sfcb/stage/mofs/root/cimv2
     __install TestAssoc.mof /var/lib/sfcb/stage/mofs/root/cimv2
     __install TestAtom.mof /var/lib/sfcb/stage/mofs/root/cimv2
     __install UpcallAtom.mof /var/lib/sfcb/stage/mofs/root/cimv2
+    __install TestExcept.mof /var/lib/sfcb/stage/mofs/root/cimv2
 
     __install TestAssocProvider.sfcb.reg /var/lib/sfcb/stage/regs
     __install TestMethod.sfcb.reg /var/lib/sfcb/stage/regs
     __install TestAtomProvider.sfcb.reg /var/lib/sfcb/stage/regs
     __install UpcallAtom.sfcb.reg /var/lib/sfcb/stage/regs
+    __install TestExcept.sfcb.reg /var/lib/sfcb/stage/regs
     sfcbrepos -f
 fi

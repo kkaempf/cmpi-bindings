@@ -1,0 +1,11 @@
+[ Description("Instance provider used to test exceptions by causing them")]
+class Test_Except
+{
+    [Key] string id;
+    uint32 count;
+    boolean flag;
+    string message;
+    uint32 counts[];
+    boolean flags[];
+    string messages[];
+};

@@ -1,0 +1,5 @@
+[Test_Except]
+   provider: TestExcept
+   location: pyCmpiProvider
+   type: instance
+   namespace: root/cimv2
