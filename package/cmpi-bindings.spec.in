@@ -80,11 +80,13 @@ Summary:        Adapter to write and run CMPI-type CIM providers in Python
 Group:          Development/Languages/Python
 # for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
 Provides:       %{name} = %{version}-%{release}
+
+#define some macros missing on fedora
 %if 0%{?fedora_version}
-Requires: python
-%else
-%{py_requires}
+%{!?py_sitedir: %define py_sitedir %(%{__python} -c "from distutils.sysconfig import get_python_lib()")}
+%{!?py_requires: %define py_requires Requires: python}
 %endif
+%{py_requires}
 
 %description -n cmpi-bindings-pywbem
 -
