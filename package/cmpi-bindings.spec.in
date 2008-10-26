@@ -91,17 +91,13 @@ Provides:       %{name} = %{version}-%{release}
 %description -n cmpi-bindings-pywbem
 -
 
-%post -n cmpi-bindings-pywbem
-python%{py_ver} -m py_compile %{py_sitedir}/cmpi_pywbem_bindings.py %{py_sitedir}/cmpi.py
-
-%preun -n cmpi-bindings-pywbem
-%{__rm} -f %{py_sitedir}/cmpi_pywbem_bindings.pyc %{py_sitedir}/cmpi.pyc
-
 %files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/libpyCmpiProvider.so
 %{py_sitedir}/cmpi_pywbem_bindings.py
+%{py_sitedir}/cmpi_pywbem_bindings.pyc
 %{py_sitedir}/cmpi.py
+%{py_sitedir}/cmpi.pyc
 
 %package -n cmpi-bindings-perl
 Requires:       perl = %{perl_version}
