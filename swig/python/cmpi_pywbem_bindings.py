@@ -423,8 +423,12 @@ class CMPIProxyProvider(object):
         self.miname = miname
         self.broker = broker
         env = ProviderEnvironment(self, None)
-        self.proxy = ProviderProxy(env, 
-              '/usr/lib/pycim/'+miname+'.py')
+        provmod = miname
+        if provmod[0] != '/':
+            provmod = '/usr/lib/pycim/' + provmod
+        if not provmod.endswith('.py'):
+            provmod+= '.py'
+        self.proxy = ProviderProxy(env, provmod)
         #print '*** broker.name()', broker.name()
         #print '*** broker.capabilities()', broker.capabilities()
         #print '*** broker.version()', broker.version()
