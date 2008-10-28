@@ -95,12 +95,12 @@ exit:
 
 
 /*
- * call_provider
+ * TargetCall
  * 
  */
 
 static int 
-call_provider(ProviderMIHandle* hdl, CMPIStatus* st, 
+TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, 
                  const char* opname, int nargs, ...)
 {
   int i; 

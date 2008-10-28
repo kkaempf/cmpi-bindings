@@ -184,12 +184,12 @@ exit:
 
 
 /*
- * call_provider
+ * TargetCall
  * Call function 'opname' with nargs arguments within managed interface hdl->instance
  */
 
 static int 
-call_provider(ProviderMIHandle* hdl, CMPIStatus* st, 
+TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, 
                  const char* opname, int nargs, ...)
 {
   int i; 

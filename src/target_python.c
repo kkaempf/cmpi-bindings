@@ -172,13 +172,13 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 /*---------------------------------------------------------------*/
 
 /*
- * call_provider
+ * TargetCall
  * 
  * ** must be called while holding the threads lock **
  */
 
 static int 
-call_provider(ProviderMIHandle* hdl, CMPIStatus* st, 
+TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, 
                  const char* opname, int nargs, ...)
 {
     int rc = 1; 
