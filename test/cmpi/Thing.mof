@@ -1,0 +1,11 @@
+[ Description("Instance provider test reproduce crash in SFCBD")]
+class Test_Thing
+{
+    [Key] string id;
+    uint32 count;
+    boolean flag;
+    string message;
+    uint32 counts[];
+    boolean flags[];
+    string messages[];
+};

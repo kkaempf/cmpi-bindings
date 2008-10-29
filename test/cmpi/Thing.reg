@@ -1,0 +1,5 @@
+[Test_Thing]
+   provider: ThingProvider
+   location: ThingProvider
+   type: instance
+   namespace: root/cimv2
