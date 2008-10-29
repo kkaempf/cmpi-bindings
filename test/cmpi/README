@@ -1,5 +1,5 @@
-This provider was written to reproduce a bug in SFCBD. By setting a string 
-property (Thing.message) to type string[], we crash sfcb. To reproduce:
+This provider reproduces an SFCBD bug. By setting a string property 
+(Thing.message) to type string[], we crash sfcb. To reproduce:
 
     1. Build provider (make)
     2. Install and register with sfcbd (make install)
