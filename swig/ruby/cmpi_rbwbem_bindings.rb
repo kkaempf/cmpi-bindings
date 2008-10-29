@@ -14,6 +14,7 @@ module Cmpi
   #  pass 'broker' to its constructor
   #
   def self.create_provider classname, broker
+    # FIXME: might allow other pathes besides RBCIMPATH
     $:.unshift RBCIMPATH # add to load path
 
     # CamelCase -> under_score
