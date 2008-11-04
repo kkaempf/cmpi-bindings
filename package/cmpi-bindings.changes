@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Oct 23 13:53:28 MDT 2008 - npaxton@novell.com
+
+- Update to latest code, prep for release for python bindings
+- Indication support in python
+- Bump version to 0.4.0
+
+-------------------------------------------------------------------
 Thu Oct 16 14:04:32 CEST 2008 - kkaempf@suse.de
 
 - Complete Ruby bindings.
