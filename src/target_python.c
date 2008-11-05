@@ -118,7 +118,6 @@ cleanup:
  * Global Python initializer
  * 
  * load the Python interpreter
- * import 'cmpi_pywbem_bindings' -> _TARGET_MODULE
  * init threads
  */
 
@@ -143,27 +142,6 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   cmpiMainPyThreadState = PyGILState_GetThisThreadState();
   PyEval_ReleaseThread(cmpiMainPyThreadState); 
   
-  TARGET_THREAD_BEGIN_BLOCK;
-  
-  /*
-   * import 'cmpi_pywbem_bindings'
-   */
-  
-  _TARGET_MODULE = PyImport_ImportModule("cmpi_pywbem_bindings");
-  if (_TARGET_MODULE == NULL)
-    {
-      TARGET_THREAD_END_BLOCK; 
-      _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
-	  CMPIString* trace = get_exc_trace(broker);
-      _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), 
-				  CMGetCharsPtr(trace, NULL)));
-      _CMPI_SETFAIL(trace); 
-      abort();
-      return -1; 
-    }
-  _SBLIM_TRACE(1,("<%d/0x%x> Python: _TARGET_MODULE at %p", getpid(), pthread_self(), _TARGET_MODULE));
-  
-  TARGET_THREAD_END_BLOCK; 
   _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() succeeded", getpid(), pthread_self())); 
   return 0; 
 }
@@ -296,6 +274,7 @@ cleanup:
 
 
 /*
+ * import 'cmpi_pywbem_bindings' 
  * local (per MI) Python initializer
  * keeps track of reference count
  */
@@ -314,15 +293,38 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   }
   /* import 'cmpi_pywbem_bindings' */
   rc = PyGlobalInitialize(hdl->broker, st); 
-  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (rc != 0)
   {
+      pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
       return rc; 
   }
 
   _SBLIM_TRACE(1,("<%d/0x%x> TargetInitialize(Python) called", getpid(), pthread_self()));
   
   TARGET_THREAD_BEGIN_BLOCK;
+  
+  /*
+   * import 'cmpi_pywbem_bindings'
+   */
+  
+  if (_TARGET_MODULE == NULL)
+  {
+	  _TARGET_MODULE = PyImport_ImportModule("cmpi_pywbem_bindings");
+	  if (_TARGET_MODULE == NULL)
+		{
+		  _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
+		  CMPIString* trace = get_exc_trace(hdl->broker);
+          PyErr_Clear(); 
+		  TARGET_THREAD_END_BLOCK; 
+		  _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), 
+					  CMGetCharsPtr(trace, NULL)));
+		  _CMPI_SETFAIL(trace); 
+		  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+		  return -1; 
+		}
+    }
+    pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+  _SBLIM_TRACE(1,("<%d/0x%x> Python: _TARGET_MODULE at %p", getpid(), pthread_self(), _TARGET_MODULE));
   
   /* cmpi_pywbem_bindings::get_cmpi_proxy_provider */
   PyObject *provclass = PyObject_GetAttrString(_TARGET_MODULE, 
@@ -379,10 +381,10 @@ TargetCleanup(void)
         pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
         return;
     }
-  
+
     TARGET_THREAD_BEGIN_BLOCK;
-    Py_DecRef(_TARGET_MODULE); 
-    TARGET_THREAD_END_BLOCK; 
+    Py_DecRef(_TARGET_MODULE);
+    TARGET_THREAD_END_BLOCK;
   
     PyEval_AcquireLock(); 
     PyThreadState_Swap(cmpiMainPyThreadState); 
