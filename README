@@ -1,50 +1,85 @@
-Swig bases CMPI bindings
+Swig based CMPI bindings
 ------------------------
 
-This implements a CMPI Instance provider via SWIG. 
-
+This implements a CMPI-compliant provider interface for various languages via SWIG.
 
 Currently supported languages
 
-- Ruby (complete)
-- Python (almost there)
-
-Support for Python is only rough. The Python interpreter and the
-Provider implementation get correctly loaded. But I do not know yet
-how to call a Python function from C.
+- Ruby
+- Python
+- Perl (beginning support)
 
 
-The prototype implements a dummy class 'Cmpi_Swig' which looks like
-this:
 
-class Cmpi_Swig : CIM_ManagedElement
-{
-  [Description ("A friendly greeting") ]
-  string hello;
-};
-    
+Implementation
+--------------
+cmpi-bindings is implemented as a single CMPI-compliant provider (per supported language)
+that serves as a "multiplexer" to the instrumented language-specific providers.
 
-FILES
------
+Using a python provider for class Py_Foo as an example, cmpi-bindings project provides a
+cmpi-compliant provider (libpyCmpiProvider.so) that will be registered with the cimom as
+the provider that handles Py_Foo requests.  When libpyCmpiProvider gets the request, it
+will then forward it on to the python module that instruments the Py_Foo class.
 
-mof/Swig_Generic.mof
- The class definition
-mof/Swig_Generic.reg
-  The (sfcb based) provider registration data
+cmpi-bindings also provides supported-language-interfaces for the Provider Environment
+and BrokerCIMOMHandle, so that providers can make "up-calls" into the cimom.
 
-src/cmpi_instance.c
-  A CMPI instance provider C stub to be included into
-  the SWIG generated C code.
-  It currently implements EnumInstances (for Ruby and Python) and
-  EnumInstanceNames (Ruby only)
-  Supporting more instance methods should be straightforward.
 
-include/cmpi
-  cmpi header files
-  
+For the stack discussion below, use the following 'type' abbreviations:
+  Ruby:    rb
+  Python:  py
+  Perl:    pl
+
+The cmpi-bindings provider interfaces under CMPI consist of the following stack:
+
+CIMOM
+  ->
+lib<type>CmpiProvider.so
+  ->
+cmpi_<type>wbem_bindings.<type>
+  ->
+<python:  pywbem/cim_provider2.py>
+  ->
+language-specific provider module
+
+
+
+Build / Installation
+--------------------
+The build scripts will only build the modules for which you have appropriate devel packages.
+It will skip any others.
+
+  Requirements
+  ------------
+  cmake
+  python interface requires:  python-devel, pywbem-0.7.0
+  perl interface requires: ?
+  ruby interface requires: ruby-1.8 ruby-devel-1.8
+
+  Build
+  -----
+  From root of tarball's source tree, create a directory 'build' and move (cd) into that directory
+  'cmake ..'
+  'make'
+  'sudo make install'
+
+  Test
+  ----
+  For each language, there is a test/<language> directory.
+  Within that directory, there should be test providers, scripts that use the test providers, and
+  scripts to register the mofs and providers with cimoms.
+
+
+Language-specific documentation
+-------------------------------
+
+  Python
+  -----
+  Visit http://pywbem.wiki.sourceforge.net/Provider+Home for QuickStart Guide,
+  Tutorials, sample providers, etc.
+
 
 
 TODO
 ----
-
-Convert it to a 'Generic' CMPI provider.
+See separate TODO file
