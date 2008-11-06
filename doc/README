@@ -1,8 +1,0 @@
-Support for Python is only rough. The Python interpreter and the
-Provider implementation get correctly loaded. But I do not know yet
-how to call a Python function from C.
-
-- (build and) install sfcbd
-- (build and) install sblim-wbemcli
-- build and install .
-- run 'wbemcli ei http://localhost/root/cimv2:Cmpi_Swig'
