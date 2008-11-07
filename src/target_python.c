@@ -295,9 +295,9 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     }
     rc = pi != 0; 
 cleanup:
-    Py_DecRef(pyargs);
-    Py_DecRef(pyfunc);
-    Py_DecRef(prv);
+    if (pyargs) Py_DecRef(pyargs);
+    if (pyfunc) Py_DecRef(pyfunc);
+    if (prv) Py_DecRef(prv);
  
     return rc; 
 }
