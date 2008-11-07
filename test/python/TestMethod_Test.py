@@ -424,6 +424,7 @@ class TestMethods(unittest.TestCase):
         ra = 'one,two,three,four'
         rv, outs = self.conn.InvokeMethod('strSplit', 'Test_Method', 
                 str=ra, sep=',')
+        self.assertEquals(outs['nelems'], 4)
         self.assertEquals(outs['elems'], ra.split(','))
         self.assertTrue(ra)
 
