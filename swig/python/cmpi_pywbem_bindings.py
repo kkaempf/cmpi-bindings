@@ -31,14 +31,14 @@
 
 # Author: Bart Whiteley <bwhiteley suse.de>
 
-import cmpi
-
-
 from pywbem.cim_provider2 import ProviderProxy
 import pywbem
 import types
 import syslog
 import sys
+
+
+import cmpi
 
 ##==============================================================================
 ##
