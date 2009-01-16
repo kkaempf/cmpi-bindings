@@ -1,0 +1,64 @@
+In the past, writing CIM providers was quite restrictive.
+
+On the one hand, CIM providers were CIMOM-specific and hardly
+portable. On the other hand, developing in C or C++ with its
+edit-compile-link-test cycle takes an awful lot of time.
+
+Both problems are well known and solutions for each of them existing
+in the past. CMPI, the Common Manageablity Programming Interface,
+makes the CIM provider CIMOM agnostic.
+Then there is the pywbem provider interface for coding CIM providers
+in Python - originally using the proprietary OpenWBEM and OpenPegasus C++
+interfaces.
+
+
+Enter cmpi-bindings.
+
+cmpi-bindings provides flexibility on both sides - the implementation
+language and the CIMOM interface.
+
+cmpi-bindings use SWIG (http://www.swig.org) to generate language
+bindings between the CMPI API and any SWIG-supported programming
+language.
+Now you're free to code providers in your favorite language, like
+Ruby, Python, Perl or, if you really have to, even Java (just kidding).
+
+cmpi-bindings started with the following design goals:
+- CIMOM neutral
+  - CMPI provider interface
+- Support most popular scripting languages
+  - Python, Ruby, Perl, ...
+- Automatically generated bindings
+- Object orientation
+  - reduce call parameters
+  - leverage exceptions
+- Code similarity
+  - across providers implemented in different languages
+
+
+The latest release (0.7) of the pywbem provider interface fully
+supports cmpi-bindings, effectively making Python the language of
+choice for CIM provider development.
+
+
+Internals
+
+cmpi-bindings use SWIG in an unusual and innovative way.
+
+Originally, SWIG is designed to allow access C or C++ libraries from
+other languages. It provides data type and function call mappings from
+C/C++ to a target language.
+
+As-is, SWIG nicely maps all CMPI data types and functions working on
+these data types. However, writing CIM providers in a target language
+requires inversion of control - calling the target language (provider
+implementation) from the CIMOM.
+To achieve this, cmpi-bindings need a small (typically ~400 lines of C
+code) target language dependant 'glue' layer. Extending it to other
+languages is fairly easy, implementations for Perl, Python and Ruby
+exist currently.
+
+See
+http://omc.svn.sourceforge.net/viewvc/omc/cmpi-bindings/trunk/doc/cmpi-bindings.pdf
+for a presentation on cmpi-bindings from last years Management
+Developers Conference (www.mandevcon.com)
