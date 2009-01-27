@@ -25,7 +25,7 @@ endif(COMMAND cmake_policy)
 ADD_CUSTOM_COMMAND (
    OUTPUT  ${SWIG_OUTPUT}
    COMMAND ${CMAKE_COMMAND} -E echo_append "Creating wrapper code for Perl ..."
-   COMMAND ${SWIG_EXECUTABLE} -perl5 -shadow -features autodoc -o ${SWIG_OUTPUT} -I${CMPI_INCLUDE_DIR} ${SWIG_INPUT}
+   COMMAND ${SWIG_EXECUTABLE} -perl5 -shadow -features autodoc -o ${SWIG_OUTPUT} -outdir ${CMAKE_CURRENT_BINARY_DIR} -I${CMPI_INCLUDE_DIR} ${SWIG_INPUT}
    COMMAND ${CMAKE_COMMAND} -E echo "Done."
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../*.i
