@@ -212,7 +212,35 @@ Cleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)    
 {
-    CMPIStatus status = {CMPI_RC_OK, NULL}; /* Return status of CIM operations. */
+    _SBLIM_TRACE(1,("Cleanup() called, miHdl %p, miHdl->instance %p, context %p, terminating %d", 
+                    miHdl, miHdl->instance, context, terminating));
+    CMPIStatus status = {CMPI_RC_OK, NULL}; 
+
+    // If an instance/method provider is loaded, but only an instance operation
+    // is called, Cleanup() will be called twice (once for instance, once
+    // for method).  However, since only instance operations were requested, 
+    // miHdl->instance won't be set for one of the calls to Cleanup(). 
+    if (miHdl->instance != Target_Null)
+    {
+        Target_Type _context;
+        Target_Type _terminating; 
+
+        TARGET_THREAD_BEGIN_BLOCK; 
+        _context = SWIG_NewPointerObj((void*) context, 
+                SWIGTYPE_p__CMPIContext, 0);
+        _terminating = Target_Bool(terminating); 
+
+        TargetCall(miHdl, &status, "cleanup", 2, _context, _terminating); 
+        TARGET_THREAD_END_BLOCK; 
+        _SBLIM_TRACE(1,("Cleanup() %d", status.rc));
+    }
+
+    if (!terminating && (status.rc == CMPI_RC_DO_NOT_UNLOAD ||
+                status.rc ==  CMPI_RC_NEVER_UNLOAD))
+    {
+        _SBLIM_TRACE(1,("Cleanup() Provider requested not to be unloaded.")); 
+        return status; 
+    }
   
     if (miHdl != NULL) 
     { 
@@ -224,7 +252,6 @@ Cleanup(
         free(miHdl);
         miHdl = NULL; 
     }
-  
     TargetCleanup();
 
     _SBLIM_TRACE(1,("Cleanup() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));

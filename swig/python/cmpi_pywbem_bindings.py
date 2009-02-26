@@ -673,6 +673,18 @@ class CMPIProxyProvider(object):
 
         return (0, '')
 
+    def cleanup(self, ctx, terminating):
+        env = ProviderEnvironment(self, ctx)
+        try:
+            if not terminating:    
+                if not self.proxy.MI_canunload(env):
+                    return (cmpi.CMPI_RC_DO_NOT_UNLOAD, '')
+            self.proxy.MI_shutdown(env)
+        except pywbem.CIMError, args:
+            return args[:2]
+
+        return (0, '')
+
     # conversion routines
     #######################################################################
 
