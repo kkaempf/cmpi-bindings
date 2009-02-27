@@ -186,9 +186,6 @@ static int _MI_COUNT = 0;    /* use count, number of MIs */
 static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER;  /* mutex around _MI_COUNT */
 static Target_Type _TARGET_MODULE = Target_Null;  /* The target module (aka namespace) */
 
-/* on-demand init */
-#define TARGET_CMPI_INIT { if (((ProviderMIHandle*)(self->hdl))->instance == Target_Null) if (TargetInitialize(((ProviderMIHandle*)(self->hdl)), &status) != 0) return status; }
-
 #if defined(SWIGPYTHON)
 #include "target_python.c"
 #endif
@@ -216,10 +213,6 @@ Cleanup(
                     miHdl, miHdl->instance, context, terminating));
     CMPIStatus status = {CMPI_RC_OK, NULL}; 
 
-    // If an instance/method provider is loaded, but only an instance operation
-    // is called, Cleanup() will be called twice (once for instance, once
-    // for method).  However, since only instance operations were requested, 
-    // miHdl->instance won't be set for one of the calls to Cleanup(). 
     if (miHdl->instance != Target_Null)
     {
         Target_Type _context;
@@ -350,8 +343,6 @@ EnumInstanceNames(CMPIInstanceMI * self,
 
     _SBLIM_TRACE(1,("EnumInstancesNames() called, context %p, result %p, reference %p", context, result, reference));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) result, SWIGTYPE_p__CMPIResult, 0);
@@ -389,8 +380,6 @@ EnumInstances(CMPIInstanceMI * self,
     /*   char * namespace = CMGetCharPtr(CMGetNameSpace(reference, NULL));  Our current CIM namespace */
 
     _SBLIM_TRACE(1,("EnumInstances() called, context %p, result %p, reference %p, properties %p", context, result, reference, properties));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -430,8 +419,6 @@ GetInstance(CMPIInstanceMI * self,
     CMPIStatus status = {CMPI_RC_OK, NULL};  /* Return status of CIM operations */
 
     _SBLIM_TRACE(1,("GetInstance() called, context %p, results %p, reference %p, properties %p", context, results, reference, properties));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -474,8 +461,6 @@ CreateInstance(CMPIInstanceMI * self,
    /* Creating new instances is not supported for this class. */
   
     _SBLIM_TRACE(1,("CreateInstance() called, context %p, results %p, reference %p, newinstance %p", context, results, reference, newinstance));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -523,8 +508,6 @@ SetInstance(CMPIInstanceMI * self,
  
     _SBLIM_TRACE(1,("SetInstance() called, context %p, results %p, reference %p, newinstance %p, properties %p", context, results, reference, newinstance, properties));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
@@ -563,8 +546,6 @@ DeleteInstance(CMPIInstanceMI * self,
 
     _SBLIM_TRACE(1,("DeleteInstance() called, context %p, results %p, reference %p", context, results, reference));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
     _result = SWIG_NewPointerObj((void*) results, SWIGTYPE_p__CMPIResult, 0);
@@ -602,8 +583,6 @@ ExecQuery(CMPIInstanceMI * self,
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};   /* Return status of CIM operations. */
    
     _SBLIM_TRACE(1,("ExecQuery() called, context %p, results %p, reference %p, query %s, language %s", context, results, reference, query, language));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -657,8 +636,6 @@ associatorNames(
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
    
     _SBLIM_TRACE(1,("associatorNames() called, ctx %p, rslt %p, objName %p, assocClass %s, resultClass %s, role %s, resultRole %s", ctx, rslt, objName, assocClass, resultClass, role, resultRole));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
@@ -727,8 +704,6 @@ associators(
    
     _SBLIM_TRACE(1,("associators() called, ctx %p, rslt %p, objName %p, assocClass %s, resultClass %s, role %s, resultRole %s", ctx, rslt, objName, assocClass, resultClass, role, resultRole));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
@@ -793,8 +768,6 @@ referenceNames(
    
     _SBLIM_TRACE(1,("referenceNames() called, ctx %p, rslt %p, objName %p, resultClass %s, role %s", ctx, rslt, objName, resultClass, role));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
@@ -848,8 +821,6 @@ references(
    
     _SBLIM_TRACE(1,("references() called, ctx %p, rslt %p, objName %p, resultClass %s, role %s, properties %p", ctx, rslt, objName, resultClass, role, properties));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
@@ -902,8 +873,6 @@ invokeMethod(
    
     _SBLIM_TRACE(1,("invokeMethod() called, ctx %p, rslt %p, objName %p, method %s, in %p, out %p", ctx, rslt, objName, method, in, out));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
@@ -947,8 +916,6 @@ CMPIStatus authorizeFilter(
   
     _SBLIM_TRACE(1,("authorizeFilter() called, ctx %p, filter %p, className %s, classPath %p, owner %s", ctx, filter, className, classPath, owner)); 
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
@@ -989,8 +956,6 @@ CMPIStatus activateFilter(
    
     _SBLIM_TRACE(1,("activateFilter() called, ctx %p, filter %p, className %s, classPath %p, firstActivation %d", ctx, filter, className, classPath, firstActivation));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
@@ -1030,8 +995,6 @@ CMPIStatus deActivateFilter(
     Target_Type _className;
    
     _SBLIM_TRACE(1,("deActivateFilter() called, ctx %p, filter %p, className %s, classPath %p, lastActivation %d", ctx, filter, className, classPath, lastActivation));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
@@ -1075,8 +1038,6 @@ mustPoll(
     //_SBLIM_TRACE(1,("mustPoll() called, ctx %p, rslt %p, filter %p, className %s, classPath %p", ctx, rslt, filter, className, classPath));
     _SBLIM_TRACE(1,("mustPoll() called, ctx %p, filter %p, className %s, classPath %p", ctx, filter, className, classPath));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     //Target_Type _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
@@ -1110,8 +1071,6 @@ enableIndications(
    
     _SBLIM_TRACE(1,("enableIndications() called, ctx %p", ctx));
 
-    TARGET_CMPI_INIT
-
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
 
@@ -1136,8 +1095,6 @@ disableIndications(
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
    
     _SBLIM_TRACE(1,("disableIndications() called, ctx %p", ctx));
-
-    TARGET_CMPI_INIT
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
@@ -1205,18 +1162,14 @@ static CMPIInstanceMIFT InstanceMIFT__={
 }; 
 
 
-static void
+static int
 createInit(const CMPIBroker* broker, 
-        const CMPIContext* context, const char* miname, CMPIStatus* st)
+        const CMPIContext* context, 
+        ProviderMIHandle* miHdl,
+        const char* miname, CMPIStatus* st)
 {
-    _SBLIM_TRACE(1,("\n>>>>> createInit() called, miname= %s (ctx=%p)\n", miname, context));
-  
-   /*
-    * We can't initialize the target here and load target modules, because
-    * SFCB passes a NULL CMPIStatus* st, which means we can't report 
-    * back error strings.  Instead, we'll check and initialize in each
-    * MIFT function
-    */ 
+    _SBLIM_TRACE(1,("\n>>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p\n", broker, miname, context, st));
+    return TargetInitialize(miHdl, st); 
 }
 
 
@@ -1233,12 +1186,17 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
         hdl->miName = strdup(miname); \
         hdl->broker = broker; \
     } \
-    mi= (CMPI##ptype##MI*)malloc(sizeof(CMPI##ptype##MI)); \
+    if (createInit(broker, context, hdl, miname, st) != 0) { \
+        if (st) st->rc = CMPI_RC_ERR_FAILED;  \
+        free(hdl->miName); \
+        free(hdl); \
+        return NULL; \
+    } \
+    mi = (CMPI##ptype##MI*)malloc(sizeof(CMPI##ptype##MI)); \
     if (mi) { \
         mi->hdl = hdl; \
         mi->ft = &ptype##MIFT__; \
     } \
-    createInit(broker, context, miname, st); \
     /*_SBLIM_TRACE(1, ("\n>>>>>     returning mi=0x%08x  mi->hdl=0x%08x   mi->ft=0x%08x", mi, mi->hdl, mi->ft));*/ \
     ++_MI_COUNT; \
     return mi; \
