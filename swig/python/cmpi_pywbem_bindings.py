@@ -738,7 +738,11 @@ class CMPIProxyProvider(object):
         #    if pinst.property_list and \
         #            prop.name.lower() not in pinst.property_list:
         #        continue
-            data, _type = self.pywbem2cmpi_value(prop.value, _type=prop.type)
+            try:
+                data, _type = self.pywbem2cmpi_value(prop.value, 
+                                                     _type=prop.type)
+            except TypeError, te:
+                raise TypeError('Error converting Property %s: Value %s, Type %s; %s' % (prop.name, prop.value, prop.type, str(te)))
             ctype = _pywbem2cmpi_typemap[_type]
             if isinstance(prop.value, list):
                 ctype = ctype | cmpi.CMPI_ARRAY
