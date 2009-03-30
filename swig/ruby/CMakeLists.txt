@@ -57,3 +57,21 @@ INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 # cmpi_rbwbem_bindings: provider implementation
 #
 INSTALL(FILES cmpi_rbwbem_bindings.rb DESTINATION ${RUBY_LIB_DIR})
+
+# rdoc
+SET(rdoc_dir "${CMAKE_CURRENT_BINARY_DIR}/html")
+ADD_CUSTOM_COMMAND (
+   OUTPUT ${rdoc_dir}
+   COMMAND ${CMAKE_COMMAND} -E echo_append "Creating rdoc documentation ..."
+   COMMAND rm -rf ${rdoc_dir}
+   COMMAND rdoc -o ${rdoc_dir} cmpi.i *.i
+   COMMAND ${CMAKE_COMMAND} -E echo "Done."
+   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/swig
+   DEPENDS ${CMAKE_SOURCE_DIR}/swig/*.i
+)
+ADD_CUSTOM_TARGET(ruby_rdoc ALL DEPENDS "${rdoc_dir}")
+ADD_DEPENDENCIES(ruby_rdoc ${NAME})
+
+#
+# Leave this to %doc in the .spec file
+#INSTALL(DIRECTORY "${rdoc_dir}" DESTINATION ${DOC_INSTALL_DIR})

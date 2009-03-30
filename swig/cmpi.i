@@ -16,6 +16,8 @@
 %include "typemaps.i"
 %include exception.i
 
+#define __type
+
 %{
 
 /*

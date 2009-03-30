@@ -110,6 +110,11 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 %rename(CMPIException) CMPIException;
 typedef struct _CMPIException {} CMPIException;
 
+/*
+ * Container for a fault, contains numeric error_code and textual
+ * description
+ *
+ */
 %extend CMPIException 
 {
   CMPIException() 
@@ -121,12 +126,25 @@ typedef struct _CMPIException {} CMPIException;
   {
       free($self->description);
   }
-
+#if defined(SWIGRUBY)
+%rename("error_code") get_error_code();
+#endif
+  /*
+   * Numerical error code
+   *
+   */
   int get_error_code() 
   {
     return $self->error_code;
   }
 
+#if defined(SWIGRUBY)
+%rename("description") get_description();
+#endif
+  /*
+   * Textual error description
+   *
+   */
   const char* get_description() 
   {
     return $self->description;
@@ -161,128 +179,152 @@ typedef struct _CMPIException {} CMPIException;
 %extend _CMPIError 
 {
   ~CMPIError() { }
-  /* Gets the type of this Error */
+
+/* Gets the type of this Error */
   CMPIErrorType type() {
     return CMGetErrorType($self, NULL);
   }
-  /* Sets the error type of this error object. */
+
 #if defined(SWIGRUBY)
   %rename("type=") set_type(const CMPIErrorType et);
 #endif
+  /* Sets the error type of this error object. */
   void set_type(const CMPIErrorType et) {
     CMSetErrorType($self, et);
   }
-  /* Returns a string which describes the alternate error type. */
+
+/* Returns a string which describes the alternate error type. */
   const char *other_type() {
     return CMGetCharPtr(CMGetOtherErrorType($self, NULL));
   }
-  /* Sets the 'other' error type of this error object. */
+
 #if defined(SWIGRUBY)
   %rename("other_type=") set_other_type(const char *ot);
 #endif
+  /* Sets the 'other' error type of this error object. */
   void set_other_type(const char *ot) {
     CMSetOtherErrorType($self, ot);
   }
+
   /* Returns a string which describes the owning entity. */
   const char *owning_entity() {
     return CMGetCharPtr(CMGetOwningEntity($self, NULL));
   }
+  
   /* Returns a string which is the message ID. */
   const char *message_id() {
     return CMGetCharPtr(CMGetMessageID($self, NULL));
   }
+  
   /* Returns a string comnating an error message. */
   const char *message() {
     return CMGetCharPtr(CMGetErrorMessage($self, NULL));
   }
+  
   /* Returns the perceieved severity of this error. */
   CMPIErrorSeverity severity() {
     return CMGetPerceivedSeverity($self, NULL);
   }
+  
   /* Returns the probable cause of this error. */
   CMPIErrorProbableCause probable_cause() {
     return CMGetProbableCause($self, NULL);
   }
-  /* Sets the description of the probable cause. */
+  
 #if defined(SWIGRUBY)
   %rename("probable_cause=") set_probable_cause(const char *pcd);
 #endif
+  /* Sets the description of the probable cause. */
   void set_probable_cause(const char *pcd) {
     CMSetProbableCauseDescription($self, pcd);
   }
+  
   /* Returns a string which describes the probable cause. */
   const char *probable_cause_description() {
     return CMGetCharPtr(CMGetProbableCauseDescription($self, NULL));
   }
+  
   /* Returns an array of strings which describes recomended actions. */
   CMPIArray *recommended_actions() {
     return CMGetRecommendedActions($self, NULL);
   }
-  /* Sets the recomended actions array. */
+  
 #if defined(SWIGRUBY)
   %rename("recommended_actions=") set_recommended_actions(const CMPIArray* ra);
 #endif
+  /* Sets the recomended actions array. */
   void set_recommended_actions(const CMPIArray* ra) {
     CMSetRecommendedActions($self, ra);
   }
+  
   /* Returns a string which describes the Error source. */
   const char *source() {
     return CMGetCharPtr(CMGetErrorSource($self, NULL));
   }
-  /* Specifies a string which specifes The identifying information of
-     the entity (i.e., the instance) generating the error. */
+  
 #if defined(SWIGRUBY)
   %rename("source=") set_source(const char *es);
 #endif
+  /* Specifies a string which specifes The identifying information of
+     the entity (i.e., the instance) generating the error. */
   void set_source(const char *es) {
     CMSetErrorSource($self, es);
   }
+  
   /* Returns a the format that the error src is in. */
   CMPIErrorSrcFormat source_format() {
     return CMGetErrorSourceFormat($self, NULL);
   }
-  /* Sets the source format of the error object. */
+
 #if defined(SWIGRUBY)
   %rename("source_format=") set_source_format(const CMPIErrorSrcFormat esf);
 #endif
+  /* Sets the source format of the error object. */
   void set_source_format(const CMPIErrorSrcFormat esf) {
     CMSetErrorSourceFormat($self, esf);
   }
+  
   /* Returns a string which describes the 'other' format, only
      available if the error source is OTHER. */
   const char *other_format() {
     return CMGetCharPtr(CMGetOtherErrorSourceFormat($self, NULL));
   }
-  /* specifies A string defining "Other" values for ErrorSourceFormat */
+  
 #if defined(SWIGRUBY)
   %rename("other_format=") set_other_format(const char *oesf);
 #endif
+  /* specifies A string defining "Other" values for ErrorSourceFormat */
   void set_other_format(const char *oesf) {
     CMSetOtherErrorSourceFormat($self, oesf);
   }
+  
   /* Returns the status code of this error. */
   CMPIrc status_code() {
     return CMGetCIMStatusCode($self, NULL);
   }
+  
   /* Returns a string which describes the status code error. */
   const char *status_description() {
     return CMGetCharPtr(CMGetCIMStatusCodeDescription($self, NULL));
   }
-  /* Sets the description of the status code. */
+  
 #if defined(SWIGRUBY)
   %rename("status_description=") set_status_description(const char *cd);
 #endif
+  /* Sets the description of the status code. */
   void set_status_description(const char *cd) {
     CMSetCIMStatusCodeDescription($self, cd);
   }
+  
   /* Returns an array which contains the dynamic content of the message. */
   CMPIArray *message_arguments() {
     return CMGetMessageArguments($self, NULL);
   }
-  /* Sets an array of strings for the dynamic content of the message. */
+
 #if defined(SWIGRUBY)
   %rename("message_arguments=") set_message_arguments(CMPIArray* ma);
 #endif
+  /* Sets an array of strings for the dynamic content of the message. */
   void set_message_arguments(CMPIArray* ma) {
     CMSetMessageArguments($self, ma);
   }
@@ -297,6 +339,7 @@ typedef struct _CMPIException {} CMPIException;
 {
   /* no con-/destructor, the broker handles this */
 
+  /* Return string representation */
   const char* to_s(const CMPIBroker* broker) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -308,16 +351,19 @@ typedef struct _CMPIException {} CMPIException;
     return CMGetCharPtr(result);
   }
 
+  /* Add the +instance+ to the result */
   void return_instance(CMPIInstance *instance) 
   {
     RAISE_IF(CMReturnInstance($self, instance));
   }
 
+  /* Add the +objectpath+ to the result */
   void return_objectpath(CMPIObjectPath *path) 
   {
     RAISE_IF(CMReturnObjectPath($self, path));
   }
 
+  /* Add typed value to the result */
   void return_data(const CMPIValue* value, const CMPIType type) 
   {
     RAISE_IF(CMReturnData($self, value, type));
@@ -361,16 +407,12 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  /* Return string representation */
   const char *string()
   {
     return CMGetCharPtr($self->ft->toString($self, NULL));
   }
   
-  /* Adds/replaces a named key property.
-   * name: Key property name.
-   * value: Address of value structure.
-   * type: Value type.
-   */
 #if 0 /* TODO: FIXME: No global _BROKER */
 #if defined(SWIGRUBY)
   %alias set "[]=";
@@ -425,6 +467,11 @@ FIXME: if clone() is exposed, release() must also
 #endif
 #endif
 
+  /* Adds/replaces a named key property.
+   * name: Key property name.
+   * value: Address of value structure.
+   * type: Value type.
+   */
   void add_key(
       const char *name, 
       const CMPIValue* value, 
@@ -433,6 +480,9 @@ FIXME: if clone() is exposed, release() must also
     RAISE_IF(CMAddKey($self, name, value, type));
   }
 
+#if defined(SWIGRUBY)
+  %rename("key") get_key(const char *name);
+#endif
   /* Gets a named key property value.
    * name: Key property name.
    */
@@ -446,10 +496,8 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Gets a key property value defined by its index.
-   * name: [out] Key property name
-   */
 #if defined (SWIGRUBY)
+  %rename("key_at") get_key_at(int index);
   VALUE
 #endif
 #if defined (SWIGPYTHON)
@@ -458,7 +506,10 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV* 
 #endif
-  get_key_at(int index) {
+  /* Gets a key property value defined by its index.
+   * name: [out] Key property name
+   */
+  __type get_key_at(int index) {
     Target_Type tdata;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -496,8 +547,9 @@ FIXME: if clone() is exposed, release() must also
 
     return result;
   }
-  /* iterate over keys as [<value>,<name>] pairs */
+
 #if defined(SWIGRUBY)
+  /* iterate over keys as [<value>,<name>] pairs */
   void keys()
   {
     int i;
@@ -524,13 +576,13 @@ FIXME: if clone() is exposed, release() must also
       %}
 #endif
 
-  /* Set/replace namespace and classname components from &lt;src&gt;. */
+  /* Set/replace namespace and classname components from +src+. */
   void replace_from(const CMPIObjectPath * src) 
   {
     RAISE_IF(CMSetNameSpaceFromObjectPath($self, src));
   }
 
-  /* Set/replace hostname, namespace and classname components from &lt;src&gt;. 
+  /* Set/replace hostname, namespace and classname components from +src+. 
   */
   void replace_all_from(const CMPIObjectPath * src) 
   {
@@ -538,7 +590,7 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Get class qualifier value.
-   * qName: Qualifier name.
+   * +qName+: Qualifier name.
    */
   CMPIData qualifier(const char *qname) 
   {
@@ -552,8 +604,8 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Get property qualifier value.
-   * pName Property name.
-   * qName Qualifier name.
+   * +pName+: Property name.
+   * +qName+: Qualifier name.
    */
   CMPIData property_qualifier(const char *pName, const char *qName) 
   {
@@ -675,11 +727,6 @@ FIXME: if clone() is exposed, release() must also
   { 
   }
 
-  /* Adds/replaces a named Property.
-   * name: Entry name.
-   * value: Address of value structure.
-   * type: Value type.
-   */
 #if 0 /* TODO: FIXME: No global _BROKER */
 #if defined(SWIGRUBY)
   %alias set "[]=";
@@ -734,6 +781,11 @@ FIXME: if clone() is exposed, release() must also
 #endif
 #endif
 
+  /* Adds/replaces a named Property.
+   * name: Entry name.
+   * value: Address of value structure.
+   * type: Value type.
+   */
   void set_property(
       const char *name, 
       const CMPIValue * value, 
@@ -742,10 +794,10 @@ FIXME: if clone() is exposed, release() must also
     RAISE_IF(CMSetProperty($self, name, value, type));
   }
 
-  /* get a named property value */
 #if defined(SWIGRUBY)
   %alias get "[]";
   /*
+   * get a named property value
    * Property access in Ruby:
    * data = instance[:propname]     # access by name (symbol)
    * data = instance["propname"     # access by name (string)
@@ -769,6 +821,11 @@ FIXME: if clone() is exposed, release() must also
   }
 #endif
 
+
+#if defined(SWIGRUBY)
+  %rename("property") get_property(const char *name);
+#endif
+  /* Get property by name */
   CMPIData get_property(const char *name) 
   {
     CMPIData result;
@@ -780,9 +837,6 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /** Gets a Property value defined by its index.
-   * index: Position in the internal Data array.
-   */
 #if defined (SWIGRUBY)
   VALUE
 #endif
@@ -792,7 +846,10 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV * 
 #endif
-  get_property_at(int index) 
+  /** Gets a Property value defined by its index.
+   * index: Position in the internal Data array.
+   */
+  __type get_property_at(int index) 
   {
     Target_Type tdata;
     Target_Type result;
@@ -820,10 +877,10 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Gets the number of properties contained in this Instance. */
 #if defined(SWIGRUBY)
   %alias property_count "size";
 #endif
+  /* Gets the number of properties contained in this Instance. */
   int property_count() 
   {
     int result;
@@ -850,13 +907,13 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
+#if defined(SWIGRUBY)
+  %alias set_objectpath "objectpath=";
+#endif
   /* Replaces the ObjectPath of the instance.
    *  The passed objectpath shall contain the namespace, classname,
    *   as well as all keys for the specified instance.
    */
-#if defined(SWIGRUBY)
-  %alias set_objectpath "objectpath=";
-#endif
   void set_objectpath(const CMPIObjectPath *path) 
   {
     RAISE_IF(CMSetObjectPath($self, path));
@@ -976,10 +1033,10 @@ FIXME: if clone() is exposed, release() must also
     RAISE_IF(CMAddArg($self, name, value, type));
   }
 
-  /* Gets a named argument value. */
 #if defined(SWIGRUBY)
   %alias get "[]";
 #endif
+  /* Gets a named argument value. */
   CMPIData get(const char *name) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -991,8 +1048,6 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Gets a Argument value defined by its index.
-   */
 #if defined (SWIGRUBY)
   VALUE
 #endif
@@ -1002,7 +1057,9 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV * 
 #endif
-  get_arg_at(int index) 
+  /* Gets a Argument value defined by its index.
+   */
+  __type get_arg_at(int index) 
   {
     Target_Type tdata;
     Target_Type result;
@@ -1032,7 +1089,6 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Gets the number of arguments contained in this Args. */
-
   int arg_count() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1049,11 +1105,13 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPISelectExp
 
-%extend _CMPISelectExp {
   /* This structure encompasses queries
    *       and provides mechanism to operate on the query.
    */
+%extend _CMPISelectExp {
   ~CMPISelectExp() { }
+  
+  /* Return string representation */
   const char* to_s() {
     return CMGetCharPtr(CMGetSelExpString($self, NULL));
   }
@@ -1064,6 +1122,7 @@ FIXME: if clone() is exposed, release() must also
 # CMPISelectCond
 
 %extend _CMPISelectCond {
+  /* Return string representation */
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
@@ -1082,6 +1141,7 @@ FIXME: if clone() is exposed, release() must also
 # CMPIPredicate
 
 %extend _CMPIPredicate {
+  /* Return string representation */
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
@@ -1149,6 +1209,7 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
+  /* Return string representation */
   const char* to_s(const CMPIBroker* broker) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1167,6 +1228,7 @@ FIXME: if clone() is exposed, release() must also
 
 %extend _CMPIArray 
 {
+  /* Return string representation */
   const char* to_s(const CMPIBroker* broker) 
   {
     CMPIString *s = CDToString(broker, $self, NULL);
@@ -1190,10 +1252,10 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Gets an element value defined by its index. */
 #if defined(SWIGRUBY)
   %alias at "[]";
 #endif
+  /* Gets an element value defined by its index. */
   CMPIData at(int index) 
   {
     CMPIData result;
@@ -1205,10 +1267,10 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Sets an element value defined by its index. */
 #if defined(SWIGRUBY)
   %alias set "[]=";
 #endif
+  /* Sets an element value defined by its index. */
   void set(int index, const CMPIValue * value, CMPIType type) 
   {
     RAISE_IF(CMSetArrayElementAt($self, index, value, type));
@@ -1232,10 +1294,12 @@ FIXME: if clone() is exposed, release() must also
 # CMPIContext
 
 %extend _CMPIContext {
+  /* Return string representation */
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
+  
   void add_entry(const char* name, const CMPIValue* data, 
                      const CMPIType type) {
     CMAddContextEntry($self, name, data, type);
@@ -1254,7 +1318,7 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV* 
 #endif
-  get_entry_at(int index) {
+  __type get_entry_at(int index) {
     Target_Type tdata;
     Target_Type result;
     CMPIString *s = NULL;
@@ -1295,16 +1359,21 @@ FIXME: if clone() is exposed, release() must also
 
 %extend _CMPIDateTime {
   ~CMPIDateTime() { }
+  
+  /* Return string representation */
   const char* to_s() {
     return CMGetCharPtr(CMGetStringFormat($self, NULL));
   }
+  
+  /* Return integer representation */
   uint64_t to_i() {
     return CMGetBinaryFormat($self, NULL);
   }
-  /* Tests whether DateTime is an interval value. */
+  
 #if defined(SWIGRUBY)
   %rename("interval?") is_interval;
 #endif
+  /* Tests whether DateTime is an interval value. */
   int is_interval() {
     return CMIsInterval($self, NULL);
   }
