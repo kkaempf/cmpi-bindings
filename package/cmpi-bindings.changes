@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Sun Aug  9 08:45:29 CEST 2009 - coolo@novell.com
+
+- use new python macros
+
+-------------------------------------------------------------------
 Thu Oct 23 13:53:28 MDT 2008 - npaxton@novell.com
 
 - Update to latest code, prep for release for python bindings

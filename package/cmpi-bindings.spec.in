@@ -82,7 +82,7 @@ Provides:       %{name} = %{version}-%{release}
 
 #define some macros missing on fedora
 %if 0%{?fedora_version}
-%{!?py_sitedir: %define py_sitedir %(%__python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+%{!?python_sitelib: %define py_sitedir %(%__python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 %{!?py_requires: %define py_requires Requires: python}
 %endif
 %{py_requires}
@@ -93,10 +93,10 @@ Provides:       %{name} = %{version}-%{release}
 %files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
 %{_libdir}/cmpi/libpyCmpiProvider.so
-%{py_sitedir}/cmpi_pywbem_bindings.py
-%{py_sitedir}/cmpi_pywbem_bindings.pyc
-%{py_sitedir}/cmpi.py
-%{py_sitedir}/cmpi.pyc
+%{python_sitelib}/cmpi_pywbem_bindings.py
+%{python_sitelib}/cmpi_pywbem_bindings.pyc
+%{python_sitelib}/cmpi.py
+%{python_sitelib}/cmpi.pyc
 
 %package -n cmpi-bindings-perl
 Requires:       perl = %{perl_version}
