@@ -289,8 +289,8 @@ class BrokerCIMOMHandle(object):
         while e and e.hasNext():
             data = e.next()
             assert(data.type == cmpi.CMPI_instance)
-            piname=self.proxy.cmpi2pywbem_inst(data.value.ref)
-            yield piname
+            pinst=self.proxy.cmpi2pywbem_inst(data.value.inst)
+            yield pinst
             
     def ReferenceNames(self, path, resultClass=None, role=None):
         cop = self.proxy.pywbem2cmpi_instname(path)
