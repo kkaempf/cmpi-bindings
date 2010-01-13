@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 13 10:25:15 CET 2010 - kkaempf@suse.de
+
+- Fix build for Fedora and RHEL
+
+-------------------------------------------------------------------
 Sun Aug  9 08:45:29 CEST 2009 - coolo@novell.com
 
 - use new python macros
