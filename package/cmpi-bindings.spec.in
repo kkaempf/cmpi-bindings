@@ -112,6 +112,7 @@ Requires:       ruby(abi) = 1.8
 
 %files -n cmpi-bindings-ruby
 %defattr(-,root,root,-)
+%dir %{_libdir}/cmpi
 %{_libdir}/cmpi/librbCmpiProvider.so
 %{ruby_sitelib}/cmpi_rbwbem_bindings.rb
 
@@ -130,6 +131,7 @@ Provides:       %{name} = %{version}-%{release}
 
 %files -n cmpi-bindings-pywbem
 %defattr(-,root,root,-)
+%dir %{_libdir}/cmpi
 %{_libdir}/cmpi/libpyCmpiProvider.so
 %{python_sitelib}/cmpi_pywbem_bindings.py
 %{python_sitelib}/cmpi_pywbem_bindings.pyc
@@ -148,6 +150,7 @@ Provides:       %{name} = %{version}-%{release}
 
 %files -n cmpi-bindings-perl
 %defattr(-,root,root,-)
+%dir %{_libdir}/cmpi
 %{_libdir}/cmpi/libplCmpiProvider.so
 %{perl_vendorlib}/cmpi_plwbem_bindings.pl
 %{perl_vendorlib}/cmpi.pm
