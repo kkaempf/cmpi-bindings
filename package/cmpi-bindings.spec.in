@@ -17,7 +17,7 @@
 
 # nodebuginfo
 
-Url:            http://omc-project.com
+Url:            http://github.com/kkaempf/cmpi-bindings
 
 Name:           @PACKAGE@
 Version:        @VERSION@
