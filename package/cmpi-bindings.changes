@@ -1,12 +1,23 @@
 -------------------------------------------------------------------
-Wed Jan 13 10:25:15 CET 2010 - kkaempf@suse.de
+Wed Mar 17 15:48:45 UTC 2010 - coolo@novell.com
 
-- Fix build for Fedora and RHEL
+- various fixes for other distributions
 
 -------------------------------------------------------------------
 Sun Aug  9 08:45:29 CEST 2009 - coolo@novell.com
 
 - use new python macros
+
+-------------------------------------------------------------------
+Tue Dec 23 12:32:39 MST 2008 - bwhiteley@suse.de
+
+- Update to official 0.4.0 release. 
+
+-------------------------------------------------------------------
+Fri Nov  7 15:48:19 MST 2008 - bwhiteley@suse.de
+
+- Better handling of import errors. 
+- Code cleanup. 
 
 -------------------------------------------------------------------
 Thu Oct 23 13:53:28 MDT 2008 - npaxton@novell.com
