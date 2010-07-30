@@ -54,9 +54,9 @@ TARGET_LINK_LIBRARIES( ${NAME} ${RUBY_LIBRARY} )
 INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 
 #
-# cmpi_rbwbem_bindings: provider implementation
+# cmpi_bindings: provider implementation
 #
-INSTALL(FILES cmpi_rbwbem_bindings.rb DESTINATION ${RUBY_LIB_DIR})
+INSTALL(FILES cmpi_bindings.rb DESTINATION ${RUBY_LIB_DIR})
 
 # rdoc
 SET(rdoc_dir "${CMAKE_CURRENT_BINARY_DIR}/html")
