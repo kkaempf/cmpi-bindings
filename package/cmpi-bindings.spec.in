@@ -123,7 +123,7 @@ Requires:       ruby(abi) = 1.8
 %defattr(-,root,root,-)
 %dir %{_libdir}/cmpi
 %{_libdir}/cmpi/librbCmpiProvider.so
-%{ruby_sitelib}/cmpi_bindings.rb
+%{ruby_sitelib}/cmpi.rb
 
 %package -n cmpi-bindings-pywbem
 License:        BSD3c(or similar) ; EPL 1.0
@@ -163,7 +163,7 @@ Provides:       %{name} = %{version}-%{release}
 %defattr(-,root,root,-)
 %dir %{_libdir}/cmpi
 %{_libdir}/cmpi/libplCmpiProvider.so
-%{perl_vendorlib}/cmpi_bindings.pl
+%{perl_vendorlib}/cmpi-bindings.pl
 %{perl_vendorlib}/cmpi.pm
 
 %changelog
