@@ -1,5 +1,5 @@
 #
-# Module RbCmpi
+# cmpi_bindings.rb
 #
 # Main entry point for cmpi-bindings-ruby, Ruby based CIM Providers
 #
