@@ -196,7 +196,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     PyObject *prv = NULL; 
  
     pyargs = PyTuple_New(nargs); 
-    pyfunc = PyObject_GetAttrString(hdl->instance, opname); 
+    pyfunc = PyObject_GetAttrString(hdl->implementation, opname); 
     if (pyfunc == NULL)
     {
         PyErr_Print(); 
@@ -383,7 +383,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
       return -1; 
     }
   /* save per-MI provider instance */
-  hdl->instance = provinst; 
+  hdl->implementation = provinst; 
   
   TARGET_THREAD_END_BLOCK; 
   _SBLIM_TRACE(1,("<%d/0x%x> TargetInitialize(Python) succeeded", getpid(), pthread_self())); 

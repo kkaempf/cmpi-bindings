@@ -38,7 +38,7 @@
 *****************************************************************************/
 
 /* load <RB_BINDINGS_FILE>.rb */
-#define RB_BINDINGS_FILE "cmpi_rbwbem_bindings"
+#define RB_BINDINGS_FILE "cmpi"
 
 /* expect 'module <RB_BINDINGS_MODULE>' inside */
 #define RB_BINDINGS_MODULE "Cmpi"
@@ -61,11 +61,12 @@ load_module()
  * load Ruby provider and create provider instance
  * 
  * Converts ProviderName to provider_name and
- * tries to load this from /usr/lib/rbcim
+ * tries to load this from cmpi/providers
  *
  * I args : pointer to array of 2 values
  *          values[0] = classname (String)
  *          values[1] = broker, passed to constructor
+ *          values[2] = context, passed to constructor
  */
 
 static VALUE
@@ -74,7 +75,7 @@ create_mi(VALUE args)
   VALUE *values = (VALUE *)args;
 
 /*  _SBLIM_TRACE(1,("Ruby: %s.new ...", StringValuePtr(values[0]))); */
-  return rb_funcall2(_TARGET_MODULE, rb_intern("create_provider"), 2, values);
+  return rb_funcall2(_TARGET_MODULE, rb_intern("create_provider"), 3, values);
 }
 
 
@@ -175,7 +176,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 static int
 TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
-  VALUE args[2];
+  VALUE args[3];
   int error;
 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
@@ -197,7 +198,8 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 
   args[0] = rb_str_new2(hdl->miName);
   args[1] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
-  hdl->instance = rb_protect(create_mi, (VALUE)args, &error);
+  args[2] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
+  hdl->implementation = rb_protect(create_mi, (VALUE)args, &error);
   if (error)
     {
       CMPIString *trace = get_exc_trace(hdl->broker);
@@ -209,14 +211,14 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 	}
     }
 exit:
-  _SBLIM_TRACE(1,("Initialize() %s", (error == 0)? "succeeded":"failed"));
+  _SBLIM_TRACE(1,("Initialize() %s", (error == 0)?"succeeded":"failed"));
   return error;
 }
 
 
 /*
  * TargetCall
- * Call function 'opname' with nargs arguments within managed interface hdl->instance
+ * Call function 'opname' with nargs arguments within managed interface hdl->implementation
  */
 
 static int 
@@ -235,7 +237,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       _SBLIM_TRACE(1,("Out of memory")); 
       abort();
     }
-  args[0] = (VALUE)(hdl->instance);
+  args[0] = (VALUE)(hdl->implementation);
   args[1] = op;
   args[2] = (VALUE)(nargs-3);
   if (nargs > 3)

@@ -79,8 +79,9 @@ void _logstderr(char *fmt,...)
 typedef struct __ProviderMIHandle
 {
     char *miName;
-    Target_Type instance;
+    Target_Type implementation;
     const CMPIBroker* broker;
+    const CMPIContext* context;
 } ProviderMIHandle;
 
 
@@ -209,11 +210,11 @@ Cleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)    
 {
-    _SBLIM_TRACE(1,("Cleanup() called, miHdl %p, miHdl->instance %p, context %p, terminating %d", 
-                    miHdl, miHdl->instance, context, terminating));
+    _SBLIM_TRACE(1,("Cleanup() called, miHdl %p, miHdl->implementation %p, context %p, terminating %d", 
+                    miHdl, miHdl->implementation, context, terminating));
     CMPIStatus status = {CMPI_RC_OK, NULL}; 
 
-    if (miHdl->instance != Target_Null)
+    if (miHdl->implementation != Target_Null)
     {
         Target_Type _context;
         Target_Type _terminating; 
@@ -614,7 +615,7 @@ ExecQuery(CMPIInstanceMI * self,
  * associatorMIFT
  */
 
-CMPIStatus
+static CMPIStatus
 associatorNames(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
@@ -679,7 +680,7 @@ associatorNames(
  * associators
  */
 
-CMPIStatus
+static CMPIStatus
 associators(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
@@ -749,7 +750,7 @@ associators(
  * referenceNames
  */
 
-CMPIStatus
+static CMPIStatus
 referenceNames(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
@@ -800,7 +801,7 @@ referenceNames(
  * references
  */
 
-CMPIStatus
+static CMPIStatus
 references(
         CMPIAssociationMI* self,
         const CMPIContext* ctx,
@@ -852,7 +853,7 @@ references(
 /*
  * invokeMethod
  */
-CMPIStatus
+static CMPIStatus
 invokeMethod(
         CMPIMethodMI* self,
         const CMPIContext* ctx,
@@ -898,7 +899,8 @@ invokeMethod(
  * authorizeFilter
  */
 
-CMPIStatus authorizeFilter(
+static CMPIStatus
+authorizeFilter(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
         const CMPISelectExp* filter,
@@ -939,7 +941,8 @@ CMPIStatus authorizeFilter(
  * activateFilter
  */
 
-CMPIStatus activateFilter(
+static CMPIStatus
+activateFilter(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
         const CMPISelectExp* filter,
@@ -979,7 +982,8 @@ CMPIStatus activateFilter(
  * deActivateFilter
  */
 
-CMPIStatus deActivateFilter(
+static CMPIStatus
+deActivateFilter(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
         const CMPISelectExp* filter,
@@ -1020,7 +1024,8 @@ CMPIStatus deActivateFilter(
  * Note: sfcb doesn't support mustPoll. :(
  * http://sourceforge.net/mailarchive/message.php?msg_id=OFF38FF3F9.39FD2E1F-ONC1257385.004A7122-C1257385.004BB0AF%40de.ibm.com
  */
-CMPIStatus
+
+static CMPIStatus
 mustPoll(
         CMPIIndicationMI* self,
         const CMPIContext* ctx,
@@ -1061,7 +1066,7 @@ mustPoll(
  * enableIndications
  */
 
-CMPIStatus
+static CMPIStatus
 enableIndications(
         CMPIIndicationMI* self,
         const CMPIContext* ctx)
@@ -1086,7 +1091,7 @@ enableIndications(
  * disableIndications
  */
 
-CMPIStatus 
+static CMPIStatus 
 disableIndications(
         CMPIIndicationMI* self,
         const CMPIContext* ctx)
@@ -1163,13 +1168,10 @@ static CMPIInstanceMIFT InstanceMIFT__={
 
 
 static int
-createInit(const CMPIBroker* broker, 
-        const CMPIContext* context, 
-        ProviderMIHandle* miHdl,
-        const char* miname, CMPIStatus* st)
+createInit(ProviderMIHandle* miHdl, CMPIStatus* st)
 {
-    _SBLIM_TRACE(1,("\n>>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p\n", broker, miname, context, st));
-    return TargetInitialize(miHdl, st); 
+    _SBLIM_TRACE(1,("\n>>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p\n", miHdl->broker, miHdl->miName, miHdl->context, st));
+    return TargetInitialize(miHdl, st);
 }
 
 
@@ -1182,11 +1184,12 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
     _SBLIM_TRACE(1, ("\n>>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname)); \
     hdl = (ProviderMIHandle*)malloc(sizeof(ProviderMIHandle)); \
     if (hdl) { \
-        hdl->instance = Target_Null; \
+        hdl->implementation = Target_Null; \
         hdl->miName = strdup(miname); \
         hdl->broker = broker; \
+        hdl->context = context; \
     } \
-    if (createInit(broker, context, hdl, miname, st) != 0) { \
+    if (createInit(hdl, st) != 0) { \
         if (st) st->rc = CMPI_RC_ERR_FAILED;  \
         free(hdl->miName); \
         free(hdl); \
