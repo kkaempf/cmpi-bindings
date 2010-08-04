@@ -44,7 +44,7 @@ ADD_DEFINITIONS(-DCMPI_PLATFORM_LINUX_GENERIC_GNU -DCMPI_VERSION=200)
 ADD_DEFINITIONS(-DTARGET_RUBY)
 
 #
-# cmpi_instance: provider .so
+# rbCmpiProvider: provider .so
 #
 
 SET( NAME rbCmpiProvider )
