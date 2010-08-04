@@ -14,7 +14,9 @@ module Cmpi
   #
   def self.create_provider classname, broker, context
 
-    context.each |value,name
+    context.each do |name,value|
+      STDERR.puts "Context '#{name}' = #{value}"
+    end
     # CamelCase -> under_score
     underscore = classname.
 	           gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
@@ -34,7 +36,11 @@ module Cmpi
   end
 
   class CMPIContext
-    alias get_entry_count count
+    def count
+      #can't use alias here because CMPIContext::get_entry_count is only defined after
+      # initializing the provider (swig init code)
+      get_entry_count
+    end
     def [] at
       if at.kind_of? Integer
 	get_entry_at( at )
@@ -43,7 +49,7 @@ module Cmpi
       end
     end
     def each
-      0.upto(count-1) do |i|
+      0.upto(self.count-1) do |i|
 	yield get_entry_at(i)
       end
     end
