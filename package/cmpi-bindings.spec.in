@@ -41,6 +41,7 @@ BuildRequires:  -vim
 
 %if 0%{?fedora} + 0%{?rhel_version} > 0
 BuildRequires:  curl-devel pkgconfig ruby ruby-devel
+BuildRequires:  ruby-libs ruby-rdoc
 %if 0%{?fedora} > 0
 BuildRequires:  perl-devel
 %endif
@@ -94,6 +95,7 @@ make %{?jobs:-j %jobs}
 
 %install
 cd build
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/cmpi
 make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
@@ -124,6 +126,9 @@ Requires:       ruby(abi) = 1.8
 %dir %{_libdir}/cmpi
 %{_libdir}/cmpi/librbCmpiProvider.so
 %{ruby_sitelib}/cmpi.rb
+%dir %{ruby_sitelib}/cmpi
+%dir %{ruby_sitelib}/cmpi/providers
+%{ruby_sitelib}/cmpi/provider.rb
 
 %package -n cmpi-bindings-pywbem
 License:        BSD3c(or similar) ; EPL 1.0
@@ -143,6 +148,7 @@ Provides:       %{name} = %{version}-%{release}
 %defattr(-,root,root,-)
 %dir %{_libdir}/cmpi
 %{_libdir}/cmpi/libpyCmpiProvider.so
+%dir %{_datadir}/cmpi
 %{python_sitelib}/cmpi_pywbem_bindings.py
 %{python_sitelib}/cmpi_pywbem_bindings.pyc
 %{python_sitelib}/cmpi.py
@@ -163,6 +169,7 @@ Provides:       %{name} = %{version}-%{release}
 %defattr(-,root,root,-)
 %dir %{_libdir}/cmpi
 %{_libdir}/cmpi/libplCmpiProvider.so
+%dir %{_datadir}/cmpi
 %{perl_vendorlib}/cmpi-bindings.pl
 %{perl_vendorlib}/cmpi.pm
 

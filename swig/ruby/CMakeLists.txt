@@ -57,6 +57,12 @@ INSTALL(TARGETS ${NAME} LIBRARY DESTINATION ${CMPI_LIBRARY_DIR})
 # cmpi: provider implementation
 #
 INSTALL(FILES cmpi.rb DESTINATION ${RUBY_LIB_DIR})
+# create (empty) cmpi/providers (because git doesn't care)
+FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmpi/providers)
+# copy cmpi/*.rb to LIB_DIR
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmpi DESTINATION ${RUBY_LIB_DIR}
+        PATTERN ".rb"
+	PATTERN "*~" EXCLUDE)
 
 # rdoc
 SET(rdoc_dir "${CMAKE_CURRENT_BINARY_DIR}/html")
@@ -64,10 +70,10 @@ ADD_CUSTOM_COMMAND (
    OUTPUT ${rdoc_dir}
    COMMAND ${CMAKE_COMMAND} -E echo_append "Creating rdoc documentation ..."
    COMMAND rm -rf ${rdoc_dir}
-   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/rdoc -o ${rdoc_dir} cmpi.i *.i
+   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/rdoc -o ${rdoc_dir} cmpi.i *.i ruby/cmpi.rb ruby/cmpi/*.rb
    COMMAND ${CMAKE_COMMAND} -E echo "Done."
    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/swig
-   DEPENDS ${CMAKE_SOURCE_DIR}/swig/*.i
+   DEPENDS ${CMAKE_SOURCE_DIR}/swig/*.i ${CMAKE_SOURCE_DIR}/swig/ruby/*.rb ${CMAKE_SOURCE_DIR}/swig/ruby/cmpi/*.rb
 )
 ADD_CUSTOM_TARGET(ruby_rdoc ALL DEPENDS "${rdoc_dir}")
 ADD_DEPENDENCIES(ruby_rdoc ${NAME})
