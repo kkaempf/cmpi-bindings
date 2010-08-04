@@ -1294,21 +1294,34 @@ FIXME: if clone() is exposed, release() must also
 # CMPIContext
 
 %extend _CMPIContext {
-  /* Return string representation */
+  /*
+   * Return string representation
+   */
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
   
+  /*
+   * Add entry by name
+   */
   void add_entry(const char* name, const CMPIValue* data, 
                      const CMPIType type) {
     CMAddContextEntry($self, name, data, type);
   }
 
+  /*
+   * Get entry by name
+   */
   CMPIData get_entry(const char* name) {
     return CMGetContextEntry($self, name, NULL); // TODO CMPIStatus exception handling
   }
 
+  /*
+   * Get entry by index
+   *
+   * returns a name:string,value:CMPIData pair
+   */
 #if defined (SWIGRUBY)
   VALUE
 #endif
@@ -1335,17 +1348,20 @@ FIXME: if clone() is exposed, release() must also
     tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
-    PyTuple_SetItem(result, 0, tdata);
-    PyTuple_SetItem(result, 1, PyString_FromString(CMGetCharPtr(s)));
+    PyTuple_SetItem(result, 0, PyString_FromString(CMGetCharPtr(s)));
+    PyTuple_SetItem(result, 1, tdata);
 #else
     result = Target_SizedArray(2);
-    Target_Append(result, tdata);
     Target_Append(result, Target_String(CMGetCharPtr(s)));
+    Target_Append(result, tdata);
 #endif
     TARGET_THREAD_END_BLOCK;
     return result;
   }
 
+  /*
+   * Get number of entries in Context
+   */
   CMPICount get_entry_count(void) {
      return CMGetContextEntryCount($self, NULL); 
     // TODO CMPIStatus exception handling
