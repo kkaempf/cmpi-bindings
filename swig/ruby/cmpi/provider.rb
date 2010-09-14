@@ -24,6 +24,18 @@ module Cmpi
   # properties : Array of String
   #
   
+  # Generic provider interface
+  module ProviderIF
+    def initialize broker
+      @broker = broker
+    end
+    # Cleanup provider, +terminating+: boolean
+    def cleanup context, terminating
+    end
+    def self.method_missing method, *args
+      not_implemented self.class, self.method
+    end
+  end
   
   # Instance provider interface
   #
@@ -107,40 +119,20 @@ module Cmpi
 
   # now define MI classes, so implementations can be derived from them
   class InstanceProvider
+    include ProviderIF
     include InstanceProviderIF
-    def initialize broker
-      @broker = broker
-    end
-    def self.method_missing method, *args
-      not_implemented self.class, self.method
-    end
   end
   class MethodProvider
+    include ProviderIF
     include MethodProviderIF
-    def initialize broker
-      @broker = broker
-    end
-    def self.method_missing method, *args
-      not_implemented self.class, self.method
-    end
   end
   class AssociationProvider
+    include ProviderIF
     include AssociationProviderIF
-    def initialize broker
-      @broker = broker
-    end
-    def self.method_missing method, *args
-      not_implemented self.class, self.method
-    end
   end
   class IndicationProvider
+    include ProviderIF
     include IndicationProviderIF
-    def initialize broker
-      @broker = broker
-    end
-    def self.method_missing method, *args
-      not_implemented self.class, self.method
-    end
   end
 
 end
