@@ -60,13 +60,10 @@ load_module()
  * create_mi (called from rb_protect)
  * load Ruby provider and create provider instance
  * 
- * Converts ProviderName to provider_name and
- * tries to load this from cmpi/providers
- *
- * I args : pointer to array of 2 values
- *          values[0] = classname (String)
- *          values[1] = broker, passed to constructor
- *          values[2] = context, passed to constructor
+ * I args : pointer to array of 3 values
+ *          values[0] = miName (provider name)
+ *          values[1] = broker
+ *          values[2] = context
  */
 
 static VALUE
