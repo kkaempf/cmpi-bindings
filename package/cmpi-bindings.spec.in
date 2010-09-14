@@ -49,16 +49,15 @@ BuildRequires:  perl-devel
 
 %if 0%{?suse_version} > 0
 
-BuildRequires:  libcurl-devel
-%if 0%{?suse_version} > 1020
+%if 0%{?suse_version} > 1010
 BuildRequires:  fdupes
 %endif
 
-# SLE10
-%if 0%{?suse_version} < 1020
-BuildRequires:  curl-devel 
-%else
+%if 0%{?suse_version} > 1010
 BuildRequires:  libcurl-devel 
+%else
+# SLE10
+BuildRequires:  curl-devel 
 %endif
 
 # SLE9
