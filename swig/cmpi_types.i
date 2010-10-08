@@ -165,7 +165,9 @@ typedef struct _CMPIException {} CMPIException;
     if (_get_raised())
     {
         _clr_raised();
+#if SWIG_VERSION < 0x020000
         SWIG_PYTHON_THREAD_END_ALLOW;
+#endif
         SWIG_fail;
     }
 }
