@@ -203,13 +203,13 @@ typedef struct _CMPIBroker {} CMPIBroker;
     const CMPIContext * ctx, 
     const CMPIObjectPath * op, 
     const char *method,
-    const CMPIArgs * in, 
+    const CMPIArgs * _in, /* 'in' is reserved in Python */
     CMPIArgs * out) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData result;
 
-    result = CBInvokeMethod($self, ctx, op, method, in, out, &st);
+    result = CBInvokeMethod($self, ctx, op, method, _in, out, &st);
     RAISE_IF(st);
 
     return result;
