@@ -3,4 +3,5 @@
 #
 ENABLE_TESTING()
 ADD_TEST(bindings_ruby_loading ruby ${CMAKE_CURRENT_SOURCE_DIR}/loading.rb )
+ADD_TEST(bindings_ruby_create ruby ${CMAKE_CURRENT_SOURCE_DIR}/create.rb )
 

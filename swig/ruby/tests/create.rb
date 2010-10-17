@@ -2,8 +2,10 @@
 # provider creation
 #
 
-$:.unshift("..")
+$:.unshift(File.join(File.dirname(__FILE__),".."))
 
-require 'cmpi_rbwbem_bindings'
+require 'cmpi'
 
-Cmpi::create_provider "TestProvider", nil
+Cmpi::location = File.join(File.dirname(__FILE__),"providers")
+
+Cmpi::create_provider "SampleProvider", nil, nil

@@ -1,4 +1,5 @@
-# load cmpi_rbwbem_bindings.rb
+# load cmpi.rb
 
-$:.unshift("..")
-require 'cmpi_rbwbem_bindings'
+$:.unshift(File.join(File.dirname(__FILE__),".."))
+
+require 'cmpi'
