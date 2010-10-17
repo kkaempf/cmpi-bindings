@@ -44,7 +44,8 @@
 #define RB_BINDINGS_MODULE "Cmpi"
 
 /*
- * load_module
+ * load_module - load cmpi.rb
+ * 
  * separate function for rb_require so it can be wrapped into rb_protect()
  */
 
@@ -58,7 +59,7 @@ load_module()
 
 /*
  * create_mi (called from rb_protect)
- * load Ruby provider and create provider instance
+ * load Ruby provider via Cmpi::create_provider
  * 
  * I args : pointer to array of 3 values
  *          values[0] = miName (provider name)
@@ -117,6 +118,7 @@ get_exc_trace(const CMPIBroker* broker)
 
 /*
  * Global Ruby initializer
+ * 
  * loads the Ruby interpreter
  * init threads
  */
@@ -136,11 +138,12 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   
   ruby_init();
   ruby_init_loadpath();
+  /* give it a name while we load cmpi.rb */
   ruby_script("cmpi_swig_ruby");
   extern void SWIG_init();
   SWIG_init();
 
-  /* load module */
+  /* load module: cmpi.rb */
   rb_protect(load_module, Qnil, &error);
   if (error)
     {
@@ -150,6 +153,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
       _CMPI_SETFAIL(trace); 
       return -1; 
     }
+  /* save pointer to module */
   _TARGET_MODULE = rb_const_get(rb_cModule, rb_intern(RB_BINDINGS_MODULE));
   if (NIL_P(_TARGET_MODULE))
     {
@@ -193,6 +197,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 
   _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s'", getpid(), hdl->miName));
 
+  /* prepare call to Cmpi::create_provider() */
   args[0] = rb_str_new2(hdl->miName);
   args[1] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
   args[2] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
@@ -215,6 +220,7 @@ exit:
 
 /*
  * TargetCall
+ * 
  * Call function 'opname' with nargs arguments within managed interface hdl->implementation
  */
 
@@ -317,4 +323,3 @@ TargetCleanup(void)
   _TARGET_MODULE = Qnil;   
   return;
 }
-

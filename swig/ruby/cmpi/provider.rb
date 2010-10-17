@@ -13,6 +13,15 @@ module Cmpi
     nil
   end
   
+  #
+  # = Generic Provider interface
+  #
+  # Defines the interface common to all specific providers
+  # * InstanceProvider
+  # * MethodProvider
+  # * AssociationProvider
+  # * IndicationProvider
+  #
   # define MI provider interfaces as modules
   #  so they can be used as mixins
   #
@@ -26,10 +35,16 @@ module Cmpi
   
   # Generic provider interface
   module ProviderIF
+    #
+    # call-seq:
+    #   ProviderIF.new broker
+    #
     def initialize broker
       @broker = broker
     end
+    #
     # Cleanup provider, +terminating+: boolean
+    #
     def cleanup context, terminating
     end
     def self.method_missing method, *args
@@ -37,9 +52,10 @@ module Cmpi
     end
   end
   
-  # Instance provider interface
   #
-  # Typing information about interface function parameters
+  # = Instance provider interface
+  #
+  # Defines the CMPI interface for Instance providers
   #
   # newinst : CMPIInstance
   #
@@ -62,7 +78,11 @@ module Cmpi
     end
   end
 
-  # Method provider interface
+  #
+  # = Method provider interface
+  #
+  # Defines the CMPI interface for Method providers
+  #
   #
   module MethodProviderIF
     # method : String
@@ -72,7 +92,11 @@ module Cmpi
     end
   end
   
-  # Association provider interface
+  #
+  # = Association provider interface
+  #
+  # Defines the CMPI interface for Association providers
+  #
   #
   # Typing information about interface function parameters
   #
@@ -92,7 +116,10 @@ module Cmpi
     end
   end
   
-  # Indication provider interface
+  #
+  # = Indication provider interface
+  #
+  # Defines the CMPI interface for Indication providers
   #
   # Typing information about interface function parameters
   #
@@ -117,19 +144,38 @@ module Cmpi
     end
   end
 
-  # now define MI classes, so implementations can be derived from them
+  #
+  # = Instance Provider
+  #
+  # Handling instances of CIM classes
+  #
   class InstanceProvider
     include ProviderIF
     include InstanceProviderIF
   end
+  #
+  # = Method Provider
+  #
+  # Implementing methods for classes and instances
+  #
   class MethodProvider
     include ProviderIF
     include MethodProviderIF
   end
+  #
+  # = Association Provider
+  #
+  # Providing (instances of) associations between instances
+  #
   class AssociationProvider
     include ProviderIF
     include AssociationProviderIF
   end
+  #
+  # = Indication Provider
+  #
+  # Providing asynchronous events
+  #
   class IndicationProvider
     include ProviderIF
     include IndicationProviderIF
