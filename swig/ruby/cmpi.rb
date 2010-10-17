@@ -5,8 +5,10 @@
 #
 
 class String
+  #
+  # Convert from CamelCase to under_score
+  #
   def decamelize
-    # CamelCase -> under_score
     self.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
 	 gsub(/([a-z\d])([A-Z])/,'\1_\2').
 	 tr("-", "_").
@@ -14,23 +16,35 @@ class String
   end
 end
 
+#
+# = Cmpi - Common Manageablity Programming Interface
+#
+# The Common Manageablity Programming Interface (CMPI) defines a common standard of interfacing Manageability Instrumentation (providers, instrumentation) to Management Brokers (CIM Object Manager). The purpose of CMPI is to standardize Manageability Instrumentation. This allows to write and build instrumentation once and run it in different CIM environments (on one platform).
+#
+# == CIMOM Context
+#
+# == Provider Interface
+#
+
 module Cmpi
-  # init
+  @@location = File.join(File.dirname(__FILE__),"cmpi","providers")
   
+  def self.location= location
+    @@location = location
+  end
+
   #
-  # on-demand loading of Ruby providers
-  # create provider for 'miname'
-  #  pass 'broker' to its constructor
+  # on-demand loading of Ruby Provider for a specific management instrumentation interface
+  #
+  # call-seq:
+  #   Cmpi::create_provider "provider_name", broker, context
+  #
   #
   def self.create_provider miname, broker, context
 
-    context.each do |name,value|
-      STDERR.puts "Context '#{name}' = #{value}"
-    end
-
     begin
-      # Expect provider below cmpi/providers
-      require File.join(File.dirname(__FILE__),"cmpi","providers",miname.decamelize) # add to load path
+      # Expect provider below @@location
+      require File.join(@@location, miname.decamelize) # add to load path
     rescue Exception
       STDERR.puts "Loading provider #{miname.decamelize}.rb for provider #{miname} failed: #{$!.message}"
       raise
@@ -39,6 +53,9 @@ module Cmpi
     Cmpi.const_get(miname).new broker
   end
 
+  #
+  # CMPIContext gives the context for Provider operation
+  #
   class CMPIContext
     def count
       #can't use alias here because CMPIContext::get_entry_count is only defined after
