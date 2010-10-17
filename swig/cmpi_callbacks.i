@@ -7,6 +7,11 @@
 %rename(CMPIBroker) CMPIBroker;
 typedef struct _CMPIBroker {} CMPIBroker;
 
+/*
+ * The CMPIBroker represents the running CIMOM and provides utility
+ * functions to the Provider
+ *
+ */
 %extend CMPIBroker 
 {
   void LogMessage(

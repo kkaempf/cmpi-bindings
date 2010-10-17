@@ -23,7 +23,7 @@ module Cmpi
   # * IndicationProvider
   #
   # define MI provider interfaces as modules
-  #  so they can be used as mixins
+  # so they can be used as mixins
   #
   # Typing information about interface function parameters
   #
@@ -32,9 +32,8 @@ module Cmpi
   # reference : CMPIObjectPath
   # properties : Array of String
   #
-  
-  # Generic provider interface
   module ProviderIF
+    protected
     #
     # call-seq:
     #   ProviderIF.new broker
@@ -60,6 +59,7 @@ module Cmpi
   # newinst : CMPIInstance
   #
   module InstanceProviderIF
+    protected
     def create_instance context, result, reference, newinst
     end
     def enum_instance_names context, result, reference
@@ -85,6 +85,7 @@ module Cmpi
   #
   #
   module MethodProviderIF
+    protected
     # method : String
     # inargs : CMPIArgs
     # outargs : CMPIArgs
@@ -106,6 +107,7 @@ module Cmpi
   # result_role : String
   #
   module AssociationProviderIF
+    protected
     def associator_names context, result, reference, assoc_class, result_class, role, result_role
     end
     def associators context, result, reference, assoc_class, result_class, role, result_role, properties
@@ -130,6 +132,7 @@ module Cmpi
   # last_activation : Bool
   #
   module IndicationProviderIF
+    protected
     def authorize_filter context, filter, class_name, reference, owner
     end
     def activate_filter context, filter, class_name, reference, first_activation
@@ -147,6 +150,12 @@ module Cmpi
   #
   # = Instance Provider
   #
+  # *Abstract* class
+  #
+  # == Synopsis
+  #   class MyProvider < Cmpi::InstanceProvider
+  #   end
+  #
   # Handling instances of CIM classes
   #
   class InstanceProvider
@@ -156,7 +165,11 @@ module Cmpi
   #
   # = Method Provider
   #
+  # *Abstract* class
+  #
   # Implementing methods for classes and instances
+  #
+  # 
   #
   class MethodProvider
     include ProviderIF
@@ -164,6 +177,8 @@ module Cmpi
   end
   #
   # = Association Provider
+  #
+  # *Abstract* class
   #
   # Providing (instances of) associations between instances
   #
@@ -173,6 +188,8 @@ module Cmpi
   end
   #
   # = Indication Provider
+  #
+  # *Abstract* class
   #
   # Providing asynchronous events
   #

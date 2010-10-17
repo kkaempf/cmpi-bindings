@@ -111,6 +111,7 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
 typedef struct _CMPIException {} CMPIException;
 
 /*
+ *
  * Container for a fault, contains numeric error_code and textual
  * description
  *
@@ -178,6 +179,10 @@ typedef struct _CMPIException {} CMPIException;
 # CMPIError
 #
 
+/*
+ * Document-class: CMPIError
+ *
+ */
 %extend _CMPIError 
 {
   ~CMPIError() { }
@@ -337,6 +342,10 @@ typedef struct _CMPIException {} CMPIException;
 # CMPIResult
 #
 
+/*
+ * Document-class: CMPIResult
+ *
+ */
 %extend _CMPIResult 
 {
   /* no con-/destructor, the broker handles this */
@@ -382,6 +391,10 @@ typedef struct _CMPIException {} CMPIException;
 # CMPIObjectPath
 #
 
+/*
+ * Document-class: CMPIObjectPath
+ *
+ */
 %extend _CMPIObjectPath 
 {
   CMPIObjectPath(const CMPIBroker * mb, const char *ns, const char *cn)
@@ -722,6 +735,10 @@ FIXME: if clone() is exposed, release() must also
 # CMPIInstance
 #
 
+/*
+ * Document-class: CMPIInstance
+ *
+ */
 %extend _CMPIInstance 
 {
   /* path: ObjectPath containing namespace and classname. */
@@ -1023,13 +1040,26 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIArgs
 
+/*
+ * CMPI Arguments
+ *
+ * Arguments are passed in an ordered Hash-like fashion (name/value pairs) and can
+ * be accessed by name or by index
+ *
+ */
 %extend _CMPIArgs 
 {
   ~CMPIArgs() 
   { 
   }
   
-  /* Adds/replaces a named argument. */
+  /*
+   * Adds/replaces a named argument.
+   *
+   * call-seq:
+   *   set("arg_name", arg_value, arg_type)
+   *
+   */
   void set(char *name, const CMPIValue * value, const CMPIType type) 
   {
     RAISE_IF(CMAddArg($self, name, value, type));
@@ -1038,7 +1068,10 @@ FIXME: if clone() is exposed, release() must also
 #if defined(SWIGRUBY)
   %alias get "[]";
 #endif
-  /* Gets a named argument value. */
+  /*
+   * Gets a named argument value.
+   *
+   */
   CMPIData get(const char *name) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1059,7 +1092,13 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV * 
 #endif
-  /* Gets a Argument value defined by its index.
+  /*
+   * Get an Argument value by index.
+   * Returns a pair of value and name
+   *
+   * call-seq:
+   *   get_arg_at(1) -> [ value, "name" ]
+   *
    */
   __type get_arg_at(int index) 
   {
@@ -1090,7 +1129,13 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Gets the number of arguments contained in this Args. */
+#if defined(SWIGRUBY)
+  %alias get "size";
+#endif
+  /*
+   * Gets the number of arguments contained in this Args.
+   *
+   */
   int arg_count() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1107,9 +1152,10 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPISelectExp
 
-  /* This structure encompasses queries
-   *       and provides mechanism to operate on the query.
-   */
+/*
+ * This structure encompasses queries
+ *       and provides mechanism to operate on the query.
+ */
 %extend _CMPISelectExp {
   ~CMPISelectExp() { }
   
@@ -1123,6 +1169,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPISelectCond
 
+/*
+ * Select conditions
+ *
+ *
+ */
 %extend _CMPISelectCond {
   /* Return string representation */
   const char* to_s(const CMPIBroker* broker) {
@@ -1135,6 +1186,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPISubCond
 
+/*
+ * Sub Conditions
+ *
+ *
+ */
 %extend _CMPISubCond {
 }
 
@@ -1142,6 +1198,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIPredicate
 
+/*
+ * Predicate
+ *
+ *
+ */
 %extend _CMPIPredicate {
   /* Return string representation */
   const char* to_s(const CMPIBroker* broker) {
@@ -1154,6 +1215,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIEnumeration
 
+/*
+ * Enumeration provide a linked-list type access to multiple elements
+ *
+ *
+ */
 %extend _CMPIEnumeration 
 {
 #if defined(SWIGRUBY)
@@ -1228,6 +1294,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIArray
 
+/*
+ * Array of equally-typed elements
+ *
+ *
+ */
 %extend _CMPIArray 
 {
   /* Return string representation */
@@ -1285,6 +1356,10 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIString
 
+/*
+ * A string
+ *
+ */
 %extend _CMPIString {
   const char* to_s() {
     return CMGetCharPtr($self);
@@ -1295,6 +1370,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIContext
 
+/*
+ * Context of the provider invocation
+ *
+ *
+ */
 %extend _CMPIContext {
   /*
    * Return string representation
@@ -1375,6 +1455,11 @@ FIXME: if clone() is exposed, release() must also
 #
 # CMPIDateTime
 
+/*
+ * Date and Time
+ *
+ *
+ */
 %extend _CMPIDateTime {
   ~CMPIDateTime() { }
   
