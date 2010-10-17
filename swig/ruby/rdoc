@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 
+ARGV.uniq!
+
 # This is ./rdoc
 #
 
