@@ -94,7 +94,7 @@ ENDIF ( NOT SWIG_EXECUTABLE )
 # Directories                                                      #
 ####################################################################
 
-# don't build standalone provider, its included in the swig code
+# can't build standalone provider, must be included in the swig code
 #ADD_SUBDIRECTORY(src)
 
 ADD_SUBDIRECTORY(swig)

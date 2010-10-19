@@ -341,13 +341,27 @@ static void _raise_ex(const CMPIStatus* st)
 /*
 **==============================================================================
 **
+** Shim code converting CMPI provider calls to target language
+**
+**
+**  define CMPI_PURE_BINDINGS during build to just get the SWIG bindings
+**  for testing
+**
+**==============================================================================
+*/
+
+#ifndef CMPI_PURE_BINDINGS
+#include "../src/cmpi_provider.c"
+#endif
+
+/*
+**==============================================================================
+**
 ** raise_exception()
 ** provider code
 **
 **==============================================================================
 */
-
-#include "../src/cmpi_provider.c"
 
 /* RAISE exception IF status argument has a nonzero rc member */
 #define RAISE_IF(EXPR) \
