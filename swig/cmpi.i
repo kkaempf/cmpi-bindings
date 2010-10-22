@@ -264,21 +264,29 @@ data_value(const CMPIData *dp)
   return result;
 }
 
-
-static CMPIString *
-to_cmpi_string(VALUE data)
+#if defined (SWIGRUBY)
+static CMPIBroker *
+cmpi_broker()
 {
   void *ptr = 0 ;
-  int res1 = 0 ;
-  CMPIBroker *cmpi_broker;
-  const char *str;
-
+  int res1;
   VALUE broker = rb_funcall(mCmpi, rb_intern("cmpi_broker"), 0);
   res1 = SWIG_ConvertPtr(broker, &ptr, SWIGTYPE_p__CMPIBroker, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "cmpi_broker", 1, mCmpi));
   }
-  cmpi_broker = (CMPIBroker *)ptr;
+  return (CMPIBroker *)ptr;
+fail:
+  return NULL;
+}
+
+
+static CMPIString *
+to_cmpi_string(VALUE data)
+{
+  CMPIBroker *broker = cmpi_broker();
+  const char *str;
+
   switch(TYPE(data)) {
     case T_STRING:
       str = StringValuePtr(data);
@@ -290,10 +298,9 @@ to_cmpi_string(VALUE data)
       data = rb_funcall(data, rb_intern("to_s"), 0 );
       str = StringValuePtr(data);
    }      
-   return CMNewString(cmpi_broker, str, NULL);
-fail:
-  return NULL;
+   return CMNewString(broker, str, NULL);
 }
+#endif
 
 /*
 **==============================================================================
