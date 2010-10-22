@@ -351,11 +351,12 @@ typedef struct _CMPIException {} CMPIException;
   /* no con-/destructor, the broker handles this */
 
   /* Return string representation */
-  const char* to_s(const CMPIBroker* broker) 
+  const char* to_s() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIString* result;
-    
+    const CMPIBroker* broker = cmpi_broker();
+
     result = CDToString(broker, $self, &st);
     RAISE_IF(st);
 
@@ -397,10 +398,11 @@ typedef struct _CMPIException {} CMPIException;
  */
 %extend _CMPIObjectPath 
 {
-  CMPIObjectPath(const CMPIBroker * mb, const char *ns, const char *cn)
+  CMPIObjectPath(const char *ns, const char *cn)
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
-    return CMNewObjectPath( mb, ns, cn, &st );
+    const CMPIBroker* broker = cmpi_broker();
+    return CMNewObjectPath( broker, ns, cn, &st );
   }
 
   ~CMPIObjectPath() 
@@ -563,7 +565,7 @@ FIXME: if clone() is exposed, release() must also
 
 #if defined(SWIGRUBY)
   /* iterate over keys as [<value>,<name>] pairs */
-  void keys()
+  void each()
   {
     int i;
     int count = CMGetKeyCount($self, NULL);
@@ -739,6 +741,12 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIInstance 
 {
+  CMPIInstance(CMPIObjectPath *path)
+  {
+    const CMPIBroker* broker = cmpi_broker();
+    return CMNewInstance(broker, path, NULL);
+  }
+
   /* path: ObjectPath containing namespace and classname. */
   ~CMPIInstance() 
   { 
@@ -1182,7 +1190,8 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPISelectCond {
   /* Return string representation */
-  const char* to_s(const CMPIBroker* broker) {
+  const char* to_s() {
+    const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
@@ -1211,7 +1220,8 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIPredicate {
   /* Return string representation */
-  const char* to_s(const CMPIBroker* broker) {
+  const char* to_s() {
+    const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
@@ -1284,8 +1294,9 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Return string representation */
-  const char* to_s(const CMPIBroker* broker) 
+  const char* to_s()
   {
+    const CMPIBroker* broker = cmpi_broker();
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIString *result;
     
@@ -1308,8 +1319,9 @@ FIXME: if clone() is exposed, release() must also
 %extend _CMPIArray 
 {
   /* Return string representation */
-  const char* to_s(const CMPIBroker* broker) 
+  const char* to_s()
   {
+    const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
@@ -1385,7 +1397,8 @@ FIXME: if clone() is exposed, release() must also
   /*
    * Return string representation
    */
-  const char* to_s(const CMPIBroker* broker) {
+  const char* to_s() {
+    const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
