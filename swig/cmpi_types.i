@@ -398,10 +398,60 @@ typedef struct _CMPIException {} CMPIException;
  */
 %extend _CMPIObjectPath 
 {
-  CMPIObjectPath(const char *ns, const char *cn)
+  CMPIObjectPath(const char *ns, const char *cn = NULL)
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     const CMPIBroker* broker = cmpi_broker();
+    if (cn == NULL) { /* assume creating from string representation */
+      /* parse <namespace>:<classname>[.<key>=<value>[,<key>=<value>]...] */
+      CMPIObjectPath *path;
+      const char *ptr;
+      
+      /* find and extract namespace */
+      ptr = strchr(ns, ':');
+      if (ptr == NULL)
+        return NULL; /* should raise */
+      ns = strndup(ns, ptr-ns);
+      
+      /* find and extract classname */
+      cn = ++ptr;
+      ptr = strchr(cn, '.');
+      if (ptr == NULL)
+        return NULL; /* should raise */
+      path = CMNewObjectPath( broker, ns, cn, &st );
+      /* find and extract properties */
+      ptr++;
+      while (*ptr) {
+        const char *key;
+	const char *val;
+	
+	key = ptr;
+	ptr = strchr(key, '=');
+	if (ptr == NULL)
+          return NULL; /* should raise */
+	val = ++ptr;
+	if (*val == '"') {
+	  val++;
+	  ptr = val;
+	  for (;;) {
+	    ptr = strchr(ptr, '"');
+	    if (ptr == NULL)
+	      return NULL; /* should raise */
+	    if (*(ptr-1) != '\\') /* not escaped " */
+	      break;
+	    ptr++;
+	  }
+	  val = strndup(val, ptr-val);
+	}
+	else {
+	  ptr = strchr(ptr, ',');
+	  val = strndup(val, ptr-val);
+	}
+	ptr++;
+	CMAddKey(path, key, val, CMPI_string);
+      }
+      return path;
+    }
     return CMNewObjectPath( broker, ns, cn, &st );
   }
 
