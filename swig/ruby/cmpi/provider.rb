@@ -7,7 +7,13 @@
 require 'cmpi'
 
 module Cmpi
-  
+
+  def self.cmpi_broker= broker
+    @@cmpi_broker = broker
+  end
+  def self.cmpi_broker
+    @@cmpi_broker
+  end
   def not_implemented klass, name
     STDERR.puts "#{klass}.#{name}: not implemented"
     nil
@@ -39,7 +45,7 @@ module Cmpi
     #   ProviderIF.new broker
     #
     def initialize broker
-      @broker = broker
+      Cmpi::cmpi_broker = broker
     end
     #
     # Cleanup provider, +terminating+: boolean

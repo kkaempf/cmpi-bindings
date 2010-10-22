@@ -75,4 +75,22 @@ module Cmpi
       end
     end
   end
+  
+  #
+  # CMPIInstance
+  #
+  class CMPIInstance
+    def each
+      (0..self.size-1).each do |i|
+	yield self.get_property_at(i)
+      end
+    end
+    def to_s
+      s = "#{self.class}("
+      self.each do |value,name|
+	s << "\"#{name}\" => #{value.inspect}, "
+      end
+      s << ")"
+    end
+  end
 end

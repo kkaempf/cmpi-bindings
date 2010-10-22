@@ -264,6 +264,37 @@ data_value(const CMPIData *dp)
   return result;
 }
 
+
+static CMPIString *
+to_cmpi_string(VALUE data)
+{
+  void *ptr = 0 ;
+  int res1 = 0 ;
+  CMPIBroker *cmpi_broker;
+  const char *str;
+
+  VALUE broker = rb_funcall(mCmpi, rb_intern("cmpi_broker"), 0);
+  res1 = SWIG_ConvertPtr(broker, &ptr, SWIGTYPE_p__CMPIBroker, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "cmpi_broker", 1, mCmpi));
+  }
+  cmpi_broker = (CMPIBroker *)ptr;
+  switch(TYPE(data)) {
+    case T_STRING:
+      str = StringValuePtr(data);
+      break;
+    case T_SYMBOL:
+      str = rb_id2name(SYM2ID(data));
+      break;
+    default:
+      data = rb_funcall(data, rb_intern("to_s"), 0 );
+      str = StringValuePtr(data);
+   }      
+   return CMNewString(cmpi_broker, str, NULL);
+fail:
+  return NULL;
+}
+
 /*
 **==============================================================================
 **

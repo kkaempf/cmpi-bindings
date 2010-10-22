@@ -428,7 +428,6 @@ FIXME: if clone() is exposed, release() must also
     return CMGetCharPtr($self->ft->toString($self, NULL));
   }
   
-#if 0 /* TODO: FIXME: No global _BROKER */
 #if defined(SWIGRUBY)
   %alias set "[]=";
   /*
@@ -453,7 +452,7 @@ FIXME: if clone() is exposed, release() must also
         type = CMPI_real32;
       break;
       case T_STRING:
-        value->string = CMNewString(_BROKER, StringValuePtr(data), NULL);
+        value->string = to_cmpi_string(data);
         type = CMPI_string;
       break; 
       case T_FIXNUM:
@@ -469,7 +468,7 @@ FIXME: if clone() is exposed, release() must also
         type = CMPI_boolean;
       break;
       case T_SYMBOL:
-        value->string = CMNewString(_BROKER, rb_id2name(SYM2ID(data)), NULL);
+        value->string = to_cmpi_string(data);
         type = CMPI_string;
       break;
       default:
@@ -479,7 +478,6 @@ FIXME: if clone() is exposed, release() must also
     }
     return CMAddKey($self, name, value, type);
   }
-#endif
 #endif
 
   /* Adds/replaces a named key property.
@@ -746,7 +744,6 @@ FIXME: if clone() is exposed, release() must also
   { 
   }
 
-#if 0 /* TODO: FIXME: No global _BROKER */
 #if defined(SWIGRUBY)
   %alias set "[]=";
   /*
@@ -771,33 +768,32 @@ FIXME: if clone() is exposed, release() must also
     type = CMPI_real32;
       break;
       case T_STRING:
-        value->string = CMNewString(_BROKER, StringValuePtr(data), NULL);
-    type = CMPI_string;
+        value->string = to_cmpi_string(data);
+	type = CMPI_string;
       break; 
       case T_FIXNUM:
         value->Int = FIX2ULONG(data);
-    type = CMPI_uint32;
+	type = CMPI_uint32;
       break;
       case T_TRUE:
         value->boolean = 1;
-    type = CMPI_boolean;
+	type = CMPI_boolean;
       break;
       case T_FALSE:
         value->boolean = 0;
-    type = CMPI_boolean;
+	type = CMPI_boolean;
       break;
       case T_SYMBOL:
-        value->string = CMNewString(_BROKER, rb_id2name(SYM2ID(data)), NULL);
-    type = CMPI_string;
+        value->string = to_cmpi_string(data);
+	type = CMPI_string;
       break;
       default:
         value->chars = NULL;
-    type = CMPI_null;
+	type = CMPI_null;
         break;
     }
     return CMSetProperty($self, name, value, type);
   }
-#endif
 #endif
 
   /* Adds/replaces a named Property.
@@ -881,8 +877,18 @@ FIXME: if clone() is exposed, release() must also
         RAISE_IF(st);
         return result;
     }
+/*    fprintf(stderr, "CMGetPropertyAt(%d) -> name %s, data type %x, state %x, value %p\n", index, CMGetCharPtr(s), data.type, data.state, data.value);
+    fflush(stderr);
+    */
     TARGET_THREAD_BEGIN_BLOCK;
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+    if (data.state == CMPI_goodValue || data.state == CMPI_keyValue)
+       tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
+    else if (data.state == CMPI_nullValue)
+       tdata = Target_Null;
+    else if (data.state == CMPI_notFound)
+       tdata = Target_Null; /* FIXME: raise exception */
+    else
+       tdata = Target_Null; /* FIXME: raise exception */
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
