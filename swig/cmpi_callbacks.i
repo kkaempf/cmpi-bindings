@@ -14,6 +14,26 @@ typedef struct _CMPIBroker {} CMPIBroker;
  */
 %extend CMPIBroker 
 {
+#if defined(SWIGPERL)
+  int __eq__( const CMPIBroker *broker )
+#endif
+#if defined(SWIGRUBY)
+  %typemap(out) int equal
+    "$result = $1 ? Qtrue : Qfalse;";
+  %rename("==") equal( const CMPIBroker *broker );
+  int equal( const CMPIBroker *broker )
+#endif
+#if defined(SWIGPYTHON)
+  /*
+  * :nodoc:
+  * Python treats 'eq' and 'ne' distinct.
+  */
+  int __ne__( const CMPIBroker *broker )
+  { return $self != broker; }
+  int __eq__( const CMPIBroker *broker )
+#endif
+  { return $self == broker; }
+  
   void LogMessage(
     int severity, 
     const char *id, 

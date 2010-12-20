@@ -407,7 +407,7 @@ g_proxies = {}
 def get_cmpi_proxy_provider(miname, broker):
     try:
         prox = g_proxies[miname]
-        if str(prox.proxy.env.proxy.broker) != str(broker):
+        if prox.proxy.env.proxy.broker != broker:
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                         'New broker not the same as cached broker!')
     except KeyError:
