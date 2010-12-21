@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Tue Dec 21 15:23:32 UTC 2010 - kkaempf@novell.com
+
+- Provide equality operator for CMPIBroker
+
+-------------------------------------------------------------------
+Fri Oct  8 09:28:07 UTC 2010 - kkaempf@novell.com
+
+- Adapt to work with Swig 2.x
+
+-------------------------------------------------------------------
 Wed Aug  4 10:58:20 UTC 2010 - kkaempf@novell.com
 
 - Install Ruby files into vendor- or site-dir
