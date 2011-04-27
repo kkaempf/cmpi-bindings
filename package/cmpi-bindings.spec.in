@@ -40,11 +40,24 @@ BuildRequires:  -vim
 %endif
 
 %if 0%{?fedora} + 0%{?rhel_version} > 0
+
 BuildRequires:  curl-devel pkgconfig ruby ruby-devel
-BuildRequires:  ruby-libs ruby-rdoc
+BuildRequires:  ruby-libs
+
+%if 0%{?rhel_version} < 500
+# rdoc needs irb/slex in rhel4
+BuildRequires: irb
+%endif
+
+%if 0%{?rhel_version} >= 500 || 0%{?fedora}
+# rdoc is separate from rhel5 on
+BuildRequires: ruby-rdoc
+%endif
+
 %if 0%{?fedora} > 0
 BuildRequires:  perl-devel
 %endif
+
 %endif
 
 %if 0%{?suse_version} > 0
