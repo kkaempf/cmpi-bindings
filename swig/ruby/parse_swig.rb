@@ -162,6 +162,10 @@ module RDoc
         enclosure = @top_level
       end
 
+      if RUBY_VERSION == "1.8.1"
+	return nil unless enclosure # workaround for RHEL4
+      end
+
       if class_mod == "class" 
         cm = enclosure.add_class(NormalClass, class_name, parent_name)
         @stats.num_classes += 1 if @stats
@@ -176,7 +180,6 @@ module RDoc
       find_class_comment(class_name, cm)
       @classes[class_name] = cm
       @known_classes[class_name] = cm.full_name
-      cm
     end
 
     ##
@@ -252,7 +255,7 @@ module RDoc
 	  extends[name] = true
 	  cn = class_name.to_s
 	  cn.capitalize! unless cn[0,1] =~ /[A-Z_]/
-	  swig_class = handle_class_module("class", cn, :parent => "rb_cObject", :content => content.to_s, :extend_name => name)
+	  handle_class_module("class", cn, :parent => "rb_cObject", :content => content.to_s, :extend_name => name)
 	end
       end
       @body.scan(/^%extend\s*(\w+)\s*\{(.*)\}/mx) do |class_name,content|
@@ -260,7 +263,7 @@ module RDoc
 	unless extends[cn]
 #	  puts "Class #{cn}"
 	  cn.capitalize! unless cn[0,1] =~ /[A-Z_]/
-	  swig_class = handle_class_module("class", cn, :parent => "rb_cObject", :content => content)
+	  handle_class_module("class", cn, :parent => "rb_cObject", :content => content)
 	  extends[cn] = true
 	end
       end
