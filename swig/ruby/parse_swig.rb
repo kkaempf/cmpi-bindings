@@ -78,7 +78,8 @@ module RDoc
     @@module_name = nil
     
     # prepare to parse a SWIG file
-    def initialize(top_level, file_name, body, options, stats)
+    # RHEL4 has Ruby 1.8.1 which does not provide stats
+    def initialize(top_level, file_name, body, options, stats = nil)
       @known_classes = KNOWN_CLASSES.dup
       @body = handle_tab_width(handle_ifdefs_in(body))
       @options = options
@@ -163,10 +164,10 @@ module RDoc
 
       if class_mod == "class" 
         cm = enclosure.add_class(NormalClass, class_name, parent_name)
-        @stats.num_classes += 1
+        @stats.num_classes += 1 if @stats
       else
         cm = enclosure.add_module(NormalModule, class_name)
-        @stats.num_modules += 1
+        @stats.num_modules += 1 if @stats
       end
       cm.record_location(enclosure.toplevel)
       cm.body = options[:content]
@@ -349,7 +350,7 @@ module RDoc
       c = find_class class_name
       c.body.scan(%r{%alias\s+(\w+)\s+"([^"]+)"\s*;}m) do #"
         |old_name, new_name|
-        @stats.num_methods += 1
+        @stats.num_methods += 1 if @stats
         raise "Unknown class '#{class_name}'" unless @known_classes[class_name]
         class_obj  = find_class(class_name)
 
@@ -474,7 +475,7 @@ module RDoc
       seen_before = class_obj.method_list.find { |meth| meth.name == meth_name }
       return nil if seen_before
       
-      @stats.num_methods += 1
+      @stats.num_methods += 1 if @stats
       if meth_name == "initialize"
 	meth_name = "new"
 	type = "singleton_method"
