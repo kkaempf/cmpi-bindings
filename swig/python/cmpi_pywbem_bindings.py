@@ -1030,8 +1030,7 @@ def test_conversions(proxy):
     assert(ncop['k1'] == 'A')
     assert(ncop['k2'] == 'B')
 
-    cinst = cmpi.CMPIInstance(ccop)
-    # Klaus, fix this. 
+    cinst = cmpi.CMPIInstance(proxy.broker, ccop)
     assert(cinst.objectpath() is not None)
 
     pinst = pywbem.CIMInstance('Cmpi_Swig', path=pcop, 

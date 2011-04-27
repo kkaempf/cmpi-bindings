@@ -265,11 +265,22 @@ data_value(const CMPIData *dp)
 }
 
 #if defined (SWIGRUBY)
+/*
+ * Callback to get CMPIBroker pointer from provider
+ *
+ * CMPIBroker is required e.g. for CMNewString and the provider
+ * gets the pointer during initialization and keeps it as a
+ * _module_ variable.
+ *
+ */
+
+#define HAVE_CMPI_BROKER 1 /* flag availability of cmpi_broker() callback */
+
 static CMPIBroker *
 cmpi_broker()
 {
   void *ptr = 0 ;
-  int res1;
+  long long res1;
   VALUE broker = rb_funcall(mCmpi, rb_intern("cmpi_broker"), 0);
   res1 = SWIG_ConvertPtr(broker, &ptr, SWIGTYPE_p__CMPIBroker, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
@@ -281,6 +292,10 @@ fail:
 }
 
 
+/*
+ * Convert Ruby Value to CMPIString
+ *
+ */
 static CMPIString *
 to_cmpi_string(VALUE data)
 {

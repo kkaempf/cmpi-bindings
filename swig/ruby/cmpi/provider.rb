@@ -8,9 +8,15 @@ require 'cmpi'
 
 module Cmpi
 
+  #
+  # Accessor for broker value passed at provider initialization
+  #  Required internally for callbacks like CMNewString
+  #
+private
   def self.cmpi_broker= broker
     @@cmpi_broker = broker
   end
+public
   def self.cmpi_broker
     @@cmpi_broker
   end

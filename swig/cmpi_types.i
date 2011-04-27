@@ -349,9 +349,15 @@ typedef struct _CMPIException {} CMPIException;
 %extend _CMPIResult 
 {
   /* no con-/destructor, the broker handles this */
-
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
   /* Return string representation */
-  const char* to_s() 
+  const char* string() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIString* result;
@@ -362,6 +368,7 @@ typedef struct _CMPIException {} CMPIException;
 
     return CMGetCharPtr(result);
   }
+#endif
 
   /* Add the +instance+ to the result */
   void return_instance(CMPIInstance *instance) 
@@ -398,10 +405,16 @@ typedef struct _CMPIException {} CMPIException;
  */
 %extend _CMPIObjectPath 
 {
+#if HAVE_CMPI_BROKER
   CMPIObjectPath(const char *ns, const char *cn = NULL)
+#else
+  CMPIObjectPath(const CMPIBroker* broker, const char *ns, const char *cn = NULL)
+#endif
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
+#if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
+#endif
     if (cn == NULL) { /* assume creating from string representation */
       /* parse <namespace>:<classname>[.<key>=<value>[,<key>=<value>]...] */
       CMPIObjectPath *path;
@@ -791,9 +804,15 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIInstance 
 {
+#if HAVE_CMPI_BROKER
   CMPIInstance(CMPIObjectPath *path)
+#else
+  CMPIInstance(const CMPIBroker* broker, CMPIObjectPath *path)
+#endif
   {
+#if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
+#endif
     return CMNewInstance(broker, path, NULL);
   }
 
@@ -1224,7 +1243,13 @@ FIXME: if clone() is exposed, release() must also
   ~CMPISelectExp() { }
   
   /* Return string representation */
-  const char* to_s() {
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string() {
     return CMGetCharPtr(CMGetSelExpString($self, NULL));
   }
 }
@@ -1240,11 +1265,19 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPISelectCond {
   /* Return string representation */
-  const char* to_s() {
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string() {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
+#endif
 }
 
 #-----------------------------------------------------
@@ -1270,11 +1303,19 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIPredicate {
   /* Return string representation */
-  const char* to_s() {
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string() {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
+#endif
 }
 
 #-----------------------------------------------------
@@ -1344,7 +1385,14 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Return string representation */
-  const char* to_s()
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string()
   {
     const CMPIBroker* broker = cmpi_broker();
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1355,6 +1403,7 @@ FIXME: if clone() is exposed, release() must also
 
     return CMGetCharPtr(result);
   }
+#endif
 }
 
 #-----------------------------------------------------
@@ -1369,13 +1418,20 @@ FIXME: if clone() is exposed, release() must also
 %extend _CMPIArray 
 {
   /* Return string representation */
-  const char* to_s()
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string()
   {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
-
+#endif
   int size() 
   {
     return CMGetArrayCount($self, NULL);
@@ -1429,7 +1485,13 @@ FIXME: if clone() is exposed, release() must also
  *
  */
 %extend _CMPIString {
-  const char* to_s() {
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string() {
     return CMGetCharPtr($self);
   }
 }
@@ -1447,12 +1509,19 @@ FIXME: if clone() is exposed, release() must also
   /*
    * Return string representation
    */
-  const char* to_s() {
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string() {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
-  
+#endif  
   /*
    * Add entry by name
    */
@@ -1533,7 +1602,13 @@ FIXME: if clone() is exposed, release() must also
   ~CMPIDateTime() { }
   
   /* Return string representation */
-  const char* to_s() {
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  const char* string() {
     return CMGetCharPtr(CMGetStringFormat($self, NULL));
   }
   
