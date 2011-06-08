@@ -156,8 +156,38 @@
   %rename("ok?") is_ok;
 #endif
   int is_ok() { return $self->rc == CMPI_RC_OK; }
+#if HAVE_CMPI_BROKER
+#ifdef SWIGPYTHON
+%rename ("__str__") string();
+  /*
+   * add CMPIStatus.to_s in Python for backwards-compatibility
+   *
+   * DEPRECATED
+   */
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
     return CMGetCharPtr(s);
   }
+#endif
+#ifdef SWIGRUBY
+%rename ("to_s") string();
+#endif
+  /* Return string representation */
+  const char* string() 
+  {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIString* result;
+    const CMPIBroker* broker = cmpi_broker();
+
+    result = CDToString(broker, $self, &st);
+    RAISE_IF(st);
+
+    return CMGetCharPtr(result);
+  }
+#else
+  const char* to_s(const CMPIBroker* broker) {
+    CMPIString *s = CDToString(broker, $self, NULL);
+    return CMGetCharPtr(s);
+  }
+#endif
 }

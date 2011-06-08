@@ -828,9 +828,9 @@ class CMPIProxyProvider(object):
         else:
             cval = getattr(cval, ctype)
             if _type == 'string':
-                pval = cval.to_s()
+                pval = cval.__str__()
             elif _type == 'chars':
-                pval = cval.to_s()
+                pval = cval.__str__()
             elif ctype == 'ref':
                 pval = self.cmpi2pywbem_instname(cval)
             else:
@@ -883,7 +883,7 @@ class CMPIProxyProvider(object):
         if val is None:
             return None
         if _type == 'string':
-            val = val.to_s()
+            val = str(val)
         if _type == 'boolean':
             val = val == 0 and 'false' or 'true'
         if _type == 'datetime':
@@ -898,13 +898,13 @@ class CMPIProxyProvider(object):
         return pywbem.tocimobj(_type, val)
 
     def cmpi2pywbem_datetime(self, dt):
-        return pywbem.CIMDateTime(dt.to_s())
+        return pywbem.CIMDateTime(dt.__str__())
 
     def pywbem2cmpi_datetime(self, dt):
         return self.broker.new_datetime_from_string(str(dt))
 
     def cmpi2pywbem_selectexp(self, filter):
-        return filter.to_s()
+        return filter.__str__()
 
 
 _pywbem2cmpi_typemap = {
@@ -991,7 +991,7 @@ def traceback2string(_type, value, tb):
 def test_conversions(proxy):
     s = 'foo'
     cs, _type = pywbem2cmpi_value(s)
-    assert(cs.string.to_s() == s)
+    assert(cs.string.__str__() == s)
     assert(_type == 'string')
     ns = cmpi2pywbem_value(cs, _type)
     assert(s == ns)
@@ -1065,7 +1065,7 @@ def test_conversions(proxy):
     assert(pdt == ndt)
     cdt = proxy.broker.new_datetime_from_string('20080623144759.823564-360')
     print '** ctd.is_interval()', cdt.is_interval()
-    print '** ctd.to_s()', cdt.to_s()
+    print '** ctd.__str__()', cdt.__str__()
 
     pinst['dt'] = pywbem.CIMDateTime('20080623144759.823564-360')
     cinst = pywbem2cmpi_inst(pinst)
