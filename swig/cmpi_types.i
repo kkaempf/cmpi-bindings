@@ -158,7 +158,6 @@ typedef struct _CMPIException {} CMPIException;
 #
 #-----------------------------------------------------
 
-#ifdef SWIGPYTHON
 %exception 
 {
     _clr_raised();
@@ -166,13 +165,14 @@ typedef struct _CMPIException {} CMPIException;
     if (_get_raised())
     {
         _clr_raised();
+#ifdef SWIGPYTHON
 #if SWIG_VERSION < 0x020000
         SWIG_PYTHON_THREAD_END_ALLOW;
+#endif
 #endif
         SWIG_fail;
     }
 }
-#endif /* SWIGPYTHON */
 
 #-----------------------------------------------------
 #
@@ -600,7 +600,7 @@ FIXME: if clone() is exposed, release() must also
     }
 
     TARGET_THREAD_BEGIN_BLOCK;
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
+    tdata = data_data(&data);
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
@@ -638,7 +638,7 @@ FIXME: if clone() is exposed, release() must also
       VALUE yield = rb_ary_new2(2);
       name = NULL;
       CMPIData data = CMGetKeyAt($self, i, &name, NULL);
-      VALUE rbdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
+      VALUE rbdata = data_data(&data);
       rb_ary_push(yield, rbdata);
       rb_ary_push(yield, rb_str_new2(CMGetCharPtr(name)));
       
@@ -958,14 +958,7 @@ FIXME: if clone() is exposed, release() must also
     fflush(stderr);
     */
     TARGET_THREAD_BEGIN_BLOCK;
-    if (data.state == CMPI_goodValue || data.state == CMPI_keyValue)
-       tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1);
-    else if (data.state == CMPI_nullValue)
-       tdata = Target_Null;
-    else if (data.state == CMPI_notFound)
-       tdata = Target_Null; /* FIXME: raise exception */
-    else
-       tdata = Target_Null; /* FIXME: raise exception */
+    tdata = data_data(&data);
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
@@ -1198,7 +1191,7 @@ FIXME: if clone() is exposed, release() must also
         return result;
     }
     TARGET_THREAD_BEGIN_BLOCK;
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+    tdata = data_data(&data);
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, tdata);
@@ -1565,7 +1558,7 @@ FIXME: if clone() is exposed, release() must also
         return result;
     }
     TARGET_THREAD_BEGIN_BLOCK;
-    tdata = SWIG_NewPointerObj((void*) data_clone(&data), SWIGTYPE_p__CMPIData, 1); 
+    tdata = data_data(&data);
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
     PyTuple_SetItem(result, 0, PyString_FromString(CMGetCharPtr(s)));

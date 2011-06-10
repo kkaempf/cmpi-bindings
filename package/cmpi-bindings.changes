@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Fri Jun 10 10:33:05 CEST 2011 - kkaempf@suse.de
+
+- Don't pass NULL back to Python, use PyNone instead.
+  (upstream issue #1)
+- Correctly handle state of CMPIData and raise exceptions in
+  case of notFound or badValue when returning CMPIData to the
+  target language.
+- v 0.4.14
+
+-------------------------------------------------------------------
 Wed Jun  8 13:38:19 CEST 2011 - kkaempf@suse.de
 
 - Replace to_s() with __str__() in Python where applicable

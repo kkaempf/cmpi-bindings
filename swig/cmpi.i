@@ -236,7 +236,7 @@ data_clone(const CMPIData *dp)
 
 /*
  * data_value
- * Convert CMPIValue to target type
+ * Convert CMPIData to target type
  */
 
 static Target_Type
@@ -244,25 +244,68 @@ data_value(const CMPIData *dp)
 {
   Target_Type result = Target_Null;
 
-  if ((dp->type) & CMPI_ARRAY)
-    {
-      int size = CMGetArrayCount(dp->value.array, NULL);
-      int i;
-      result = Target_SizedArray(size);
-      for (i = 0; i < size; --i)
-        {
-           CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
-           Target_Append(result, value_value(&(data.value), (dp->type) & ~CMPI_ARRAY));
-        }
-      Target_INCREF(result);
+  if (dp->state & CMPI_notFound) {
+    SWIG_exception(SWIG_IndexError, "value not found");
+  }
+  else if (dp->state & CMPI_badValue) {
+    SWIG_exception(SWIG_ValueError, "bad value");
+  }
+  else if ((dp->type) & CMPI_ARRAY) {
+    int size = CMGetArrayCount(dp->value.array, NULL);
+    int i;
+    result = Target_SizedArray(size);
+    for (i = 0; i < size; --i) {
+      CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
+      Target_Append(result, value_value(&(data.value), (dp->type) & ~CMPI_ARRAY));
     }
-  else
-    {
-      result = value_value(&(dp->value), dp->type);
-    }
-
+    Target_INCREF(result);
+  }
+  else {
+    result = value_value(&(dp->value), dp->type);
+  }
+fail:
   return result;
 }
+
+
+/*
+ * data_data
+ * Convert CMPIData to target CMPIData
+ */
+
+static Target_Type
+data_data(const CMPIData *dp)
+{
+  Target_Type result = Target_Null;
+
+  if (dp->state & CMPI_notFound) {
+    SWIG_exception(SWIG_IndexError, "value not found");
+  }
+  else if (dp->state & CMPI_badValue) {
+    SWIG_exception(SWIG_ValueError, "bad value");
+  }
+  else if (dp->state & CMPI_nullValue) {
+    Target_INCREF(result);
+  }
+  else if ((dp->type) & CMPI_ARRAY) {
+    int size = CMGetArrayCount(dp->value.array, NULL);
+    int i;
+    result = Target_SizedArray(size);
+    for (i = 0; i < size; --i) {
+      CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
+      Target_Append(result, data_data(&data));
+    }
+    Target_INCREF(result);
+  }
+  else {
+    result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, 1);
+  }
+fail:
+  return result;
+}
+
+
+
 
 #if defined (SWIGRUBY)
 /*
@@ -315,7 +358,8 @@ to_cmpi_string(VALUE data)
    }      
    return CMNewString(broker, str, NULL);
 }
-#endif
+
+#endif /* SWIGRUBY */
 
 /*
 **==============================================================================
