@@ -177,22 +177,22 @@ value_value(const CMPIValue *value, const CMPIType type)
       break;
 
       case CMPI_instance:     /* ((16+0)<<8) */
-        return SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, 1);
+        return SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
       break;
       case CMPI_ref:          /* ((16+1)<<8) */
-        return SWIG_NewPointerObj((void*) (value->ref), SWIGTYPE_p__CMPIObjectPath, 1);
+        return SWIG_NewPointerObj((void*) (value->ref), SWIGTYPE_p__CMPIObjectPath, SWIG_POINTER_OWN);
       break;
       case CMPI_args:         /* ((16+2)<<8) */
-        return SWIG_NewPointerObj((void*) (value->args), SWIGTYPE_p__CMPIArgs, 1);
+        return SWIG_NewPointerObj((void*) (value->args), SWIGTYPE_p__CMPIArgs, SWIG_POINTER_OWN);
       break;
       case CMPI_class:        /* ((16+3)<<8) */
-        return SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, 1);
+        return SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
       break;
       case CMPI_filter:       /* ((16+4)<<8) */
-        return SWIG_NewPointerObj((void*) (value->filter), SWIGTYPE_p__CMPISelectExp, 1);
+        return SWIG_NewPointerObj((void*) (value->filter), SWIGTYPE_p__CMPISelectExp, SWIG_POINTER_OWN);
       break;
       case CMPI_enumeration:  /* ((16+5)<<8) */
-        return SWIG_NewPointerObj((void*) (value->Enum), SWIGTYPE_p__CMPIEnumeration, 1);
+        return SWIG_NewPointerObj((void*) (value->Enum), SWIGTYPE_p__CMPIEnumeration, SWIG_POINTER_OWN);
       break;
       case CMPI_string:       /* ((16+6)<<8) */
         result = Target_String(CMGetCharPtr(value->string));
@@ -204,7 +204,7 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = Target_DateTime(value->dateTime);
       break;
       case CMPI_ptr:          /* ((16+9)<<8) */
-        return SWIG_NewPointerObj((void*) &(value->dataPtr), SWIGTYPE_p__CMPIValuePtr, 1);
+        return SWIG_NewPointerObj((void*) &(value->dataPtr), SWIGTYPE_p__CMPIValuePtr, SWIG_POINTER_OWN);
       break;
       case CMPI_charsptr:     /* ((16+10)<<8) */
          /* FIXME: unused ? */
@@ -298,7 +298,7 @@ data_data(const CMPIData *dp)
     Target_INCREF(result);
   }
   else {
-    result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, 1);
+    result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, SWIG_POINTER_OWN);
   }
 fail:
   return result;
@@ -428,7 +428,7 @@ static void _raise_ex(const CMPIStatus* st)
         ex->description = NULL;
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-    obj = SWIG_NewPointerObj(ex, SWIGTYPE_p__CMPIException, 1);
+    obj = SWIG_NewPointerObj(ex, SWIGTYPE_p__CMPIException, SWIG_POINTER_OWN);
     PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p__CMPIException), obj);
     SWIG_PYTHON_THREAD_END_BLOCK;
     _set_raised();
