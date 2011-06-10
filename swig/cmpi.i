@@ -30,7 +30,7 @@
 #define Target_DECREF(x) Py_DECREF(x)
 #define Target_True Py_True
 #define Target_False Py_False
-#define Target_Null NULL
+#define Target_Null Py_None
 #define Target_Void Py_None
 #define Target_Type PyObject*
 #define Target_Bool(x) PyBool_FromLong(x)
