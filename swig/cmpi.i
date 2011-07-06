@@ -258,7 +258,6 @@ data_value(const CMPIData *dp)
       CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
       Target_Append(result, value_value(&(data.value), (dp->type) & ~CMPI_ARRAY));
     }
-    Target_INCREF(result);
   }
   else {
     result = value_value(&(dp->value), dp->type);
@@ -295,7 +294,6 @@ data_data(const CMPIData *dp)
       CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
       Target_Append(result, data_data(&data));
     }
-    Target_INCREF(result);
   }
   else {
     result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, SWIG_POINTER_OWN);
