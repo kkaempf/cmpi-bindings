@@ -344,7 +344,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 		{
 		  _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
 		  CMPIString* trace = get_exc_trace(hdl->broker);
-          PyErr_Clear(); 
+		  PyErr_Clear(); 
 		  TARGET_THREAD_END_BLOCK; 
 		  _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), 
 					  CMGetCharsPtr(trace, NULL)));
