@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jul  6 12:46:39 UTC 2011 - kkaempf@novell.com
+
+- Fix Python memory leaks, remove excessive INCREFs
+  (by Mihai Ibanescu)
+- v 0.4.16
+
+-------------------------------------------------------------------
 Wed Jul  6 09:47:53 UTC 2011 - kkaempf@novell.com
 
 - Fix Python backend loading issue.
