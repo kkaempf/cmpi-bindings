@@ -98,10 +98,14 @@ string2target(const char *s)
     Target_Type obj;
 
     if (s == NULL)
-        return Target_Null;
-
-    obj = Target_String(s);
- 
+    {
+        obj = Target_Null;
+	Target_INCREF(obj);
+    }
+    else
+    {
+	obj = Target_String(s);
+    }
     return obj;
 }
 
@@ -120,16 +124,17 @@ proplist2target(const char** cplist)
 
     if (cplist == NULL)
     {
-        Target_INCREF(Target_Void);
-        return Target_Void; 
+	pl = Target_Null;
+        Target_INCREF(pl);
     }
- 
-    pl = Target_Array(); 
-    for (; (cplist!=NULL && *cplist != NULL); ++cplist)
+    else
     {
-        Target_Append(pl, Target_String(*cplist)); 
+        pl = Target_Array(); 
+        for (; (cplist!=NULL && *cplist != NULL); ++cplist)
+        {
+            Target_Append(pl, Target_String(*cplist)); 
+        }
     }
- 
     return pl; 
 }
 
@@ -427,11 +432,14 @@ GetInstance(CMPIInstanceMI * self,
     _reference = SWIG_NewPointerObj((void*) reference, SWIGTYPE_p__CMPIObjectPath, 0);
     _properties = proplist2target(properties); 
 
+    /* For Python, TargetCall() packs all arguments into a tuple and releases this tuple,
+     * effectively DECREFing all elements */
+
     TargetCall((ProviderMIHandle*)self->hdl, &status, "get_instance", 4, 
                                                                _context,
                                                                _result, 
                                                                _reference,
-                                                               _properties); 
+                                                               _properties);
     TARGET_THREAD_END_BLOCK; 
     _SBLIM_TRACE(1,("GetInstance() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
     return status;
