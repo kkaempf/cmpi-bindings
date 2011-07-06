@@ -337,10 +337,10 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
    * import 'cmpi_pywbem_bindings'
    */
   
-  if (_TARGET_MODULE == NULL)
+  if (_TARGET_MODULE == Target_Null)
   {
     _TARGET_MODULE = PyImport_ImportModule("cmpi_pywbem_bindings");
-    if (_TARGET_MODULE == NULL)
+    if (_TARGET_MODULE == NULL || _TARGET_MODULE == Target_Null)
     {
       _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
       CMPIString* trace = get_exc_trace(hdl->broker);
@@ -356,12 +356,15 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   _SBLIM_TRACE(1,("<%d/0x%x> Python: _TARGET_MODULE at %p", getpid(), pthread_self(), _TARGET_MODULE));
   
   /* cmpi_pywbem_bindings::get_cmpi_proxy_provider */
-  PyObject *provclass = PyObject_GetAttrString(_TARGET_MODULE, 
-                           "get_cmpi_proxy_provider"); 
+  PyObject *provclass = PyObject_GetAttrString(_TARGET_MODULE, "get_cmpi_proxy_provider"); 
   if (provclass == NULL)
   {
+    _SBLIM_TRACE(1,("<%d/0x%x> Python: cmpi_pywbem_bindings does not define get_cmpi_proxy_provider", getpid(), pthread_self()));
+    CMPIString* trace = get_exc_trace(hdl->broker);
+    PyErr_Clear(); 
     TARGET_THREAD_END_BLOCK; 
-    _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
+    _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), CMGetCharsPtr(trace, NULL)));
+    _CMPI_SETFAIL(trace); 
     return -1; 
   }
   PyObject *broker = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
@@ -377,8 +380,12 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   Py_DecRef(provclass); 
   if (provinst == NULL)
   {
+    _SBLIM_TRACE(1,("<%d/0x%x> Python: call to cmpi_pywbem_bindings::get_cmpi_proxy_provider() failed", getpid(), pthread_self()));
+    CMPIString* trace = get_exc_trace(hdl->broker);
+    PyErr_Clear(); 
     TARGET_THREAD_END_BLOCK; 
-    _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
+    _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), CMGetCharsPtr(trace, NULL)));
+    _CMPI_SETFAIL(trace); 
     return -1; 
   }
   /* save per-MI provider instance */

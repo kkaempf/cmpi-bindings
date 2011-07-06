@@ -155,7 +155,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
     }
   /* save pointer to module */
   _TARGET_MODULE = rb_const_get(rb_cModule, rb_intern(RB_BINDINGS_MODULE));
-  if (NIL_P(_TARGET_MODULE))
+  if (_TARGET_MODULE == Target_Null)
     {
       _SBLIM_TRACE(1,("<%d> Ruby: import '%s' doesn't define module '%s'", getpid(), RB_BINDINGS_MODULE));
       st->rc = CMPI_RC_ERR_NOT_FOUND;
@@ -320,6 +320,6 @@ static void
 TargetCleanup(void)
 {
   ruby_finalize();
-  _TARGET_MODULE = Qnil;   
+  _TARGET_MODULE = Target_Null;   
   return;
 }
