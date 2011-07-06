@@ -339,32 +339,31 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   
   if (_TARGET_MODULE == NULL)
   {
-	  _TARGET_MODULE = PyImport_ImportModule("cmpi_pywbem_bindings");
-	  if (_TARGET_MODULE == NULL)
-		{
-		  _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
-		  CMPIString* trace = get_exc_trace(hdl->broker);
-		  PyErr_Clear(); 
-		  TARGET_THREAD_END_BLOCK; 
-		  _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), 
-					  CMGetCharsPtr(trace, NULL)));
-		  _CMPI_SETFAIL(trace); 
-		  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
-		  return -1; 
-		}
+    _TARGET_MODULE = PyImport_ImportModule("cmpi_pywbem_bindings");
+    if (_TARGET_MODULE == NULL)
+    {
+      _SBLIM_TRACE(1,("<%d/0x%x> Python: import cmpi_pywbem_bindings failed", getpid(), pthread_self()));
+      CMPIString* trace = get_exc_trace(hdl->broker);
+      PyErr_Clear(); 
+      TARGET_THREAD_END_BLOCK; 
+      _SBLIM_TRACE(1,("<%d/0x%x> %s", getpid(), pthread_self(), CMGetCharsPtr(trace, NULL)));
+      _CMPI_SETFAIL(trace); 
+      pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+      return -1; 
     }
-    pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+  }
+  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   _SBLIM_TRACE(1,("<%d/0x%x> Python: _TARGET_MODULE at %p", getpid(), pthread_self(), _TARGET_MODULE));
   
   /* cmpi_pywbem_bindings::get_cmpi_proxy_provider */
   PyObject *provclass = PyObject_GetAttrString(_TARGET_MODULE, 
                            "get_cmpi_proxy_provider"); 
   if (provclass == NULL)
-    {
-      TARGET_THREAD_END_BLOCK; 
-      _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
-      return -1; 
-    }
+  {
+    TARGET_THREAD_END_BLOCK; 
+    _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
+    return -1; 
+  }
   PyObject *broker = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
   PyObject *args = PyTuple_New(2); 
   _SBLIM_TRACE(1,("\n<%d/0x%x> >>>>> TargetInitialize(Python) called, MINAME=%s\n",
@@ -377,11 +376,11 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   Py_DecRef(args); 
   Py_DecRef(provclass); 
   if (provinst == NULL)
-    {
-      TARGET_THREAD_END_BLOCK; 
-      _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
-      return -1; 
-    }
+  {
+    TARGET_THREAD_END_BLOCK; 
+    _CMPI_SETFAIL(get_exc_trace(hdl->broker)); 
+    return -1; 
+  }
   /* save per-MI provider instance */
   hdl->implementation = provinst; 
   
