@@ -195,7 +195,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     PyObject *pyfunc = NULL; 
     PyObject *prv = NULL; 
  
-    pyargs = PyTuple_New(nargs); 
     pyfunc = PyObject_GetAttrString(hdl->implementation, opname); 
     if (pyfunc == NULL)
     {
@@ -221,6 +220,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
         goto cleanup; 
     }
     
+    pyargs = PyTuple_New(nargs); 
     va_start(vargs, nargs); 
     int i; 
     for (i = 0; i < nargs; ++i)
