@@ -1143,7 +1143,7 @@ static CMPIIndicationMIFT IndicationMIFT__={
 static CMPIAssociationMIFT AssociationMIFT__={ 
     CMPICurrentVersion, 
     CMPICurrentVersion, 
-    "instanceCmpi_Swig",  // miName
+    "associatonCmpi_Swig",  // miName
     AssocCleanup, 
     associators, 
     associatorNames, 
@@ -1155,7 +1155,7 @@ static CMPIAssociationMIFT AssociationMIFT__={
 static CMPIInstanceMIFT InstanceMIFT__={ 
     CMPICurrentVersion, 
     CMPICurrentVersion, 
-    "associatorCmpi_Swig",  // miName
+    "instanceCmpi_Swig",  // miName
     InstCleanup, 
     EnumInstanceNames, 
     EnumInstances, 
