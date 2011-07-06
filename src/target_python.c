@@ -397,32 +397,31 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 static void
 TargetCleanup(void)
 {
-    /* Decrement _MI_COUNT, protected by _CMPI_INIT_MUTEX
-     * call Py_Finalize when _MI_COUNT drops to zero
-     */
-    if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
-    {
-        perror("Can't lock _CMPI_INIT_MUTEX");
-        abort();
-    }
-    if (--_MI_COUNT > 0) 
-    {
-        pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
-        return;
-    }
-
-    TARGET_THREAD_BEGIN_BLOCK;
-    Py_DecRef(_TARGET_MODULE);
-    TARGET_THREAD_END_BLOCK;
-  
-    PyEval_AcquireLock(); 
-    PyThreadState_Swap(cmpiMainPyThreadState); 
-    if (_TARGET_INIT)  // if Python is initialized and _MI_COUNT == 0, call Py_Finalize
-    {
-        _SBLIM_TRACE(1,("Calling Py_Finalize()"));
-        Py_Finalize();
-        _TARGET_INIT=0; // false
-    }
+  /* Decrement _MI_COUNT, protected by _CMPI_INIT_MUTEX
+   * call Py_Finalize when _MI_COUNT drops to zero
+   */
+  if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
+  {
+    perror("Can't lock _CMPI_INIT_MUTEX");
+    abort();
+  }
+  if (--_MI_COUNT > 0) 
+  {
     pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+    return;
+  }
+
+  TARGET_THREAD_BEGIN_BLOCK;
+  Py_DecRef(_TARGET_MODULE);
+  TARGET_THREAD_END_BLOCK;
   
+  PyEval_AcquireLock(); 
+  PyThreadState_Swap(cmpiMainPyThreadState); 
+  if (_TARGET_INIT)  // if Python is initialized and _MI_COUNT == 0, call Py_Finalize
+  {
+    _SBLIM_TRACE(1,("Calling Py_Finalize()"));
+    Py_Finalize();
+    _TARGET_INIT=0; // false
+  }
+  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
 }
