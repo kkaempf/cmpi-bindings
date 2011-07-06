@@ -40,6 +40,7 @@
 #define Target_Real(x) Py_None
 #define Target_Array() PyList_New(0)
 #define Target_SizedArray(len) PyList_New(len)
+#define Target_ListSet(x,n,y) PyList_SetItem(x,n,y)
 #define Target_Append(x,y) PyList_Append(x,y)
 #define Target_DateTime(x) Py_None
 #include <Python.h>
@@ -65,6 +66,7 @@
 #define Target_Real(x) rb_float_new(x)
 #define Target_Array() rb_ary_new()
 #define Target_SizedArray(len) rb_ary_new2(len)
+#define Target_ListSet(x,n,y) rb_ary_store(x,n,y)
 #define Target_Append(x,y) rb_ary_push(x,y)
 #define Target_DateTime(x) Qnil
 #define TARGET_THREAD_BEGIN_BLOCK do {} while(0)
@@ -100,6 +102,7 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #define Target_Real(x) SWIG_From_double(x)
 #define Target_Array() (SV *)newAV()
 #define Target_SizedArray(len) (SV *)newAV()
+#define Target_ListSet(x,n,y) av_store((AV *)(x),n,y)
 #define Target_Append(x,y) av_push(((AV *)(x)), y)
 #define Target_DateTime(x) NULL
 #include <perl.h>
@@ -256,7 +259,8 @@ data_value(const CMPIData *dp)
     result = Target_SizedArray(size);
     for (i = 0; i < size; --i) {
       CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
-      Target_Append(result, value_value(&(data.value), (dp->type) & ~CMPI_ARRAY));
+      Target_Type value = value_value(&(data.value), (dp->type) & ~CMPI_ARRAY);
+      Target_ListSet(result, i, value);
     }
   }
   else {
@@ -292,7 +296,8 @@ data_data(const CMPIData *dp)
     result = Target_SizedArray(size);
     for (i = 0; i < size; --i) {
       CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
-      Target_Append(result, data_data(&data));
+      Target_Type value = data_data(&data);
+      Target_ListSet(result, i, value);
     }
   }
   else {
