@@ -248,7 +248,9 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       va_start(vargs, nargs);
       for (i = 3; i < nargs; ++i)
 	{
-	  args[i] = va_arg(vargs, VALUE);
+	  VALUE value;
+	  value = va_arg(vargs, VALUE);
+	  args[i] = (value == (VALUE)NULL) ? Qnil : value;
 	}
       va_end(vargs);
     }

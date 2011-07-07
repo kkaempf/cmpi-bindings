@@ -650,10 +650,10 @@ associatorNames(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    _assocClass = Target_Null; 
-    _resultClass = Target_Null; 
-    _role = Target_Null; 
-    _resultRole = Target_Null;
+    _assocClass = (Target_Type)NULL; 
+    _resultClass = (Target_Type)NULL; 
+    _role = (Target_Type)NULL; 
+    _resultRole = (Target_Type)NULL;
     if (assocClass != NULL)
     {
         _assocClass = string2target(assocClass); 
@@ -718,10 +718,10 @@ associators(
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
     _props = proplist2target(properties); 
-    _assocClass = Target_Null;
-    _resultClass = Target_Null;
-    _role = Target_Null;
-    _resultRole = Target_Null;
+    _assocClass = (Target_Type)NULL;
+    _resultClass = (Target_Type)NULL;
+    _role = (Target_Type)NULL;
+    _resultRole = (Target_Type)NULL;
     if (assocClass != NULL)
     {
         _assocClass = string2target(assocClass); 
@@ -781,8 +781,8 @@ referenceNames(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    _resultClass = Target_Null;
-    _role = Target_Null;
+    _resultClass = (Target_Type)NULL;
+    _role = (Target_Type)NULL;
     if (role != NULL) 
     { 
         _role = string2target(role); 
@@ -834,8 +834,8 @@ references(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    _role = Target_Null;
-    _resultClass = Target_Null;
+    _role = (Target_Type)NULL;
+    _resultClass = (Target_Type)NULL;
     if (role != NULL) 
     { 
         _role = string2target(role); 
