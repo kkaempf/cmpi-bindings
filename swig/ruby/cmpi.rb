@@ -88,11 +88,12 @@ module Cmpi
       end
     end
     def to_s
-      s = "#{self.class}("
+      s = ""
       self.each do |value,name|
-	s << "\"#{name}\" => #{value.inspect}, "
+	s << ", " unless s.empty?
+	s << "\"#{name}\" => #{value.inspect}"
       end
-      s << ")"
+      s = "#{self.class}(" + s + ")"
     end
   end
 end
