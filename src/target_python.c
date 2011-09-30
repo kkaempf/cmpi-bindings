@@ -281,9 +281,11 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     st->rc = (CMPIrc)pi; 
     if (prstr == Py_None)
     {
+#if 0
         TARGET_THREAD_BEGIN_ALLOW;
         st->msg = hdl->broker->eft->newString(hdl->broker, "", NULL); 
         TARGET_THREAD_END_ALLOW; 
+#endif
     }
     else
     {
@@ -402,8 +404,11 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
  */
 
 static void
-TargetCleanup(void)
+TargetCleanup(ProviderMIHandle * hdl)
 {
+  if (hdl && hdl->implementation)
+    Py_DecRef(hdl->implementation);
+
   /* Decrement _MI_COUNT, protected by _CMPI_INIT_MUTEX
    * call Py_Finalize when _MI_COUNT drops to zero
    */

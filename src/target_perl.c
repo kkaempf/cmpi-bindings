@@ -148,7 +148,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
  */
 
 static void
-TargetCleanup(void)
+TargetCleanup(ProviderMIHandle * hdl)
 {
   _TARGET_MODULE = Target_Null;
   perl_destruct(_TARGET_INIT);
