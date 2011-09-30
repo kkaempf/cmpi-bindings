@@ -192,7 +192,7 @@
     s = CDToString(broker, $self, &st);
     RAISE_IF(st);
 
-    result = strdup(CMGetCharPtr(result));
+    result = strdup(CMGetCharPtr(s));
     CMRelease(s);
     return result;
   }

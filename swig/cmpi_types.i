@@ -394,10 +394,10 @@ typedef struct _CMPIException {} CMPIException;
   const char* string() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIString* result;
+    CMPIString* s;
     const CMPIBroker* broker = cmpi_broker();
 
-    result = CDToString(broker, $self, &st);
+    s = CDToString(broker, $self, &st);
     RAISE_IF(st);
 
     const char *result = strdup(CMGetCharPtr(s));
