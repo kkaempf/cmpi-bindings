@@ -161,7 +161,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
       st->rc = CMPI_RC_ERR_NOT_FOUND;
       return -1;
     }  
-  _SBLIM_TRACE(1,("<%d> RbGlobalInitialize() succeeded -> %ld", getpid(), _TARGET_MODULE)); 
+  _SBLIM_TRACE(1,("<%d> RbGlobalInitialize() succeeded -> %p", getpid(), (void *)_TARGET_MODULE)); 
   return 0; 
 }
 
@@ -319,7 +319,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
  */
 
 static void
-TargetCleanup(void)
+TargetCleanup(ProviderMIHandle * hdl)
 {
   ruby_finalize();
   _TARGET_MODULE = Target_Null;   
