@@ -454,6 +454,7 @@ typedef struct _CMPIException {} CMPIException;
     if (cn == NULL) { /* assume creating from string representation */
       /* parse <namespace>:<classname>[.<key>=<value>[,<key>=<value>]...] */
       CMPIObjectPath *path;
+      CMPIValue value;
       const char *ptr;
       
       /* find and extract namespace */
@@ -461,23 +462,29 @@ typedef struct _CMPIException {} CMPIException;
       if (ptr == NULL)
         return NULL; /* should raise */
       ns = strndup(ns, ptr-ns);
-      
       /* find and extract classname */
       cn = ++ptr;
       ptr = strchr(cn, '.');
       if (ptr == NULL)
         return NULL; /* should raise */
+      cn = strndup(cn, ptr-cn);
       path = CMNewObjectPath( broker, ns, cn, &st );
       /* find and extract properties */
+      
+      /*
+       * FIXME: lookup the class definition and add the keys with
+       * properly typed values
+       */
       ptr++;
       while (*ptr) {
-        const char *key;
-	const char *val;
+        char *key;
+	char *val;
 	
 	key = ptr;
 	ptr = strchr(key, '=');
 	if (ptr == NULL)
           return NULL; /* should raise */
+	key = strndup(key, ptr-key);
 	val = ++ptr;
 	if (*val == '"') {
 	  val++;
@@ -497,7 +504,11 @@ typedef struct _CMPIException {} CMPIException;
 	  val = strndup(val, ptr-val);
 	}
 	ptr++;
-	CMAddKey(path, key, val, CMPI_string);
+	value.string = CMNewString(broker, val, NULL);
+	free(val);
+	CMAddKey(path, key, &value, CMPI_string);
+	CMRelease(value.string);
+	free(key);
       }
       return path;
     }
@@ -506,7 +517,7 @@ typedef struct _CMPIException {} CMPIException;
 
   ~CMPIObjectPath() 
   { 
-    CMRelease( $self );
+/* handled by sfcb    CMRelease( $self ); */
   }
 
   /**
@@ -544,7 +555,7 @@ FIXME: if clone() is exposed, release() must also
   CMPIStatus set(VALUE property, VALUE data)
   {
     const char *name;
-    CMPIValue *value = (CMPIValue *)malloc(sizeof(CMPIValue));
+    CMPIValue value;
     CMPIType type;
     if (SYMBOL_P(property)) {
       name = rb_id2name(SYM2ID(property));
@@ -554,35 +565,35 @@ FIXME: if clone() is exposed, release() must also
     }
     switch (TYPE(data)) {
       case T_FLOAT:
-        value->Float = RFLOAT(data)->value;
+        value.Float = RFLOAT(data)->value;
         type = CMPI_real32;
       break;
       case T_STRING:
-        value->string = to_cmpi_string(data);
+        value.string = to_cmpi_string(data);
         type = CMPI_string;
       break; 
       case T_FIXNUM:
-        value->Int = FIX2ULONG(data);
+        value.Int = FIX2ULONG(data);
         type = CMPI_uint32;
       break;
       case T_TRUE:
-        value->boolean = 1;
+        value.boolean = 1;
         type = CMPI_boolean;
       break;
       case T_FALSE:
-        value->boolean = 0;
+        value.boolean = 0;
         type = CMPI_boolean;
       break;
       case T_SYMBOL:
-        value->string = to_cmpi_string(data);
+        value.string = to_cmpi_string(data);
         type = CMPI_string;
       break;
       default:
-        value->chars = NULL;
+        value.chars = NULL;
         type = CMPI_null;
         break;
     }
-    return CMAddKey($self, name, value, type);
+    return CMAddKey($self, name, &value, type);
   }
 #endif
 
@@ -866,7 +877,7 @@ FIXME: if clone() is exposed, release() must also
 
   ~CMPIInstance() 
   { 
-    CMRelease( $self );
+/* handled in sfcb    CMRelease( $self ); */
   }
 
 #if defined(SWIGRUBY)
