@@ -94,6 +94,11 @@
     Target_Type value = data_value($self);
     return rb_funcall(value, rb_intern("to_s"), 0);
   }
+  VALUE inspect()
+  {
+    Target_Type value = data_value($self);
+    return rb_funcall(value, rb_intern("inspect"), 0);
+  }
 #endif
 
 #if defined(SWIGRUBY)
@@ -164,30 +169,40 @@
    *
    * DEPRECATED
    */
+  %newobject to_s;
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
   /* Return string representation */
+  %newobject string;
   const char* string() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIString* result;
+    CMPIString* s;
+    const char *result;
     const CMPIBroker* broker = cmpi_broker();
 
-    result = CDToString(broker, $self, &st);
+    s = CDToString(broker, $self, &st);
     RAISE_IF(st);
 
-    return CMGetCharPtr(result);
+    result = strdup(CMGetCharPtr(result));
+    CMRelease(s);
+    return result;
   }
 #else
+  %newobject to_s;
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
 }

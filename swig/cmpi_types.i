@@ -126,6 +126,7 @@ typedef struct _CMPIException {} CMPIException;
   ~CMPIException() 
   {
       free($self->description);
+      free($self);
   }
 #if defined(SWIGRUBY)
 %rename("error_code") get_error_code();
@@ -201,8 +202,12 @@ typedef struct _CMPIException {} CMPIException;
   }
 
 /* Returns a string which describes the alternate error type. */
+  %newobject other_type;
   const char *other_type() {
-    return CMGetCharPtr(CMGetOtherErrorType($self, NULL));
+    CMPIString *s = CMGetOtherErrorType($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 
 #if defined(SWIGRUBY)
@@ -214,18 +219,30 @@ typedef struct _CMPIException {} CMPIException;
   }
 
   /* Returns a string which describes the owning entity. */
+  %newobject owning_entity;
   const char *owning_entity() {
-    return CMGetCharPtr(CMGetOwningEntity($self, NULL));
+    CMPIString *s = CMGetOwningEntity($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
   /* Returns a string which is the message ID. */
+  %newobject message_id;
   const char *message_id() {
-    return CMGetCharPtr(CMGetMessageID($self, NULL));
+    CMPIString *s = CMGetMessageID($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
-  /* Returns a string comnating an error message. */
+  /* Returns a string combinating an error message. */
+  %newobject message;
   const char *message() {
-    return CMGetCharPtr(CMGetErrorMessage($self, NULL));
+    CMPIString *s = CMGetErrorMessage($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
   /* Returns the perceieved severity of this error. */
@@ -247,8 +264,12 @@ typedef struct _CMPIException {} CMPIException;
   }
   
   /* Returns a string which describes the probable cause. */
+  %newobject probable_cause_description;
   const char *probable_cause_description() {
-    return CMGetCharPtr(CMGetProbableCauseDescription($self, NULL));
+    CMPIString *s = CMGetProbableCauseDescription($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
   /* Returns an array of strings which describes recomended actions. */
@@ -265,8 +286,12 @@ typedef struct _CMPIException {} CMPIException;
   }
   
   /* Returns a string which describes the Error source. */
+  %newobject source;
   const char *source() {
-    return CMGetCharPtr(CMGetErrorSource($self, NULL));
+    CMPIString *s = CMGetErrorSource($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
 #if defined(SWIGRUBY)
@@ -293,8 +318,12 @@ typedef struct _CMPIException {} CMPIException;
   
   /* Returns a string which describes the 'other' format, only
      available if the error source is OTHER. */
+  %newobject other_format;
   const char *other_format() {
-    return CMGetCharPtr(CMGetOtherErrorSourceFormat($self, NULL));
+    CMPIString *s = CMGetOtherErrorSourceFormat($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
 #if defined(SWIGRUBY)
@@ -311,8 +340,12 @@ typedef struct _CMPIException {} CMPIException;
   }
   
   /* Returns a string which describes the status code error. */
+  %newobject status_description;
   const char *status_description() {
-    return CMGetCharPtr(CMGetCIMStatusCodeDescription($self, NULL));
+    CMPIString *s = CMGetCIMStatusCodeDescription($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
 #if defined(SWIGRUBY)
@@ -357,6 +390,7 @@ typedef struct _CMPIException {} CMPIException;
 %rename ("to_s") string();
 #endif
   /* Return string representation */
+  %newobject string;
   const char* string() 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -366,7 +400,9 @@ typedef struct _CMPIException {} CMPIException;
     result = CDToString(broker, $self, &st);
     RAISE_IF(st);
 
-    return CMGetCharPtr(result);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
 
@@ -470,6 +506,7 @@ typedef struct _CMPIException {} CMPIException;
 
   ~CMPIObjectPath() 
   { 
+    CMRelease( $self );
   }
 
   /**
@@ -488,9 +525,13 @@ FIXME: if clone() is exposed, release() must also
 %rename ("to_s") string();
 #endif
   /* Return string representation */
+  %newobject string;
   const char *string()
   {
-    return CMGetCharPtr($self->ft->toString($self, NULL));
+    CMPIString *s = $self->ft->toString($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
 #if defined(SWIGRUBY)
@@ -574,6 +615,7 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
+  %newobject get_key_at;
 #if defined (SWIGRUBY)
   %rename("key_at") get_key_at(int index);
   VALUE
@@ -592,10 +634,12 @@ FIXME: if clone() is exposed, release() must also
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetKeyAt($self, index, &s, &st);
-    Target_Type result = Target_Null;
+    Target_Type result;
     if (st.rc)
     {
         RAISE_IF(st);
+	result = Target_Null;
+	Target_INCREF(result);
         return result;
     }
 
@@ -611,6 +655,7 @@ FIXME: if clone() is exposed, release() must also
     Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
     TARGET_THREAD_END_BLOCK;
+    CMRelease(s);
     return result;
   }
 
@@ -641,7 +686,7 @@ FIXME: if clone() is exposed, release() must also
       VALUE rbdata = data_data(&data);
       rb_ary_push(yield, rbdata);
       rb_ary_push(yield, rb_str_new2(CMGetCharPtr(name)));
-      
+      CMRelease(name);
       rb_yield(yield);
     }
   }
@@ -731,13 +776,13 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Get the namespace component. */
+  %newobject namespace;
   const char *namespace() 
   {
-    const char* result;
     CMPIStatus st = { CMPI_RC_OK, NULL };
-
-    result = CMGetCharPtr(CMGetNameSpace($self, &st));
-
+    CMPIString *s = CMGetNameSpace($self, &st);
+    const char* result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
     return result;
   }
 
@@ -760,14 +805,15 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Get the hostname component. */
+  %newobject hostname;
   const char *hostname() 
   {
     const char* result;
     CMPIStatus st = { CMPI_RC_OK, NULL };
-
-    result = CMGetCharPtr(CMGetHostname($self, NULL));
+    CMPIString *s = CMGetHostname($self, &st);
     RAISE_IF(st);
-
+    result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
     return result;
   }
 
@@ -781,14 +827,15 @@ FIXME: if clone() is exposed, release() must also
   }
 
   /* Get the classname component. */
+  %newobject classname;
   const char *classname() 
   {
     const char* result;
     CMPIStatus st = { CMPI_RC_OK, NULL };
-
-    result = CMGetCharPtr(CMGetClassName($self, &st));
+    CMPIString *s = CMGetClassName($self, &st);
     RAISE_IF(st);
-
+    result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
     return result;
   }
 }
@@ -804,6 +851,7 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIInstance 
 {
+  /* path: ObjectPath containing namespace and classname. */
 #if HAVE_CMPI_BROKER
   CMPIInstance(CMPIObjectPath *path)
 #else
@@ -816,9 +864,9 @@ FIXME: if clone() is exposed, release() must also
     return CMNewInstance(broker, path, NULL);
   }
 
-  /* path: ObjectPath containing namespace and classname. */
   ~CMPIInstance() 
   { 
+    CMRelease( $self );
   }
 
 #if defined(SWIGRUBY)
@@ -948,10 +996,11 @@ FIXME: if clone() is exposed, release() must also
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetPropertyAt($self, index, &s, &st);
-    result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
+	result = Target_Null;
+	Target_INCREF(result);
         return result;
     }
 /*    fprintf(stderr, "CMGetPropertyAt(%d) -> name %s, data type %x, state %x, value %p\n", index, CMGetCharPtr(s), data.type, data.state, data.value);
@@ -969,6 +1018,7 @@ FIXME: if clone() is exposed, release() must also
     Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
     TARGET_THREAD_END_BLOCK;
+    CMRelease(s);
     return result;
   }
 
@@ -1127,6 +1177,7 @@ FIXME: if clone() is exposed, release() must also
 {
   ~CMPIArgs() 
   { 
+    CMRelease( $self );
   }
   
   /*
@@ -1184,10 +1235,11 @@ FIXME: if clone() is exposed, release() must also
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetArgAt($self, index, &s, &st);
 
-    result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
+	result = Target_Null;
+	Target_INCREF(result);
         return result;
     }
     TARGET_THREAD_BEGIN_BLOCK;
@@ -1202,6 +1254,7 @@ FIXME: if clone() is exposed, release() must also
     Target_Append(result, Target_String(CMGetCharPtr(s)));
 #endif
     TARGET_THREAD_END_BLOCK;
+    CMRelease(s);
     return result;
   }
 
@@ -1233,7 +1286,10 @@ FIXME: if clone() is exposed, release() must also
  *       and provides mechanism to operate on the query.
  */
 %extend _CMPISelectExp {
-  ~CMPISelectExp() { }
+  ~CMPISelectExp()
+  {
+    CMRelease( $self );
+  }
   
   /* Return string representation */
 #ifdef SWIGPYTHON
@@ -1242,8 +1298,12 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string() {
-    return CMGetCharPtr(CMGetSelExpString($self, NULL));
+    CMPIString *s = CMGetSelExpString($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 }
 
@@ -1265,10 +1325,13 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string() {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
 }
@@ -1303,10 +1366,13 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string() {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
 }
@@ -1322,6 +1388,9 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIEnumeration 
 {
+  ~_CMPIEumeration() {
+    CMRelease( $self );
+  }	
 #if defined(SWIGRUBY)
   %alias length "size";
 #endif
@@ -1385,16 +1454,18 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string()
   {
     const CMPIBroker* broker = cmpi_broker();
     CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIString *result;
+    CMPIString *s;
     
-    result = CDToString(broker, $self, &st);
+    s = CDToString(broker, $self, &st);
     RAISE_IF(st);
-
-    return CMGetCharPtr(result);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
 }
@@ -1410,6 +1481,9 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIArray 
 {
+  ~_CMPIArray() {
+    CMRelease( $self );
+  }	
   /* Return string representation */
 #if HAVE_CMPI_BROKER
 #ifdef SWIGPYTHON
@@ -1418,11 +1492,14 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string()
   {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif
   int size() 
@@ -1478,6 +1555,9 @@ FIXME: if clone() is exposed, release() must also
  *
  */
 %extend _CMPIString {
+  ~_CMPIString() {
+    CMRelease( $self );
+  }	
 #ifdef SWIGPYTHON
 %rename ("__str__") string();
 #endif
@@ -1499,6 +1579,9 @@ FIXME: if clone() is exposed, release() must also
  *
  */
 %extend _CMPIContext {
+  ~_CMPIContext() {
+    CMRelease( $self );
+  }	
   /*
    * Return string representation
    */
@@ -1509,10 +1592,13 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string() {
     const CMPIBroker* broker = cmpi_broker();
     CMPIString *s = CDToString(broker, $self, NULL);
-    return CMGetCharPtr(s);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
 #endif  
   /*
@@ -1551,10 +1637,11 @@ FIXME: if clone() is exposed, release() must also
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data = CMGetContextEntryAt($self, index, &s, &st);
 
-    result = Target_Null;
     if (st.rc)
     {
         RAISE_IF(st);
+	result = Target_Null;
+	Target_INCREF(result);
         return result;
     }
     TARGET_THREAD_BEGIN_BLOCK;
@@ -1569,6 +1656,7 @@ FIXME: if clone() is exposed, release() must also
     Target_Append(result, tdata);
 #endif
     TARGET_THREAD_END_BLOCK;
+    CMRelease(s);
     return result;
   }
 
@@ -1592,7 +1680,10 @@ FIXME: if clone() is exposed, release() must also
  *
  */
 %extend _CMPIDateTime {
-  ~CMPIDateTime() { }
+  ~CMPIDateTime()
+  {
+    CMRelease( $self );
+  }
   
   /* Return string representation */
 #ifdef SWIGPYTHON
@@ -1601,8 +1692,12 @@ FIXME: if clone() is exposed, release() must also
 #ifdef SWIGRUBY
 %rename ("to_s") string();
 #endif
+  %newobject string;
   const char* string() {
-    return CMGetCharPtr(CMGetStringFormat($self, NULL));
+    CMPIString *s = CMGetStringFormat($self, NULL);
+    const char *result = strdup(CMGetCharPtr(s));
+    CMRelease(s);
+    return result;
   }
   
   /* Return integer representation */

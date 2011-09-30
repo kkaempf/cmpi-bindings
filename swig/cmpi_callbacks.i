@@ -12,6 +12,8 @@ typedef struct _CMPIBroker {} CMPIBroker;
  * functions to the Provider
  *
  */
+
+
 %extend CMPIBroker 
 {
 #if defined(SWIGPERL)
@@ -264,6 +266,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
+  %newobject new_object_path;
   CMPIObjectPath* new_object_path(const char* ns, const char* cname)
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -275,17 +278,18 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
+  %newobject new_instance;
   CMPIInstance* new_instance(const CMPIObjectPath* path, int allow_null_ns)
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIInstance* result;
-    CMPIString* ns;
-    const char* str;
+    CMPIString* ns = NULL;
 
     /* Raise exception if no namespace */
 
     if (!allow_null_ns)
     {
+        const char* str;
         if (!(ns = CMGetNameSpace(path, &st)) || st.rc ||
             !(str = CMGetCharsPtr(ns, NULL)) || *str == '\0')
         {
@@ -294,6 +298,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
             _raise_ex(&st);
             return NULL;
         }
+	if (ns) CMRelease(ns);
     }
 
     result = CMNewInstance($self, path, &st); 
@@ -302,6 +307,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
+  %newobject new_args;
   CMPIArgs* new_args(void)
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -313,6 +319,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
+  %newobject new_datetime;
   CMPIDateTime* new_datetime(void) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -324,6 +331,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
+  %newobject new_datetime_from_uint64;
   CMPIDateTime* new_datetime_from_uint64(
     uint64_t bintime, 
     int interval = 0 ) 
@@ -338,6 +346,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
   }
 
   /* utc Date/Time definition in UTC format */
+  %newobject new_datetime_from_string;
   CMPIDateTime* new_datetime_from_string(const char *utc) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -349,6 +358,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
+  %newobject new_string;
   CMPIString* new_string(const char *s) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -363,6 +373,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
   /* count: Maximum number of elements
    * type: Element type
    */
+  %newobject new_array;
   CMPIArray* new_array(int count, CMPIType type ) 
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -383,6 +394,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
    * lang: The query language.
    * projection [Output]: Projection specification (suppressed when NULL).
    */
+  %newobject new_select_exp;
   CMPISelectExp* new_select_exp(
     const char *query, 
     const char *lang, 
@@ -405,6 +417,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
   * pc: Probable caues of this error.
   * cimStatusCodeStatus: Code.
   */
+  %newobject new_error;
   CMPIError* new_error(
     const char *owner, 
     const char* msgID, 

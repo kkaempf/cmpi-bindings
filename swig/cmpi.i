@@ -177,22 +177,22 @@ value_value(const CMPIValue *value, const CMPIType type)
       break;
 
       case CMPI_instance:     /* ((16+0)<<8) */
-        return SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
       break;
       case CMPI_ref:          /* ((16+1)<<8) */
-        return SWIG_NewPointerObj((void*) (value->ref), SWIGTYPE_p__CMPIObjectPath, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->ref), SWIGTYPE_p__CMPIObjectPath, SWIG_POINTER_OWN);
       break;
       case CMPI_args:         /* ((16+2)<<8) */
-        return SWIG_NewPointerObj((void*) (value->args), SWIGTYPE_p__CMPIArgs, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->args), SWIGTYPE_p__CMPIArgs, SWIG_POINTER_OWN);
       break;
       case CMPI_class:        /* ((16+3)<<8) */
-        return SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
       break;
       case CMPI_filter:       /* ((16+4)<<8) */
-        return SWIG_NewPointerObj((void*) (value->filter), SWIGTYPE_p__CMPISelectExp, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->filter), SWIGTYPE_p__CMPISelectExp, SWIG_POINTER_OWN);
       break;
       case CMPI_enumeration:  /* ((16+5)<<8) */
-        return SWIG_NewPointerObj((void*) (value->Enum), SWIGTYPE_p__CMPIEnumeration, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->Enum), SWIGTYPE_p__CMPIEnumeration, SWIG_POINTER_OWN);
       break;
       case CMPI_string:       /* ((16+6)<<8) */
         result = Target_String(CMGetCharPtr(value->string));
@@ -204,7 +204,7 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = Target_DateTime(value->dateTime);
       break;
       case CMPI_ptr:          /* ((16+9)<<8) */
-        return SWIG_NewPointerObj((void*) &(value->dataPtr), SWIGTYPE_p__CMPIValuePtr, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) &(value->dataPtr), SWIGTYPE_p__CMPIValuePtr, SWIG_POINTER_OWN);
       break;
       case CMPI_charsptr:     /* ((16+10)<<8) */
          /* FIXME: unused ? */
@@ -215,7 +215,9 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = Target_Null;
       break;
     }
-  Target_INCREF(result);
+  if (result == Target_Null)
+    Target_INCREF(result);
+
   return result;
 }
 
@@ -242,7 +244,7 @@ data_clone(const CMPIData *dp)
 static Target_Type
 data_value(const CMPIData *dp)
 {
-  Target_Type result = Target_Null;
+  Target_Type result;
 
   if (dp->state & CMPI_notFound) {
     SWIG_exception(SWIG_IndexError, "value not found");
@@ -276,7 +278,7 @@ fail:
 static Target_Type
 data_data(const CMPIData *dp)
 {
-  Target_Type result = Target_Null;
+  Target_Type result;
 
   if (dp->state & CMPI_notFound) {
     SWIG_exception(SWIG_IndexError, "value not found");
@@ -285,6 +287,7 @@ data_data(const CMPIData *dp)
     SWIG_exception(SWIG_ValueError, "bad value");
   }
   else if (dp->state & CMPI_nullValue) {
+    result = Target_Null;
     Target_INCREF(result);
   }
   else if ((dp->type) & CMPI_ARRAY) {
@@ -303,8 +306,6 @@ data_data(const CMPIData *dp)
 fail:
   return result;
 }
-
-
 
 
 #if defined (SWIGRUBY)
@@ -484,6 +485,8 @@ static void _raise_ex(const CMPIStatus* st)
 
 %exceptionclass CMPIException;
 %exceptionclass _CMPIException;
+
+%typemap(newfree) char * "free($1);";
 
 # Definitions
 %include "cmpi_defs.i"
