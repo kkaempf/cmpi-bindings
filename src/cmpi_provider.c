@@ -241,6 +241,7 @@ Cleanup(
         return status; 
     }
   
+    TargetCleanup(miHdl);
     if (miHdl != NULL) 
     { 
         free(miHdl->miName); 
@@ -251,7 +252,6 @@ Cleanup(
         free(miHdl);
         miHdl = NULL; 
     }
-    TargetCleanup();
 
     _SBLIM_TRACE(1,("Cleanup() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
     return status;
@@ -277,7 +277,8 @@ InstCleanup(CMPIInstanceMI * self,
 {
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Instance provider %s", ((ProviderMIHandle *)self->hdl)->miName));
-    st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
+    st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating);
+    free(self);
     return st;
 }
 
@@ -294,6 +295,7 @@ AssocCleanup(CMPIAssociationMI * self,
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Association provider %s", ((ProviderMIHandle *)self->hdl)->miName));
     st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
+    free(self);
     return st;
 }
 
@@ -310,6 +312,7 @@ MethodCleanup(CMPIMethodMI * self,
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Method provider %s", ((ProviderMIHandle *)self->hdl)->miName));
     st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
+    free(self);
     return st;
 }
 
@@ -326,6 +329,7 @@ IndicationCleanup(CMPIIndicationMI * self,
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Indication provider %s", ((ProviderMIHandle *)self->hdl)->miName));
     st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
+    free(self);
     return st;
 }
 
