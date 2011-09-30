@@ -1,7 +1,7 @@
 #
-# spec file for package cmpi-bindings (Version @VERSION@)
+# spec file for package cmpi-bindings
 #
-# Copyright (c) 2010 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2011 SUSE LINUX Products GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -21,7 +21,7 @@ Url:            http://github.com/kkaempf/cmpi-bindings
 
 Name:           @PACKAGE@
 Version:        @VERSION@
-Release:        7
+Release:        1
 License:        BSD3c(or similar) ; EPL 1.0
 Summary:        Adapter to write and run CMPI-type CIM providers
 Group:          Development/Libraries/Other
@@ -84,7 +84,6 @@ BuildRequires:  pkg-config
 %endif
 
 Source:         %{name}-%{version}.tar.bz2
-Prefix:         /usr
 
 %description
 -
@@ -95,7 +94,7 @@ Prefix:         /usr
 %build
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=%{prefix} \
+cmake -DCMAKE_INSTALL_PREFIX=%_prefix \
       -DLIB=%{_lib} \
       -DCMAKE_VERBOSE_MAKEFILE=TRUE \
       -DCMAKE_C_FLAGS_RELEASE:STRING="%{optflags}" \
@@ -103,15 +102,12 @@ cmake -DCMAKE_INSTALL_PREFIX=%{prefix} \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_SKIP_RPATH=1 \
       ..
-make %{?jobs:-j %jobs}
+make %{?_smp_mflags}
 
 %install
 cd build
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/cmpi
 make install DESTDIR=$RPM_BUILD_ROOT
-
-%clean
-%{__rm} -rf %{buildroot}
 
 %package -n cmpi-bindings-ruby
 License:        BSD3c(or similar) ; EPL 1.0

@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Fri Sep 30 12:58:37 UTC 2011 - kkaempf@suse.com
+
+- Release CMPI objects properly
+- v 0.4.17
+
+-------------------------------------------------------------------
+Sat Sep 17 23:14:16 UTC 2011 - jengelh@medozas.de
+
+- Remove redundant tags/sections from specfile
+- Use %_smp_mflags for parallel build
+
+-------------------------------------------------------------------
 Wed Jul  6 12:46:39 UTC 2011 - kkaempf@novell.com
 
 - Fix Python memory leaks, remove excessive INCREFs
