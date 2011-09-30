@@ -2,6 +2,7 @@
 Fri Sep 30 12:58:37 UTC 2011 - kkaempf@suse.com
 
 - Release CMPI objects properly
+- Fix CMPIObjectPath and CMPIInstance constructors
 - v 0.4.17
 
 -------------------------------------------------------------------
