@@ -407,15 +407,15 @@ typedef struct _CMPIException {} CMPIException;
 #endif
 
   /* Add the +instance+ to the result */
-  void return_instance(CMPIInstance *instance) 
+  void return_instance(CMPIInstance *instance_disown) 
   {
-    RAISE_IF(CMReturnInstance($self, instance));
+    RAISE_IF(CMReturnInstance($self, instance_disown));
   }
 
   /* Add the +objectpath+ to the result */
-  void return_objectpath(CMPIObjectPath *path) 
+  void return_objectpath(CMPIObjectPath *path_disown)
   {
-    RAISE_IF(CMReturnObjectPath($self, path));
+    RAISE_IF(CMReturnObjectPath($self, path_disown));
   }
 
   /* Add typed value to the result */
@@ -517,7 +517,7 @@ typedef struct _CMPIException {} CMPIException;
 
   ~CMPIObjectPath() 
   { 
-/* handled by sfcb    CMRelease( $self ); */
+    CMRelease( $self );
   }
 
   /**
@@ -877,7 +877,7 @@ FIXME: if clone() is exposed, release() must also
 
   ~CMPIInstance() 
   { 
-/* handled in sfcb    CMRelease( $self ); */
+    CMRelease( $self );
   }
 
 #if defined(SWIGRUBY)

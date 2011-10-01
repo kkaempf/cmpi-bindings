@@ -488,6 +488,10 @@ static void _raise_ex(const CMPIStatus* st)
 
 %typemap(newfree) char * "free($1);";
 
+/* disown pointers passed back through CMReturn... */
+%apply SWIGTYPE *DISOWN { CMPIInstance *instance_disown };
+%apply SWIGTYPE *DISOWN { CMPIObjectPath *path_disown };
+
 # Definitions
 %include "cmpi_defs.i"
 
