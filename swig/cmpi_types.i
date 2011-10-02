@@ -507,12 +507,17 @@ typedef struct _CMPIException {} CMPIException;
 	    ptr++;
 	  }
 	  val = strndup(val, ptr-val);
+	  ++ptr;
 	}
 	else {
 	  ptr = strchr(ptr, ',');
-	  val = strndup(val, ptr-val);
+	  if (ptr) {
+	    val = strndup(val, ptr-val);
+	    ++ptr;
+	  }
+	  else
+	    val = strdup(val);
 	}
-	ptr++;
 	value.string = CMNewString(broker, val, &st);
 	RAISE_IF(st);
 	free((void *)val);
