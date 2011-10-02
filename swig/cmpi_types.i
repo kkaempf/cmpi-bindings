@@ -906,10 +906,14 @@ FIXME: if clone() is exposed, release() must also
   CMPIInstance(const CMPIBroker* broker, CMPIObjectPath *path)
 #endif
   {
+    CMPIInstance *instance;
+    CMPIStatus st = { CMPI_RC_OK, NULL };
 #if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
 #endif
-    return CMNewInstance(broker, path, NULL);
+    instance =CMNewInstance(broker, path, &st);
+    RAISE_IF(st);
+    return instance;
   }
 
   ~CMPIInstance() 
