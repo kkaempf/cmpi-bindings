@@ -536,7 +536,7 @@ fail:
 
   ~CMPIObjectPath() 
   { 
-    CMRelease( $self );
+/* FIXME    CMRelease( $self ); */
   }
 
   /**
@@ -896,7 +896,7 @@ FIXME: if clone() is exposed, release() must also
 
   ~CMPIInstance() 
   { 
-    CMRelease( $self );
+/* FIXME    CMRelease( $self ); */
   }
 
 #if defined(SWIGRUBY)
