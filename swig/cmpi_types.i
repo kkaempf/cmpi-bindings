@@ -482,8 +482,8 @@ typedef struct _CMPIException {} CMPIException;
        * properly typed values
        */
       while (ptr && *ptr) {
-        char *key;
-	char *val;
+        const char *key;
+	const char *val;
 	
 	key = ptr;
 	ptr = strchr(key, '=');
@@ -515,10 +515,10 @@ typedef struct _CMPIException {} CMPIException;
 	ptr++;
 	value.string = CMNewString(broker, val, &st);
 	RAISE_IF(st);
-	free(val);
+	free((void *)val);
 	CMAddKey(path, key, &value, CMPI_string);
 	CMRelease(value.string);
-	free(key);
+	free((void *)key);
       }
     }
     else {

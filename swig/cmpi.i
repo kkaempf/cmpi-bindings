@@ -265,7 +265,9 @@ data_value(const CMPIData *dp)
   else {
     result = value_value(&(dp->value), dp->type);
   }
+#if !defined (SWIGRUBY)
 fail:
+#endif
   return result;
 }
 
@@ -303,7 +305,9 @@ data_data(const CMPIData *dp)
   else {
     result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, SWIG_POINTER_OWN);
   }
+#if !defined (SWIGRUBY)
 fail:
+#endif
   return result;
 }
 
@@ -400,11 +404,13 @@ static void* _get_raised()
     return pthread_getspecific(_key);
 }
 
+#ifdef SWIGPYTHON
 static void _set_raised()
 {
     pthread_once(&_once, _init_key);
     pthread_setspecific(_key, (void*)1);
 }
+#endif
 
 static void _clr_raised()
 {

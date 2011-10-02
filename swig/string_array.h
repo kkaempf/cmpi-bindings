@@ -75,6 +75,7 @@ static void string_array_free(char** array)
     free(array);
 }
 
+#if 0
 static const char* string_array_find(char** array, const char* str)
 {
     char** p;
@@ -88,6 +89,7 @@ static const char* string_array_find(char** array, const char* str)
     /* Not found! */
     return NULL;
 }
+#endif
 
 static const char* string_array_find_ignore_case(char** array, const char* str)
 {
@@ -103,6 +105,7 @@ static const char* string_array_find_ignore_case(char** array, const char* str)
     return NULL;
 }
 
+#if 0
 static void string_array_print(char** array)
 {
     char** p;
@@ -117,5 +120,6 @@ static void string_array_print(char** array)
 
     printf("}\n");
 }
+#endif
 
 #endif /* string_array_h */
