@@ -451,39 +451,46 @@ typedef struct _CMPIException {} CMPIException;
 #if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
 #endif
+    CMPIObjectPath *path;
     if (cn == NULL) { /* assume creating from string representation */
       /* parse <namespace>:<classname>[.<key>=<value>[,<key>=<value>]...] */
-      CMPIObjectPath *path;
       CMPIValue value;
       const char *ptr;
       
       /* find and extract namespace */
       ptr = strchr(ns, ':');
-      if (ptr == NULL)
-        return NULL; /* should raise */
+      if (ptr == NULL) {
+ 	path = NULL;
+	SWIG_exception_fail(SWIG_ValueError, "Missing ':' between namespace and classname");
+      }
       ns = strndup(ns, ptr-ns);
       /* find and extract classname */
       cn = ++ptr;
       ptr = strchr(cn, '.');
-      if (ptr == NULL)
-        return NULL; /* should raise */
-      cn = strndup(cn, ptr-cn);
+      if (ptr != NULL) {      /* key is optional */
+        cn = strndup(cn, ptr-cn);
+	++ptr;
+      }
       path = CMNewObjectPath( broker, ns, cn, &st );
-      /* find and extract properties */
+      RAISE_IF(st);
       
+      
+      /* find and extract properties (if any) */
+
       /*
        * FIXME: lookup the class definition and add the keys with
        * properly typed values
        */
-      ptr++;
-      while (*ptr) {
+      while (ptr && *ptr) {
         char *key;
 	char *val;
 	
 	key = ptr;
 	ptr = strchr(key, '=');
-	if (ptr == NULL)
-          return NULL; /* should raise */
+	if (ptr == NULL) {
+ 	  path = NULL;
+	  SWIG_exception_fail(SWIG_ValueError, "Missing '=' between property name and value");
+        }
 	key = strndup(key, ptr-key);
 	val = ++ptr;
 	if (*val == '"') {
@@ -491,8 +498,10 @@ typedef struct _CMPIException {} CMPIException;
 	  ptr = val;
 	  for (;;) {
 	    ptr = strchr(ptr, '"');
-	    if (ptr == NULL)
-	      return NULL; /* should raise */
+	    if (ptr == NULL) {
+	      path = NULL;
+	      SWIG_exception_fail(SWIG_ValueError, "Missing '\"' at end of string value");
+	    }
 	    if (*(ptr-1) != '\\') /* not escaped " */
 	      break;
 	    ptr++;
@@ -504,15 +513,20 @@ typedef struct _CMPIException {} CMPIException;
 	  val = strndup(val, ptr-val);
 	}
 	ptr++;
-	value.string = CMNewString(broker, val, NULL);
+	value.string = CMNewString(broker, val, &st);
+	RAISE_IF(st);
 	free(val);
 	CMAddKey(path, key, &value, CMPI_string);
 	CMRelease(value.string);
 	free(key);
       }
-      return path;
     }
-    return CMNewObjectPath( broker, ns, cn, &st );
+    else {
+      path = CMNewObjectPath( broker, ns, cn, &st );
+      RAISE_IF(st);
+    }
+fail:
+    return path;
   }
 
   ~CMPIObjectPath() 
@@ -548,9 +562,9 @@ FIXME: if clone() is exposed, release() must also
 #if defined(SWIGRUBY)
   %alias set "[]=";
   /*
-   * Key setting in Ruby
-   * instance[:propname] = data    # set by name (symbol)
-   * instance["propname"] = data   # set by name (string)
+   * Property setting in Ruby
+   * reference[:propname] = data    # set by name (symbol)
+   * reference["propname"] = data   # set by name (string)
    */
   CMPIStatus set(VALUE property, VALUE data)
   {
