@@ -631,12 +631,26 @@ FIXME: if clone() is exposed, release() must also
 
 #if defined(SWIGRUBY)
   %rename("key") get_key(const char *name);
-#endif
+  %alias get_key "[]";
+  /* Gets a named key property value.
+   * name: Key property name.
+   */
+  CMPIData get_key(VALUE property) 
+  {
+    const char *name;
+    if (SYMBOL_P(property)) {
+      name = rb_id2name(SYM2ID(property));
+    }
+    else {
+      name = StringValuePtr(property);
+    }
+#else
   /* Gets a named key property value.
    * name: Key property name.
    */
   CMPIData get_key(const char *name) 
   {
+#endif
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData result;
     result = CMGetKey($self, name, &st);
