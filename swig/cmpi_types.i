@@ -632,11 +632,19 @@ FIXME: if clone() is exposed, release() must also
 #if defined(SWIGRUBY)
   %rename("key") get_key(const char *name);
   %alias get_key "[]";
+#endif
   /* Gets a named key property value.
    * name: Key property name.
    */
-  CMPIData get_key(VALUE property) 
+#if defined(SWIGRUBY)
+  VALUE get_key(VALUE property) 
+#else
+  CMPIData get_key(const char *name) 
+#endif
   {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData result;
+#if defined(SWIGRUBY)
     const char *name;
     if (SYMBOL_P(property)) {
       name = rb_id2name(SYM2ID(property));
@@ -644,19 +652,15 @@ FIXME: if clone() is exposed, release() must also
     else {
       name = StringValuePtr(property);
     }
-#else
-  /* Gets a named key property value.
-   * name: Key property name.
-   */
-  CMPIData get_key(const char *name) 
-  {
 #endif
-    CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIData result;
     result = CMGetKey($self, name, &st);
     RAISE_IF(st);
 
+#if defined(SWIGRUBY)
+    return data_value(&result);
+#else
     return result;
+#endif
   }
 
   %newobject get_key_at;
