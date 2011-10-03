@@ -576,12 +576,7 @@ FIXME: if clone() is exposed, release() must also
     const char *name;
     CMPIValue value;
     CMPIType type;
-    if (SYMBOL_P(property)) {
-      name = rb_id2name(SYM2ID(property));
-    }
-    else {
-      name = StringValuePtr(property);
-    }
+    name = target_charptr(property);
     switch (TYPE(data)) {
       case T_FLOAT:
         value.Float = RFLOAT(data)->value;
@@ -646,12 +641,7 @@ FIXME: if clone() is exposed, release() must also
     CMPIData result;
 #if defined(SWIGRUBY)
     const char *name;
-    if (SYMBOL_P(property)) {
-      name = rb_id2name(SYM2ID(property));
-    }
-    else {
-      name = StringValuePtr(property);
-    }
+    name = target_charptr(property);
 #endif
     result = CMGetKey($self, name, &st);
     RAISE_IF(st);
@@ -912,6 +902,7 @@ FIXME: if clone() is exposed, release() must also
     const CMPIBroker* broker = cmpi_broker();
 #endif
     instance =CMNewInstance(broker, path, &st);
+    fprintf(stderr, "CMPIInstance -> %p:%d\n", instance, st.rc);
     RAISE_IF(st);
     return instance;
   }
@@ -933,16 +924,11 @@ FIXME: if clone() is exposed, release() must also
     const char *name;
     CMPIValue *value = (CMPIValue *)malloc(sizeof(CMPIValue));
     CMPIType type;
-    if (SYMBOL_P(property)) {
-      name = rb_id2name(SYM2ID(property));
-    }
-    else {
-      name = StringValuePtr(property);
-    }
+    name = target_charptr(property);
     switch (TYPE(data)) {
       case T_FLOAT:
         value->Float = RFLOAT(data)->value;
-    type = CMPI_real32;
+	type = CMPI_real32;
       break;
       case T_STRING:
         value->string = to_cmpi_string(data);
@@ -1002,12 +988,8 @@ FIXME: if clone() is exposed, release() must also
     }
     else {
       const char *name;
-      if (SYMBOL_P(property)) {
-        name = rb_id2name(SYM2ID(property));
-      }
-      else {
-        name = StringValuePtr(property);
-      }
+      name = target_charptr(property);
+
       return CMGetProperty($self, name, NULL);
     }
   }

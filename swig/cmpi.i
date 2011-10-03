@@ -271,6 +271,33 @@ fail:
   return result;
 }
 
+/*
+ * target_charptr
+ * Convert target type to const char *
+ */
+
+static const char *
+target_charptr(Target_Type target)
+{
+  const char *str;
+#if defined (SWIGRUBY)
+  if (SYMBOL_P(target)) {
+    str = rb_id2name(SYM2ID(target));
+  }
+  else if (TYPE(target) == T_STRING) {
+    str = StringValuePtr(target);
+  }
+  else {
+    VALUE target_s = rb_funcall(target, rb_intern("to_s"), 0 );
+    str = StringValuePtr(target_s);
+  }
+#else
+#error target_charptr not defined
+  str = NULL;
+#endif
+  return str;
+}
+
 
 /*
  * data_data
