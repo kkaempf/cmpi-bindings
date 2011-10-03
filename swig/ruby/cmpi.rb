@@ -90,6 +90,7 @@ module Cmpi
     def to_s
       s = ""
       self.each do |value,name|
+	next unless value
 	s << ", " unless s.empty?
 	s << "\"#{name}\" => #{value.inspect}"
       end
