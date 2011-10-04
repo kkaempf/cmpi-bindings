@@ -4,6 +4,9 @@
  * Target language specific functions for cmpi_bindings
  *
  * Here: Ruby
+ * 
+ * Written by Klaus Kaempf <kkaempf@suse.de>
+ * 
  */
 
 /*****************************************************************************
@@ -37,11 +40,31 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-/* load <RB_BINDINGS_FILE>.rb */
-#define RB_BINDINGS_FILE "cmpi"
+/*
+ * How it works
+ *
+ * This target language adapter provides three functions for use by cmpi-provider.c 
+ * 
+ * static int TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
+ * static int TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, const char* opname, int nargs, ...)
+ * static void TargetCleanup(ProviderMIHandle * hdl)
+ *
+ * TargetInitialize
+ * - loads the provider pointed to by ProviderMIHandle#miName
+ *   miName - managed interface name - is FooBar (camel case) and loads foo_bar.rb
+ *     expecting class Cmpi::FooBar
+ *
+ * TargetCall
+ * - calls opname with args of ProviderMIHandle#implementation
+ * 
+ * TargetCleanup
+ * - tear down provider
+ */
 
-/* expect 'module <RB_BINDINGS_MODULE>' inside */
-#define RB_BINDINGS_MODULE "Cmpi"
+#include <ctype.h>
+
+/* the module name for all Ruby code */
+#define RB_MODULE_NAME "Cmpi"
 
 /*
  * load_module - load cmpi.rb
@@ -50,10 +73,30 @@
  */
 
 static VALUE
-load_module()
+load_provider(const char *classname)
 {
-  ruby_script(RB_BINDINGS_FILE);
-  return rb_require(RB_BINDINGS_FILE);
+  if (classname == NULL || *classname == 0) {
+    _SBLIM_TRACE(1,("Ruby: load_provider(%s) failed", classname));
+  char *filename = alloca(strlen(classname) * 2 + 1);
+  /* copy/decamelize classname */
+  const char *cptr = classname;
+  char *fptr = filename;
+  while (*cptr) {
+    if (isupper(*cptr)) {
+      if (cptr > classname /* not first char */
+	  && islower(*cptr-1)) { /* last was lower */
+	*fptr++ = '_';
+      }
+      *fptr++ = tolower(*cptr++);
+    }
+    else {
+      *fptr++ = *cptr++;
+    }
+  }
+  *fptr = 0;
+  ruby_script(filename);
+  _SBLIM_TRACE(1,("Ruby: loading (%s)", filename));
+  return rb_require(filename);
 }
 
 
