@@ -57,6 +57,7 @@ devel packages.  It will skip any others.
   Requirements
   ------------
   cmake 2.4 or later
+  CMPI header files, e.g. from sblim-cmpi-devel
   python interface requires:  python-devel, pywbem-0.7.0
   perl interface requires: ?
   ruby interface requires: ruby-1.8 ruby-devel-1.8

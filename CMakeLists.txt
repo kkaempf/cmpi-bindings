@@ -37,10 +37,6 @@ ELSE ( DEFINED  LIB )
 ENDIF ( DEFINED  LIB )
 MESSAGE(STATUS "Providers will be installed in ${CMPI_LIBRARY_DIR}" )
 
-# Include
-SET( CMPI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include/cmpi )
-
-
 
 INCLUDE(${CMAKE_SOURCE_DIR}/VERSION.cmake)
 
