@@ -44,11 +44,6 @@ typedef struct _CMPIBroker {} CMPIBroker;
     RAISE_IF(CMLogMessage($self, severity, id, text, NULL)); 
   }
 
-  unsigned long capabilities() 
-  {
-    return CBGetCapabilities($self);
-  }
-
   int version() 
   {
     return CBBrokerVersion($self);
