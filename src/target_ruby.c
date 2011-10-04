@@ -62,9 +62,15 @@
  */
 
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /* the module name for all Ruby code */
 #define RB_MODULE_NAME "Cmpi"
+
+/* an optional environment variable pointing to a directory with Ruby providers */
+#define RUBY_PROVIDERS_DIR_ENV "RUBY_PROVIDERS_DIR"
 
 /*
  * load_module - load cmpi.rb
@@ -73,10 +79,13 @@
  */
 
 static VALUE
-load_provider(const char *classname)
+load_provider(VALUE arg)
 {
+  const char *classname = (const char *)arg;
   if (classname == NULL || *classname == 0) {
     _SBLIM_TRACE(1,("Ruby: load_provider(%s) failed", classname));
+    return Qfalse;
+  }
   char *filename = alloca(strlen(classname) * 2 + 1);
   /* copy/decamelize classname */
   const char *cptr = classname;
@@ -84,7 +93,7 @@ load_provider(const char *classname)
   while (*cptr) {
     if (isupper(*cptr)) {
       if (cptr > classname /* not first char */
-	  && islower(*cptr-1)) { /* last was lower */
+	  && islower(*(cptr-1))) { /* last was lower */
 	*fptr++ = '_';
       }
       *fptr++ = tolower(*cptr++);
@@ -102,12 +111,14 @@ load_provider(const char *classname)
 
 /*
  * create_mi (called from rb_protect)
- * load Ruby provider via Cmpi::create_provider
+ * initialize Ruby provider
+ * calls Provider#_create (miName, broker, context)
  * 
- * I args : pointer to array of 3 values
- *          values[0] = miName (provider name)
- *          values[1] = broker
- *          values[2] = context
+ * I args : pointer to array of 4 values
+ *          values[0] = Class instance (Cmpi::<provider>)
+ *          values[1] = miName (provider name) string
+ *          values[2] = broker
+ *          values[3] = context
  */
 
 static VALUE
@@ -116,12 +127,12 @@ create_mi(VALUE args)
   VALUE *values = (VALUE *)args;
 
 /*  _SBLIM_TRACE(1,("Ruby: %s.new ...", StringValuePtr(values[0]))); */
-  return rb_funcall2(_TARGET_MODULE, rb_intern("create_provider"), 3, values);
+  return rb_funcall2(values[0], rb_intern("_create"), 3, values+1);
 }
 
 
 /*
- * call_mi
+ * call_mi (called from rb_protect)
  * call function of instance
  * 
  * I args: pointer to array of at least 3 values
@@ -162,6 +173,8 @@ get_exc_trace(const CMPIBroker* broker)
 /*
  * Global Ruby initializer
  * 
+ * ** called with mutex locked **
+ * 
  * loads the Ruby interpreter
  * init threads
  */
@@ -169,43 +182,38 @@ get_exc_trace(const CMPIBroker* broker)
 static int
 RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
-  int error;
+  int error = 0;
+  char *loadpath;
 
-  if (_TARGET_INIT)
-    {
-      return 0; 
-    }
-  _TARGET_INIT=1;//true
+  if (_TARGET_INIT) {
+    return error; 
+  }
+  _TARGET_INIT=1; /* safe, since mutex is locked */
   
   _SBLIM_TRACE(1,("<%d> Ruby: Loading", getpid()));
   
   ruby_init();
   ruby_init_loadpath();
-  /* give it a name while we load cmpi.rb */
-  ruby_script("cmpi_swig_ruby");
   extern void SWIG_init();
   SWIG_init();
 
-  /* load module: cmpi.rb */
-  rb_protect(load_module, Qnil, &error);
-  if (error)
-    {
-      CMPIString *trace = get_exc_trace(broker);
-
-      _SBLIM_TRACE(1,("<%d> Ruby: import '%s' failed: %s", getpid(), RB_BINDINGS_FILE, CMGetCharPtr(trace)));
-      _CMPI_SETFAIL(trace); 
-      return -1; 
-    }
-  /* save pointer to module */
-  _TARGET_MODULE = rb_const_get(rb_cModule, rb_intern(RB_BINDINGS_MODULE));
-  if (_TARGET_MODULE == Target_Null)
-    {
-      _SBLIM_TRACE(1,("<%d> Ruby: import '%s' doesn't define module '%s'", getpid(), RB_BINDINGS_MODULE));
-      st->rc = CMPI_RC_ERR_NOT_FOUND;
+  /* Check RUBY_PROVIDERS_DIR_ENV if its a dir, append to $: */
+  loadpath = getenv(RUBY_PROVIDERS_DIR_ENV);
+  if (loadpath) {
+    struct stat buf;
+    VALUE search;
+    if (stat(loadpath, &buf)) {
+      _SBLIM_TRACE(1,("<%d> Can't stat $RUBY_PROVIDERS_DIR '%s'", getpid(), loadpath)); 
       return -1;
-    }  
-  _SBLIM_TRACE(1,("<%d> RbGlobalInitialize() succeeded -> %p", getpid(), (void *)_TARGET_MODULE)); 
-  return 0; 
+    }
+    if ((buf.st_mode & S_IFDIR) == 0) {
+      _SBLIM_TRACE(1,("<%d> Not a directory: $RUBY_PROVIDERS_DIR '%s'", getpid(), loadpath)); 
+      return -1;
+    }
+    search = rb_gv_get("$:");
+    rb_ary_push(search, rb_str_new2(loadpath));
+  }
+  return error; 
 }
 
 
@@ -220,7 +228,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 static int
 TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
-  VALUE args[3];
+  VALUE args[4];
   int error;
 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
@@ -235,27 +243,47 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (error != 0)
   {
-     goto exit;
+     goto fail;
   }
 
   _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s'", getpid(), hdl->miName));
 
-  /* prepare call to Cmpi::create_provider() */
-  args[0] = rb_str_new2(hdl->miName);
-  args[1] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
-  args[2] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
+  /* call   static VALUE load_provider(const char *classname) */
+  rb_protect(load_provider, (VALUE)hdl->miName, &error);
+  if (error)
+    goto fail;
+
+  /* Get Cmpi::Provider */
+  args[0] = rb_const_get(rb_cObject, rb_intern(RB_MODULE_NAME));
+  if (args[0] == Qnil) {
+    _SBLIM_TRACE(1,("<%d> No such module '%s'", getpid(), RB_MODULE_NAME));
+    error = -1;
+    goto fail;
+  }
+  args[0] = rb_const_get(args[0], rb_intern(hdl->miName));
+  if (args[0] == Qnil) {
+    _SBLIM_TRACE(1,("<%d> No such class  '%s::%s'", getpid(), RB_MODULE_NAME, hdl->miName));
+    error = -1;
+    goto fail;
+  }
+
+  /* prepare call to Cmpi::Provider#_create() */
+  args[1] = rb_str_new2(hdl->miName);
+  args[2] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
+  args[3] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
   hdl->implementation = rb_protect(create_mi, (VALUE)args, &error);
+
+fail:
   if (error)
     {
       CMPIString *trace = get_exc_trace(hdl->broker);
-      _SBLIM_TRACE(1,("Ruby: FAILED creating %s:", hdl->miName, CMGetCharPtr(trace)));
+      _SBLIM_TRACE(1,("Ruby: FAILED creating %s: %s", hdl->miName, CMGetCharPtr(trace)));
       if (st != NULL)
 	{
 	  st->rc = CMPI_RC_ERR_INVALID_CLASS;
 	  st->msg = trace;
 	}
     }
-exit:
   _SBLIM_TRACE(1,("Initialize() %s", (error == 0)?"succeeded":"failed"));
   return error;
 }
