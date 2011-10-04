@@ -27,33 +27,6 @@ end
 #
 
 module Cmpi
-  @@locations = [
-    ENV['RUBY_PROVIDERS_DIR'],
-    File.join(File.dirname(__FILE__),"cmpi","providers")
-  ]
-
-  #
-  # on-demand loading of Ruby Provider for a specific management instrumentation interface
-  #
-  # call-seq:
-  #   Cmpi::create_provider "provider_name", broker, context
-  #
-  #
-  def self.create_provider miname, broker, context
-
-    @@locations.each do |dir|
-      next unless dir
-      begin
-	# Expect provider below @@location
-	require File.join(dir, miname.decamelize) # add to load path
-	# found provider if we get here
-	return Cmpi.const_get(miname).new broker
-      rescue
-      end
-    end
-
-    raise "Loading provider #{miname.decamelize}.rb for provider #{miname} failed: #{$!.message}"
-  end
 
   #
   # CMPIContext gives the context for Provider operation
