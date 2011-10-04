@@ -110,13 +110,13 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #include <stdint.h>
 
 /* OS support macros */
-#include <cmpios.h>
+#include <cmpi/cmpios.h>
 
 /* CMPI convenience macros */
-#include <cmpimacs.h>
+#include <cmpi/cmpimacs.h>
 
 /* CMPI platform check */
-#include <cmpipl.h>
+#include <cmpi/cmpipl.h>
 
 #include <pthread.h>
 

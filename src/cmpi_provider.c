@@ -36,9 +36,9 @@
 #include <pthread.h>
 
 /* Include the required CMPI macros, data types, and API function headers */
-#include <cmpidt.h>
-#include <cmpift.h>
-#include <cmpimacs.h>
+#include <cmpi/cmpidt.h>
+#include <cmpi/cmpift.h>
+#include <cmpi/cmpimacs.h>
 
 // Needed to obtain errno of failed system calls
 #include <errno.h>

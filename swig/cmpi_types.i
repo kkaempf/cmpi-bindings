@@ -1145,7 +1145,7 @@ FIXME: if clone() is exposed, release() must also
     for (i = 0; i < n; i++)
     {
         CMPIString* pn = NULL;
-        char* str;
+        const char* str;
 
         cd = CMGetKeyAt(cop, i, &pn, &st);
 

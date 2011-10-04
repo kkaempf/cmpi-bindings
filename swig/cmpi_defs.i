@@ -18,7 +18,7 @@
 /* Warning(314): 'ref' is a perl keyword */
 %rename("reference") _CMPIValue::ref;
 #endif
-%include "cmpidt.h"
+%include "cmpi/cmpidt.h"
 
 #-----------------------------------------------------
 
