@@ -288,7 +288,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   args[1] = rb_str_new2(hdl->miName);
   args[2] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
   args[3] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
-  rb_protect(create_mi, (VALUE)args, &error);
+  rb_protect(init_mi, (VALUE)args, &error);
 
 fail:
   if (error) {
