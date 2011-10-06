@@ -298,7 +298,7 @@ target_charptr(Target_Type target)
 #elif defined (SWIGPYTHON)
   str = PyString_AsString(target);
 #else
-#error target_charptr not defined
+#warning target_charptr not defined
   str = NULL;
 #endif
   return str;

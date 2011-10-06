@@ -190,7 +190,10 @@ static int _TARGET_INIT = 0; /* acts as a boolean - is target initialized? */
 #endif
 static int _MI_COUNT = 0;    /* use count, number of MIs */
 static pthread_mutex_t _CMPI_INIT_MUTEX = PTHREAD_MUTEX_INITIALIZER;  /* mutex around _MI_COUNT */
+
+#ifndef SWIGRUBY
 static Target_Type _TARGET_MODULE = Target_Null;  /* The target module (aka namespace) */
+#endif
 
 #if defined(SWIGPYTHON)
 #include "target_python.c"
