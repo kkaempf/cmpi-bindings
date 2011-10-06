@@ -47,12 +47,23 @@ public
   module ProviderIF
     protected
     #
+    # Initialize provider
     # call-seq:
-    #   ProviderIF.new broker
+    #   ProviderIF._init name, broker, context
     #
-    def initialize broker
+    def _init name, broker, context
       Cmpi::cmpi_broker = broker
     end
+    #
+    # Finalize provider
+    # call-seq:
+    #   ProviderIF._finish
+    #
+    def _finish
+    end
+
+
+    public
     #
     # Cleanup provider, +terminating+: boolean
     #
