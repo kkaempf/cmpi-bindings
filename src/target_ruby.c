@@ -73,9 +73,12 @@
 #define RUBY_PROVIDERS_DIR_ENV "RUBY_PROVIDERS_DIR"
 
 /*
- * load_module - load cmpi.rb
+ * load_module - load provider
  * 
  * separate function for rb_require so it can be wrapped into rb_protect()
+ * 
+ * Returns Cmpi::<Class>
+ * 
  */
 
 static VALUE
@@ -105,47 +108,21 @@ load_provider(VALUE arg)
   *fptr = 0;
   ruby_script(filename);
   _SBLIM_TRACE(1,("Ruby: loading (%s)", filename));
-  return rb_require(filename);
-}
-
-
-/*
- * init_mi (called from rb_protect)
- * initialize Ruby provider
- * calls Provider#_init (miName, broker, context)
- * 
- * I args : pointer to array of 4 values
- *          values[0] = Class instance (Cmpi::<provider>)
- *          values[1] = miName (provider name) string
- *          values[2] = broker
- *          values[3] = context
- */
-
-static VALUE
-init_mi(VALUE args)
-{
-  VALUE *values = (VALUE *)args;
-
-/*  _SBLIM_TRACE(1,("Ruby: %s.new ...", StringValuePtr(values[0]))); */
-  return rb_funcall2(values[0], rb_intern("_init"), 3, values+1);
-}
-
-
-/*
- * finish_mi (called from rb_protect)
- * De-initialize Ruby provider
- * calls Provider#_finish without args
- * 
- * I args : pointer to array of 1 value
- *          values[0] = Class instance (Cmpi::<provider>)
- */
-
-static VALUE
-finish_mi(VALUE args)
-{
-  VALUE *values = (VALUE *)args;
-
-  return rb_funcall2(values[0], rb_intern("_finish"), 0, NULL);
+  if (rb_require(filename) != Qtrue) {
+    _SBLIM_TRACE(1,("<%d> require '%s' failed", getpid(), filename));
+    return Qnil;
+  }
+  /* Get Cmpi::Provider */
+  VALUE val = rb_const_get(rb_cObject, rb_intern(RB_MODULE_NAME));
+  if (val == Qnil) {
+    _SBLIM_TRACE(1,("<%d> No such module '%s'", getpid(), RB_MODULE_NAME));
+    return val;
+  }
+  val = rb_const_get(val, rb_intern(classname));
+  if (val == Qnil) {
+    _SBLIM_TRACE(1,("<%d> No such class  '%s::%s'", getpid(), RB_MODULE_NAME, classname));
+  }
+  return val;
 }
 
 
@@ -246,7 +223,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 static int
 TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
-  VALUE args[4];
+  VALUE args[6];
   int error;
 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
@@ -264,31 +241,19 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 
   _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s'", getpid(), hdl->miName));
 
-  /* call   static VALUE load_provider(const char *classname) */
-  rb_protect(load_provider, (VALUE)hdl->miName, &error);
+  /* call   static VALUE load_provider(const char *classname)
+     returns Cmpi::<Class>
+   */
+  args[0] = rb_protect(load_provider, (VALUE)hdl->miName, &error);
   if (error)
     goto fail;
 
-  /* Get Cmpi::Provider */
-  args[0] = rb_const_get(rb_cObject, rb_intern(RB_MODULE_NAME));
-  if (args[0] == Qnil) {
-    _SBLIM_TRACE(1,("<%d> No such module '%s'", getpid(), RB_MODULE_NAME));
-    error = -1;
-    goto fail;
-  }
-  args[0] = rb_const_get(args[0], rb_intern(hdl->miName));
-  if (args[0] == Qnil) {
-    _SBLIM_TRACE(1,("<%d> No such class  '%s::%s'", getpid(), RB_MODULE_NAME, hdl->miName));
-    error = -1;
-    goto fail;
-  }
-  hdl->implementation = args[0];
-
-  /* prepare call to Cmpi::Provider#_create() */
-  args[1] = rb_str_new2(hdl->miName);
-  args[2] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
-  args[3] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
-  rb_protect(init_mi, (VALUE)args, &error);
+  args[1] = rb_intern("new");
+  args[2] = 3;
+  args[3] = rb_str_new2(hdl->miName);
+  args[4] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
+  args[5] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
+  hdl->implementation = rb_protect(call_mi, (VALUE)args, &error);
 
 fail:
   if (error) {
@@ -407,7 +372,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 static void
 TargetCleanup(ProviderMIHandle * hdl)
 {
-  finish_mi(hdl->implementation);
   ruby_finalize();
   return;
 }
