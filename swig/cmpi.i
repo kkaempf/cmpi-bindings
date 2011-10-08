@@ -291,6 +291,9 @@ target_charptr(Target_Type target)
   else if (TYPE(target) == T_STRING) {
     str = StringValuePtr(target);
   }
+  else if (target == Target_Null) {
+    str = NULL;
+  }
   else {
     VALUE target_s = rb_funcall(target, rb_intern("to_s"), 0 );
     str = StringValuePtr(target_s);
