@@ -442,7 +442,11 @@ typedef struct _CMPIException {} CMPIException;
 %extend _CMPIObjectPath 
 {
 #if HAVE_CMPI_BROKER
+#if defined(SWIGRUBY)
+  CMPIObjectPath(VALUE ns_t, VALUE cn_t = Qnil) /* Can't use Target_Type here, this is SWIG level */
+#else
   CMPIObjectPath(const char *ns, const char *cn = NULL)
+#endif
 #else
   CMPIObjectPath(const CMPIBroker* broker, const char *ns, const char *cn = NULL)
 #endif
@@ -451,6 +455,11 @@ typedef struct _CMPIException {} CMPIException;
 #if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
 #endif
+#if defined(SWIGRUBY)
+    const char *ns = target_charptr(ns_t);
+    const char *cn = target_charptr(cn_t);
+#endif
+
     CMPIObjectPath *path;
     if (cn == NULL) { /* assume creating from string representation */
       /* parse <namespace>:<classname>[.<key>=<value>[,<key>=<value>]...] */
