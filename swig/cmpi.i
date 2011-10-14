@@ -370,20 +370,8 @@ static CMPIString *
 to_cmpi_string(VALUE data)
 {
   CMPIBroker *broker = cmpi_broker();
-  const char *str;
-
-  switch(TYPE(data)) {
-    case T_STRING:
-      str = StringValuePtr(data);
-      break;
-    case T_SYMBOL:
-      str = rb_id2name(SYM2ID(data));
-      break;
-    default:
-      data = rb_funcall(data, rb_intern("to_s"), 0 );
-      str = StringValuePtr(data);
-   }      
-   return CMNewString(broker, str, NULL);
+  const char *str = target_charptr(data);
+  return CMNewString(broker, str, NULL);
 }
 
 #endif /* SWIGRUBY */
