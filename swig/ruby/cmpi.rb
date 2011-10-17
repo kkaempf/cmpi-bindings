@@ -176,9 +176,8 @@ CMPI_ARRAY = ((1)<<13)
   #
   class ValueMap
     def self.method_missing name, *args
-      t = self.type
       v = self.map[name.to_s]
-      return [v,t] if v
+      return v if v
       STDERR.puts "#{self.class}.#{name} ?"
       nil
     end
@@ -237,10 +236,13 @@ CMPI_ARRAY = ((1)<<13)
     def method_missing name, *args
       s = name.to_s
       if s =~ /=$/
-	v,t = args[0]
-	t = @typemap[name] if t.nil? && @typemap
-	STDERR.puts "CMPIObjectPath.#{name} = #{v.inspect}<#{t}>"
-        self[s.chop,v] = t
+	v = args[0]
+	n = s.chop
+	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
+	@typemap ||= Cmpi.const_get(classname).typemap
+	t = @typemap[n] if @typemap
+	STDERR.puts "CMPIObjectPath.%s = %s<%08x>" % [n, v.inspect, t]
+        self[n,v] = t
       else
 #	STDERR.puts "CMPIObjectPath.#{name} -> #{self[s].inspect}"
 	self[s]

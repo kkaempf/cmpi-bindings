@@ -590,15 +590,13 @@ FIXME: if clone() is exposed, release() must also
     CMPIType ctype = FIXNUM_P(type) ? FIX2LONG(type) : CMPI_null;
     name = target_charptr(property);
     fprintf(stderr,"ObjectPath[%s]=<%08x>...\n", name, ctype);
-    if ((ctype & CMPI_REAL) == CMPI_REAL) {
+    if ((ctype & CMPI_REAL)) {
       if (TYPE(data) != T_FLOAT) {
-        fprintf(stderr, "to_f\n");
         data = rb_funcall(data, rb_intern("to_f"), 0 );
       }
     }
-    else if ((ctype & CMPI_INTEGER) == CMPI_INTEGER) {
+    else if ((ctype & CMPI_INTEGER)) {
       if (!FIXNUM_P(data)) {
-        fprintf(stderr, "to_i\n");
         data = rb_funcall(data, rb_intern("to_i"), 0 );
       }
     }
