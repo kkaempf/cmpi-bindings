@@ -57,9 +57,6 @@ module Cmpi
   def self.uint64
     ((8+3)<<4)
   end
-  def self.SINT
-    ((8+4)<<4)
-  end
   def self.sint8
     ((8+4)<<4)
   end
@@ -80,9 +77,6 @@ module Cmpi
   end
   def self.args
     ((16+2)<<8)
-  end
-  def self.class
-    ((16+3)<<8)
   end
   def self.filter
     ((16+4)<<8)
@@ -106,6 +100,77 @@ module Cmpi
     ((16+10)<<8)
   end
   
+CMPI_ARRAY = ((1)<<13)
+
+  def self.booleanA
+    CMPI_ARRAY | self.boolean
+  end
+  def self.char16A
+    CMPI_ARRAY | self.char16
+  end
+
+  def self.real32A
+    CMPI_ARRAY | self.real32
+  end
+  def self.real64A
+    CMPI_ARRAY | self.real64
+  end
+
+  def self.uint8A
+    CMPI_ARRAY | self.uint8
+  end
+  def self.uint16A
+    CMPI_ARRAY | self.uint16
+  end
+  def self.uint32A
+    CMPI_ARRAY | self.uint32
+  end
+  def self.uint64A
+    CMPI_ARRAY | self.uint64
+  end
+  def self.sint8A
+    CMPI_ARRAY | self.sint8
+  end
+  def self.sint16A
+    CMPI_ARRAY | self.sint16
+  end
+  def self.sint32A
+    CMPI_ARRAY | self.sint32
+  end
+  def self.sint64A
+    CMPI_ARRAY | self.sint64
+  end
+  def self.instanceA
+    CMPI_ARRAY | self.instance
+  end
+  def self.refA
+    CMPI_ARRAY | self.ref
+  end
+  def self.argsA
+    CMPI_ARRAY | self.args
+  end
+  def self.filterA
+    CMPI_ARRAY | self.filter
+  end
+  def self.enumerationA
+    CMPI_ARRAY | self.enumeration
+  end
+  def self.stringA
+    CMPI_ARRAY | self.string
+  end
+  def self.charsA
+    CMPI_ARRAY | self.chars
+  end
+  def self.dateTimeA
+    CMPI_ARRAY | self.dateTime
+  end
+  def self.ptrA
+    CMPI_ARRAY | self.ptr
+  end
+  def self.charsptrA
+    CMPI_ARRAY | self.charsptrA
+  end
+
   #
   # Base class for ValueMap/Values classes from genprovider
   #
@@ -165,6 +230,7 @@ module Cmpi
   # CMPIObjectPath
   #
   class CMPIObjectPath
+    attr_accessor :typemap
     #
     # Allow Ref.Property and Ref.Property=
     #
@@ -172,7 +238,8 @@ module Cmpi
       s = name.to_s
       if s =~ /=$/
 	v,t = args[0]
-#	STDERR.puts "CMPIObjectPath.#{name} = #{v.inspect}<#{t}>"
+	t = @typemap[name] if t.nil? && @typemap
+	STDERR.puts "CMPIObjectPath.#{name} = #{v.inspect}<#{t}>"
         self[s.chop,v] = t
       else
 #	STDERR.puts "CMPIObjectPath.#{name} -> #{self[s].inspect}"
