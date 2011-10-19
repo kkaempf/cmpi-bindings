@@ -583,126 +583,16 @@ FIXME: if clone() is exposed, release() must also
    * reference[:propname, CMPI::uint16] = data    # set by name (symbol)
    * reference["propname"] = data   # set by name (string)
    */
-  CMPIStatus set(VALUE property, VALUE data, VALUE type = Qnil)
+  CMPIStatus set(VALUE property, VALUE data, VALUE expected_type = Qnil)
   {
     const char *name;
-    CMPIValue cvalue;
-    CMPIType ctype = FIXNUM_P(type) ? FIX2LONG(type) : CMPI_null;
+    CMPIValue value;
+    CMPIType actual_type;
+    CMPIType type = FIXNUM_P(expected_type) ? FIX2LONG(expected_type) : CMPI_null;
     name = target_charptr(property);
-    fprintf(stderr,"ObjectPath[%s]=<%08x>...\n", name, ctype);
-    if ((ctype & CMPI_REAL)) {
-      if (TYPE(data) != T_FLOAT) {
-        data = rb_funcall(data, rb_intern("to_f"), 0 );
-      }
-    }
-    else if ((ctype & CMPI_INTEGER)) {
-      if (!FIXNUM_P(data)) {
-        data = rb_funcall(data, rb_intern("to_i"), 0 );
-      }
-    }
-    
-    switch (ctype) {
-      case CMPI_null: /*         0 */
-        if (type == Qnil) {
-	  /* CMPIType not given, deduce it from Ruby type */
-	  switch (TYPE(data)) {
-	  case T_FLOAT:
-            cvalue.Float = RFLOAT(data)->value;
-            ctype = CMPI_real32;
-	  break;
-	  case T_STRING:
-            cvalue.string = to_cmpi_string(data);
-	    ctype = CMPI_string;
-          break; 
-          case T_FIXNUM:
-            cvalue.Int = FIX2ULONG(data);
-	    ctype = CMPI_uint32;
-          break;
-	  case T_TRUE:
-            cvalue.boolean = 1;
-            ctype = CMPI_boolean;
-          break;
-	  case T_FALSE:
-            cvalue.boolean = 0;
-            ctype = CMPI_boolean;
-	  break;
-          case T_SYMBOL:
-            cvalue.string = to_cmpi_string(data);
-	    ctype = CMPI_string;
-          break;
-          default:
-            cvalue.chars = NULL;
-            ctype = CMPI_null;
-          break;
-          }
-	}
-        break;
-      case CMPI_boolean: /*      (2+0) */
-        cvalue.boolean = RTEST(data) ? 1 : 0;
-        break;
-      case CMPI_char16: /*       (2+1) */
-        cvalue.string = to_cmpi_string(data);
-        break;
-      case CMPI_real32: /*       ((2+0)<<2) */
-        cvalue.Float = RFLOAT(data)->value;
-        break;
-      case CMPI_real64: /*       ((2+1)<<2) */
-        cvalue.Double = RFLOAT(data)->value;
-        break;
-      case CMPI_uint8: /*        ((8+0)<<4) */
-        cvalue.uint8 = FIX2ULONG(data);
-        break;
-      case CMPI_uint16: /*       ((8+1)<<4) */
-        cvalue.uint16 = FIX2ULONG(data);
-        break;
-      case CMPI_uint32: /*       ((8+2)<<4) */
-        cvalue.uint32 = FIX2ULONG(data);
-        break;
-      case CMPI_uint64: /*       ((8+3)<<4) */
-        cvalue.uint64 = FIX2ULONG(data);
-        break;
-      case CMPI_sint8: /*        ((8+4)<<4) */
-        cvalue.sint8 = FIX2LONG(data);
-        break;
-      case CMPI_sint16: /*       ((8+5)<<4) */
-        cvalue.sint16 = FIX2LONG(data);
-        break;
-      case CMPI_sint32: /*       ((8+6)<<4) */        
-        cvalue.sint32 = FIX2LONG(data);
-        break;
-      case CMPI_sint64: /*       ((8+7)<<4) */
-        cvalue.sint64 = FIX2LONG(data);
-        break;
-      case CMPI_instance: /*     ((16+0)<<8) */
-        break;
-      case CMPI_ref: /*          ((16+1)<<8) */
-        break;
-      case CMPI_args: /*         ((16+2)<<8) */
-        break;
-      case CMPI_class: /*        ((16+3)<<8) */
-        break;
-      case CMPI_filter: /*       ((16+4)<<8) */
-        break;
-      case CMPI_enumeration: /*  ((16+5)<<8) */
-        break;
-      case CMPI_string: /*       ((16+6)<<8) */
-        cvalue.string = to_cmpi_string(data);
-        break;
-      case CMPI_chars: /*        ((16+7)<<8) */
-        cvalue.chars = strdup(target_charptr(data));
-        break;
-      case CMPI_dateTime: /*     ((16+8)<<8) */
-        break;
-      case CMPI_ptr: /*          ((16+9)<<8) */
-        break;
-      case CMPI_charsptr: /*     ((16+10)<<8) */
-        break;
-
-      default:
-      fprintf(stderr, "*** Unhandled type %08x\n", ctype);
-      break;
-    } /* switch (type) */
-    return CMAddKey($self, name, &cvalue, ctype);
+    actual_type = target_to_value(data, &value, type);
+    fprintf(stderr, "CMAddKey(%s,%p,%08x)\n", name, value.chars, actual_type);
+    return CMAddKey($self, name, &value, actual_type);
   }
 #endif
 
@@ -996,7 +886,7 @@ FIXME: if clone() is exposed, release() must also
 #if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
 #endif
-    instance =CMNewInstance(broker, path, &st);
+    instance = CMNewInstance(broker, path, &st);
     fprintf(stderr, "CMPIInstance -> %p:%d\n", instance, st.rc);
     RAISE_IF(st);
     return instance;
@@ -1012,45 +902,19 @@ FIXME: if clone() is exposed, release() must also
   /*
    * Property setting in Ruby
    * instance[:propname] = data    # set by name (symbol)
+   * instance[:propname, CMPI::uint16] = data    # set by name (symbol)
    * instance["propname"] = data   # set by name (string)
    */
-  CMPIStatus set(VALUE property, VALUE data)
+  CMPIStatus set(VALUE property, VALUE data, VALUE expected_type = Qnil)
   {
     const char *name;
-    CMPIValue *value = (CMPIValue *)malloc(sizeof(CMPIValue));
-    CMPIType type;
+    CMPIValue value;
+    CMPIType actual_type;
+    CMPIType type = FIXNUM_P(expected_type) ? FIX2LONG(expected_type) : CMPI_null;
     name = target_charptr(property);
-    switch (TYPE(data)) {
-      case T_FLOAT:
-        value->Float = RFLOAT(data)->value;
-	type = CMPI_real32;
-      break;
-      case T_STRING:
-        value->string = to_cmpi_string(data);
-	type = CMPI_string;
-      break; 
-      case T_FIXNUM:
-        value->Int = FIX2ULONG(data);
-	type = CMPI_uint32;
-      break;
-      case T_TRUE:
-        value->boolean = 1;
-	type = CMPI_boolean;
-      break;
-      case T_FALSE:
-        value->boolean = 0;
-	type = CMPI_boolean;
-      break;
-      case T_SYMBOL:
-        value->string = to_cmpi_string(data);
-	type = CMPI_string;
-      break;
-      default:
-        value->chars = NULL;
-	type = CMPI_null;
-        break;
-    }
-    return CMSetProperty($self, name, value, type);
+    actual_type = target_to_value(data, &value, type);
+    fprintf(stderr, "CMSetProperty(%s,%p,%08x)\n", name, value.chars, actual_type);
+    return CMSetProperty($self, name, &value, actual_type);
   }
 #endif
 

@@ -209,19 +209,41 @@ CMPI_ARRAY = ((1)<<13)
   # CMPIInstance
   #
   class CMPIInstance
+    attr_accessor :typemap
     def each
       (0..self.size-1).each do |i|
+	STDERR.puts "CMPIInstance[#{i}]"
 	yield self.get_property_at(i)
       end
     end
     def to_s
+      return self.objectpath.to_s
       s = ""
       self.each do |value,name|
 	next unless value
 	s << ", " unless s.empty?
 	s << "\"#{name}\" => #{value.inspect}"
+	STDERR.puts s
       end
       s = "#{self.class}(" + s + ")"
+    end
+    #
+    # Allow Instance.Property and Instance.Property=
+    #
+    def method_missing name, *args
+      s = name.to_s
+      if s =~ /=$/
+	v = args[0]
+	n = s.chop
+	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
+	@typemap ||= Cmpi.const_get(self.objectpath.classname).typemap
+	t = @typemap[n] if @typemap
+	STDERR.puts "CMPIInstance.%s = %s<%08x>" % [n, v.inspect, t]
+        self[n,v] = t
+      else
+#	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"
+	self[s]
+      end
     end
   end
   
@@ -239,7 +261,7 @@ CMPI_ARRAY = ((1)<<13)
 	v = args[0]
 	n = s.chop
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
-	@typemap ||= Cmpi.const_get(classname)::Types
+	@typemap ||= Cmpi.const_get(classname).typemap
 	t = @typemap[n] if @typemap
 	STDERR.puts "CMPIObjectPath.%s = %s<%08x>" % [n, v.inspect, t]
         self[n,v] = t

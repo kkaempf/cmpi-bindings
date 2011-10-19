@@ -374,6 +374,173 @@ to_cmpi_string(VALUE data)
   return CMNewString(broker, str, NULL);
 }
 
+
+/*
+ * Convert Target_Type to CMPIValue
+ * If type  != CMPI_null, convert to ctype
+ * else convert to best matching CMPIType
+ *
+ */
+
+static CMPIType
+target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
+{
+  /*
+   * Array-type
+   *
+   */
+
+  if (type & CMPI_ARRAY) {
+
+    const CMPIBroker* broker = cmpi_broker();
+    int size, i;
+#if defined(SWIGRUBY)
+    if (TYPE(data) != T_ARRAY) {
+      data = rb_funcall(data, rb_intern("to_a"), 0 );
+    }
+    size = RARRAY_LEN(data);
+    value->array = CMNewArray (broker, size, type, NULL);
+#else
+#error Undefined
+#endif
+    type &= ~CMPI_ARRAY;
+    for (i = 0; i < size; ++i) {
+      CMPIValue val;
+#if defined(SWIGRUBY)
+      Target_Type elem = rb_ary_entry(data, i);
+#endif
+      target_to_value(elem, &val, type);
+      fprintf(stderr, "%p[%d] = %p<%08x>\n", value->array, i, val.chars, type);
+      CMSetArrayElementAt(value->array, i, &val, type);
+    }
+    type |= CMPI_ARRAY;
+  }
+  else {
+
+    /*
+     * Normal-type
+     *
+     */
+
+    if ((type & CMPI_REAL)) {
+      if (TYPE(data) != T_FLOAT) {
+        data = rb_funcall(data, rb_intern("to_f"), 0 );
+      }
+    }
+    else if ((type & CMPI_INTEGER)) {
+      if (!FIXNUM_P(data)) {
+        data = rb_funcall(data, rb_intern("to_i"), 0 );
+      }
+    }
+    
+    switch (type) {
+      case CMPI_null: /*         0 */
+	/* CMPIType not given, deduce it from Ruby type */
+	switch (TYPE(data)) {
+	case T_FLOAT:
+            value->Float = RFLOAT(data)->value;
+            type = CMPI_real32;
+	break;
+	case T_STRING:
+            value->string = to_cmpi_string(data);
+	    type = CMPI_string;
+        break; 
+        case T_FIXNUM:
+            value->Int = FIX2ULONG(data);
+	    type = CMPI_uint32;
+        break;
+	case T_TRUE:
+            value->boolean = 1;
+            type = CMPI_boolean;
+        break;
+	case T_FALSE:
+            value->boolean = 0;
+            type = CMPI_boolean;
+	break;
+        case T_SYMBOL:
+            value->string = to_cmpi_string(data);
+	    type = CMPI_string;
+        break;
+        default:
+            value->chars = NULL;
+            type = CMPI_null;
+        break;
+
+      }
+      break;
+      case CMPI_boolean: /*      (2+0) */
+        value->boolean = RTEST(data) ? 1 : 0;
+        break;
+      case CMPI_char16: /*       (2+1) */
+        value->string = to_cmpi_string(data);
+        break;
+      case CMPI_real32: /*       ((2+0)<<2) */
+        value->Float = RFLOAT(data)->value;
+        break;
+      case CMPI_real64: /*       ((2+1)<<2) */
+        value->Double = RFLOAT(data)->value;
+        break;
+      case CMPI_uint8: /*        ((8+0)<<4) */
+        value->uint8 = FIX2ULONG(data);
+        break;
+      case CMPI_uint16: /*       ((8+1)<<4) */
+        value->uint16 = FIX2ULONG(data);
+        break;
+      case CMPI_uint32: /*       ((8+2)<<4) */
+        value->uint32 = FIX2ULONG(data);
+        break;
+      case CMPI_uint64: /*       ((8+3)<<4) */
+        value->uint64 = FIX2ULONG(data);
+        break;
+      case CMPI_sint8: /*        ((8+4)<<4) */
+        value->sint8 = FIX2LONG(data);
+        break;
+      case CMPI_sint16: /*       ((8+5)<<4) */
+        value->sint16 = FIX2LONG(data);
+        break;
+      case CMPI_sint32: /*       ((8+6)<<4) */        
+        value->sint32 = FIX2LONG(data);
+        break;
+      case CMPI_sint64: /*       ((8+7)<<4) */
+        value->sint64 = FIX2LONG(data);
+        break;
+#if 0
+      case CMPI_instance: /*     ((16+0)<<8) */
+        break;
+      case CMPI_ref: /*          ((16+1)<<8) */
+        break;
+      case CMPI_args: /*         ((16+2)<<8) */
+        break;
+      case CMPI_class: /*        ((16+3)<<8) */
+        break;
+      case CMPI_filter: /*       ((16+4)<<8) */
+        break;
+      case CMPI_enumeration: /*  ((16+5)<<8) */
+        break;
+#endif
+      case CMPI_string: /*       ((16+6)<<8) */
+        value->string = to_cmpi_string(data);
+        break;
+      case CMPI_chars: /*        ((16+7)<<8) */
+        value->chars = strdup(target_charptr(data));
+        break;
+#if 0
+      case CMPI_dateTime: /*     ((16+8)<<8) */
+        break;
+      case CMPI_ptr: /*          ((16+9)<<8) */
+        break;
+      case CMPI_charsptr: /*     ((16+10)<<8) */
+        break;
+#endif
+      default:
+      fprintf(stderr, "*** target_to_value: Unhandled type %08x\n", type);
+      break;
+    } /* switch (type) */
+  }
+  return type;
+}
+
+
 #endif /* SWIGRUBY */
 
 /*
