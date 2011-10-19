@@ -239,7 +239,7 @@ CMPI_ARRAY = ((1)<<13)
 	v = args[0]
 	n = s.chop
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
-	@typemap ||= Cmpi.const_get(classname).typemap
+	@typemap ||= Cmpi.const_get(classname)::Types
 	t = @typemap[n] if @typemap
 	STDERR.puts "CMPIObjectPath.%s = %s<%08x>" % [n, v.inspect, t]
         self[n,v] = t
