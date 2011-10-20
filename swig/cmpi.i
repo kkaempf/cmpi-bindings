@@ -410,7 +410,6 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       Target_Type elem = rb_ary_entry(data, i);
 #endif
       target_to_value(elem, &val, type);
-      fprintf(stderr, "%p[%d] = %p<%08x>\n", value->array, i, val.chars, type);
       CMSetArrayElementAt(value->array, i, &val, type);
     }
     type |= CMPI_ARRAY;

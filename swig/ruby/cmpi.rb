@@ -212,7 +212,6 @@ CMPI_ARRAY = ((1)<<13)
     attr_accessor :typemap
     def each
       (0..self.size-1).each do |i|
-	STDERR.puts "CMPIInstance[#{i}]"
 	yield self.get_property_at(i)
       end
     end
@@ -223,7 +222,6 @@ CMPI_ARRAY = ((1)<<13)
 	next unless value
 	s << ", " unless s.empty?
 	s << "\"#{name}\" => #{value.inspect}"
-	STDERR.puts s
       end
       s = "#{self.class}(" + s + ")"
     end
@@ -238,7 +236,6 @@ CMPI_ARRAY = ((1)<<13)
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
 	@typemap ||= Cmpi.const_get(self.objectpath.classname).typemap
 	t = @typemap[n] if @typemap
-	STDERR.puts "CMPIInstance.%s = %s<%08x>" % [n, v.inspect, t]
         self[n,v] = t
       else
 #	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"

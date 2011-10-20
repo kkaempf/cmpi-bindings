@@ -591,7 +591,6 @@ FIXME: if clone() is exposed, release() must also
     CMPIType type = FIXNUM_P(expected_type) ? FIX2LONG(expected_type) : CMPI_null;
     name = target_charptr(property);
     actual_type = target_to_value(data, &value, type);
-    fprintf(stderr, "CMAddKey(%s,%p,%08x)\n", name, value.chars, actual_type);
     return CMAddKey($self, name, &value, actual_type);
   }
 #endif
@@ -887,7 +886,6 @@ FIXME: if clone() is exposed, release() must also
     const CMPIBroker* broker = cmpi_broker();
 #endif
     instance = CMNewInstance(broker, path, &st);
-    fprintf(stderr, "CMPIInstance -> %p:%d\n", instance, st.rc);
     RAISE_IF(st);
     return instance;
   }
@@ -913,7 +911,6 @@ FIXME: if clone() is exposed, release() must also
     CMPIType type = FIXNUM_P(expected_type) ? FIX2LONG(expected_type) : CMPI_null;
     name = target_charptr(property);
     actual_type = target_to_value(data, &value, type);
-    fprintf(stderr, "CMSetProperty(%s,%p,%08x)\n", name, value.chars, actual_type);
     return CMSetProperty($self, name, &value, actual_type);
   }
 #endif
