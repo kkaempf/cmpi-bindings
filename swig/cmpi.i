@@ -385,6 +385,7 @@ to_cmpi_string(VALUE data)
 static CMPIType
 target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 {
+  CMPIStatus st;
   /*
    * Array-type
    *
@@ -523,9 +524,20 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       case CMPI_chars: /*        ((16+7)<<8) */
         value->chars = strdup(target_charptr(data));
         break;
+      case CMPI_dateTime: { /*     ((16+8)<<8) */
+        const CMPIBroker* broker = cmpi_broker();
+	VALUE usecs = rb_funcall(data, rb_intern("usec"), 0 );
+	VALUE secs = rb_funcall(data, rb_intern("to_i"), 0 );
+	CMPIUint64 bintime = INT2FIX(usecs);
+	fprintf(stderr, "CMPI_dateTime: usecs %lld\n", bintime);
+	CMPIUint64 sectime = INT2FIX(secs);
+	fprintf(stderr, "CMPI_dateTime: secs %lld\n", sectime);
+	bintime += sectime * (CMPIUint64)1000 * (CMPIUint64)1000;
+	value->dateTime = CMNewDateTimeFromBinary(broker, bintime, 0, &st);
+	fprintf(stderr, "CMPI_dateTime: %lld => %d\n", bintime, st.rc); /* , CMGetCharPtr(st.msg) */
+      }
+      break;
 #if 0
-      case CMPI_dateTime: /*     ((16+8)<<8) */
-        break;
       case CMPI_ptr: /*          ((16+9)<<8) */
         break;
       case CMPI_charsptr: /*     ((16+10)<<8) */
