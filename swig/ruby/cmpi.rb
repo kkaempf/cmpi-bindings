@@ -314,4 +314,13 @@ CMPI_ARRAY = ((1)<<13)
       end
     end
   end
+  
+  #
+  # CMPIStatus
+  #
+  class CMPIStatus
+    def to_s
+      (rc == 0) ? "Ok" : "#{rc}:#{msg}"
+    end
+  end
 end

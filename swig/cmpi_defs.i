@@ -180,10 +180,7 @@
     CMRelease(s);
     return result;
   }
-#endif
-#ifdef SWIGRUBY
-%rename ("to_s") string();
-#endif
+#endif /* PYTHON */
   /* Return string representation */
   %newobject string;
   const char* string() 
@@ -200,7 +197,7 @@
     CMRelease(s);
     return result;
   }
-#else
+#else /* no cmpi_broker() */
   %newobject to_s;
   const char* to_s(const CMPIBroker* broker) {
     CMPIString *s = CDToString(broker, $self, NULL);
