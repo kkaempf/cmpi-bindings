@@ -13,12 +13,12 @@ module Cmpi
   #  Required internally for callbacks like CMNewString
   #
 private
-  def self.cmpi_broker= broker
-    @@cmpi_broker = broker
+  def self.broker= broker
+    @@broker = broker
   end
 public
-  def self.cmpi_broker
-    @@cmpi_broker
+  def self.broker
+    @@broker
   end
   def not_implemented klass, name
     STDERR.puts "#{klass}.#{name}: not implemented"
@@ -52,7 +52,7 @@ public
     #   ProviderIF._init name, broker, context
     #
     def initialize name, broker, context
-      Cmpi::cmpi_broker = broker
+      Cmpi::broker = broker
     end
 
     public

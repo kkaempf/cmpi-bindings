@@ -358,17 +358,17 @@ fail:
  *
  */
 
-#define HAVE_CMPI_BROKER 1 /* flag availability of cmpi_broker() callback */
+#define HAVE_CMPI_BROKER 1 /* flag availability of Cmpi#broker() callback */
 
 static CMPIBroker *
 cmpi_broker()
 {
   void *ptr = 0 ;
   long long res1;
-  VALUE broker = rb_funcall(mCmpi, rb_intern("cmpi_broker"), 0);
+  VALUE broker = rb_funcall(mCmpi, rb_intern("broker"), 0);
   res1 = SWIG_ConvertPtr(broker, &ptr, SWIGTYPE_p__CMPIBroker, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "cmpi_broker", 1, mCmpi));
+    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "broker", 1, mCmpi));
   }
   return (CMPIBroker *)ptr;
 fail:
