@@ -239,6 +239,7 @@ CMPI_ARRAY = ((1)<<13)
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
 	@typemap ||= Cmpi.const_get(self.objectpath.classname).typemap
 	t = @typemap[n] if @typemap
+#	STDERR.puts "Instance.#{n} = #{v}:#{t}"
         self[n,v] = t
       else
 #	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"
@@ -287,8 +288,23 @@ CMPI_ARRAY = ((1)<<13)
   #
   class CMPIEnumeration
     def each
-      unless empty?
+      while has_next
 	yield self.next
+      end
+    end
+  end
+  
+  #
+  # CMPIData
+  #
+  class CMPIData
+    def method_missing name, *args
+#      STDERR.puts "CMPIData.%s? %0x" % [name, type]
+      case type
+      when Cmpi.instance
+	value.inst.send(name,*args)
+      when Cmpi.ref
+	value.ref.send(name,*args)
       end
     end
   end
