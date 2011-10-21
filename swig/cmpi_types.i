@@ -1382,18 +1382,6 @@ FIXME: if clone() is exposed, release() must also
 {
   ~_CMPIEumeration() {
     CMRelease( $self );
-  }	
-#if defined(SWIGRUBY)
-  %alias length "size";
-#endif
-  int length() 
-  {
-    int l = 0;
-    while (CMHasNext($self, NULL)) {
-      ++l;
-      CMGetNext($self, NULL);
-    }
-    return l;
   }
 #if defined(SWIGPERL)
 /* Warning(314): 'next' is a perl keyword */
@@ -1411,7 +1399,7 @@ FIXME: if clone() is exposed, release() must also
   }
 
 #if defined(SWIGRUBY)
-  %alias hasNext "empty?";
+  %rename("has_next") hasNext;
 #endif
   int hasNext() 
   {
@@ -1420,16 +1408,11 @@ FIXME: if clone() is exposed, release() must also
 
     result = CMHasNext($self, NULL);
     RAISE_IF(st);
-#if defined(SWIGRUBY)
-fprintf(stderr, "hasNext %d => empty? %d\n", result, !result);
-    return !result;
-#else
     return result;
-#endif
   }
 
 #if defined(SWIGRUBY)
-  %alias toArray "to_ary";
+  %rename("to_ary") toArray;
 #endif
   CMPIArray *toArray() 
   {
