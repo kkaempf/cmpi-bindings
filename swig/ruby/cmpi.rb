@@ -211,19 +211,22 @@ CMPI_ARRAY = ((1)<<13)
   class CMPIInstance
     attr_accessor :typemap
     def each
-      (0..self.size-1).each do |i|
+      (0..size-1).each do |i|
 	yield self.get_property_at(i)
       end
     end
     def to_s
-      return self.objectpath.to_s
+      path = objectpath
+      keys = []
+      path.each { |val,name| keys << name }
       s = ""
       self.each do |value,name|
 	next unless value
+	next if keys.include? name
 	s << ", " unless s.empty?
-	s << "\"#{name}\" => #{value.inspect}"
+	s << "\"#{name}\"=>#{value.inspect}"
       end
-      s = "#{self.class}(" + s + ")"
+      "#{path} #{s}"
     end
     #
     # Allow Instance.Property and Instance.Property=
