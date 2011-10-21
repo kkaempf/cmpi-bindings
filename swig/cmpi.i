@@ -540,6 +540,9 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         break;
       case CMPI_dateTime: { /*     ((16+8)<<8) */
         const CMPIBroker* broker = cmpi_broker();
+	if (FIXNUM_P(data)) { /* Integer -> seconds since Epoch */
+	  data = rb_funcall(rb_cTime, rb_intern("at"), 1, data );
+	}
 	VALUE usecs = rb_funcall(data, rb_intern("usec"), 0 );
 	VALUE secs = rb_funcall(data, rb_intern("to_i"), 0 );
 	CMPIUint64 bintime = INT2FIX(usecs);
