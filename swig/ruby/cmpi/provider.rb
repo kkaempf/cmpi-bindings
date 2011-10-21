@@ -74,7 +74,6 @@ public
   # newinst : CMPIInstance
   #
   module InstanceProviderIF
-    protected
     def create_instance context, result, reference, newinst
     end
     def enum_instance_names context, result, reference
@@ -100,7 +99,6 @@ public
   #
   #
   module MethodProviderIF
-    protected
     # method : String
     # inargs : CMPIArgs
     # outargs : CMPIArgs
@@ -122,7 +120,6 @@ public
   # result_role : String
   #
   module AssociationProviderIF
-    protected
     def associator_names context, result, reference, assoc_class, result_class, role, result_role
     end
     def associators context, result, reference, assoc_class, result_class, role, result_role, properties
@@ -147,7 +144,6 @@ public
   # last_activation : Bool
   #
   module IndicationProviderIF
-    protected
     def authorize_filter context, filter, class_name, reference, owner
     end
     def activate_filter context, filter, class_name, reference, first_activation
