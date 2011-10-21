@@ -648,7 +648,7 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV* 
 #endif
-  /* Gets a key property value defined by its index.
+  /* Gets a key property [value,name] defined by its index.
    * name: [out] Key property name
    */
   __type get_key_at(int index) {
@@ -936,6 +936,8 @@ FIXME: if clone() is exposed, release() must also
    * data = instance[:propname]     # access by name (symbol)
    * data = instance["propname"     # access by name (string)
    * data = instance[1]             # access by index
+   *
+   * See get_property_at to retrieve property name and value
    */
   CMPIData get(VALUE property)
   {
@@ -976,7 +978,7 @@ FIXME: if clone() is exposed, release() must also
 #if defined (SWIGPERL)
   SV * 
 #endif
-  /** Gets a Property value defined by its index.
+  /** Gets a Property name and value defined by its index.
    * index: Position in the internal Data array.
    */
   __type get_property_at(int index) 
