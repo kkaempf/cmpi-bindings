@@ -1420,8 +1420,12 @@ FIXME: if clone() is exposed, release() must also
 
     result = CMHasNext($self, NULL);
     RAISE_IF(st);
-
+#if defined(SWIGRUBY)
+fprintf(stderr, "hasNext %d => empty? %d\n", result, !result);
+    return !result;
+#else
     return result;
+#endif
   }
 
 #if defined(SWIGRUBY)
@@ -1438,28 +1442,6 @@ FIXME: if clone() is exposed, release() must also
     return result;
   }
 
-  /* Return string representation */
-#if HAVE_CMPI_BROKER
-#ifdef SWIGPYTHON
-%rename ("__str__") string();
-#endif
-#ifdef SWIGRUBY
-%rename ("to_s") string();
-#endif
-  %newobject string;
-  const char* string()
-  {
-    const CMPIBroker* broker = cmpi_broker();
-    CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIString *s;
-    
-    s = CDToString(broker, $self, &st);
-    RAISE_IF(st);
-    const char *result = strdup(CMGetCharPtr(s));
-    CMRelease(s);
-    return result;
-  }
-#endif
 }
 
 #-----------------------------------------------------
