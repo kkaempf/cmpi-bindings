@@ -270,4 +270,15 @@ CMPI_ARRAY = ((1)<<13)
       end
     end
   end
+  
+  #
+  # CMPIEnumeration
+  #
+  class CMPIEnumeration
+    def each
+      unless empty?
+	yield self.next
+      end
+    end
+  end
 end
