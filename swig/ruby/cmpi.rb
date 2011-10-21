@@ -19,7 +19,13 @@ end
 #
 # = Cmpi - Common Manageablity Programming Interface
 #
-# The Common Manageablity Programming Interface (CMPI) defines a common standard of interfacing Manageability Instrumentation (providers, instrumentation) to Management Brokers (CIM Object Manager). The purpose of CMPI is to standardize Manageability Instrumentation. This allows to write and build instrumentation once and run it in different CIM environments (on one platform).
+
+# The Common Manageablity Programming Interface (CMPI) defines a
+# common standard of interfacing Manageability Instrumentation
+# (providers, instrumentation) to Management Brokers (CIM Object
+# Manager). The purpose of CMPI is to standardize Manageability
+# Instrumentation. This allows to write and build instrumentation once
+# and run it in different CIM environments (on one platform).
 #
 # == CIMOM Context
 #
