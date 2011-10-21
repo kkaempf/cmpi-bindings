@@ -79,6 +79,10 @@
 #
 
 %extend CMPIData {
+/*
+  type, state, value are created by SWIG via %include cmpidt above
+
+*/
   CMPIData(CMPIData *data)
   {
     return data_clone(data);
