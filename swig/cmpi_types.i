@@ -1540,25 +1540,6 @@ FIXME: if clone() is exposed, release() must also
     CMRelease( $self );
   }	
   /*
-   * Return string representation
-   */
-#if HAVE_CMPI_BROKER
-#ifdef SWIGPYTHON
-%rename ("__str__") string();
-#endif
-#ifdef SWIGRUBY
-%rename ("to_s") string();
-#endif
-  %newobject string;
-  const char* string() {
-    const CMPIBroker* broker = cmpi_broker();
-    CMPIString *s = CDToString(broker, $self, NULL);
-    const char *result = strdup(CMGetCharPtr(s));
-    CMRelease(s);
-    return result;
-  }
-#endif  
-  /*
    * Add entry by name
    */
   void add_entry(const char* name, const CMPIValue* data, 
