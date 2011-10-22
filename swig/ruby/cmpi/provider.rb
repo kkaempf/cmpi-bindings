@@ -62,7 +62,7 @@ public
     def cleanup context, terminating
     end
     def self.method_missing method, *args
-      not_implemented self.class, self.method
+      true
     end
   end
   
