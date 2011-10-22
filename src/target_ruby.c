@@ -96,7 +96,8 @@ load_provider(VALUE arg)
   while (*cptr) {
     if (isupper(*cptr)) {
       if (cptr > classname /* not first char */
-	  && islower(*(cptr-1))) { /* last was lower */
+	  && (*(fptr-1) != '_')
+	  && (islower(*(cptr-1)) || islower(*(cptr+1))) ) { /* last was lower or next is lower */
 	*fptr++ = '_';
       }
       *fptr++ = tolower(*cptr++);
