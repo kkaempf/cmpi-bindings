@@ -382,29 +382,6 @@ typedef struct _CMPIException {} CMPIException;
 %extend _CMPIResult 
 {
   /* no con-/destructor, the broker handles this */
-#if HAVE_CMPI_BROKER
-#ifdef SWIGPYTHON
-%rename ("__str__") string();
-#endif
-#ifdef SWIGRUBY
-%rename ("to_s") string();
-#endif
-  /* Return string representation */
-  %newobject string;
-  const char* string() 
-  {
-    CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIString* s;
-    const CMPIBroker* broker = cmpi_broker();
-
-    s = CDToString(broker, $self, &st);
-    RAISE_IF(st);
-
-    const char *result = strdup(CMGetCharPtr(s));
-    CMRelease(s);
-    return result;
-  }
-#endif
 
   /* Add the +instance+ to the result */
   void return_instance(CMPIInstance *instance_disown) 
