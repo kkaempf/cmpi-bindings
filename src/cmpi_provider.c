@@ -228,8 +228,7 @@ Cleanup(
         Target_Type _terminating; 
 
         TARGET_THREAD_BEGIN_BLOCK; 
-        _context = SWIG_NewPointerObj((void*) context, 
-                SWIGTYPE_p__CMPIContext, 0);
+        _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
         _terminating = Target_Bool(terminating); 
 
         TargetCall(miHdl, &status, "cleanup", 2, _context, _terminating); 
@@ -281,7 +280,8 @@ InstCleanup(CMPIInstanceMI * self,
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Instance provider %s", ((ProviderMIHandle *)self->hdl)->miName));
     st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating);
-    free(self);
+    if (terminating && st.rc == CMPI_RC_OK)
+      free(self);
     return st;
 }
 
@@ -298,7 +298,8 @@ AssocCleanup(CMPIAssociationMI * self,
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Association provider %s", ((ProviderMIHandle *)self->hdl)->miName));
     st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
-    free(self);
+    if (terminating && st.rc == CMPI_RC_OK)
+      free(self);
     return st;
 }
 
@@ -315,7 +316,8 @@ MethodCleanup(CMPIMethodMI * self,
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Method provider %s", ((ProviderMIHandle *)self->hdl)->miName));
     st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
-    free(self);
+    if (terminating && st.rc == CMPI_RC_OK)
+      free(self);
     return st;
 }
 
@@ -331,8 +333,9 @@ IndicationCleanup(CMPIIndicationMI * self,
 {
     CMPIStatus st;
     _SBLIM_TRACE(1,("Cleanup() called for Indication provider %s", ((ProviderMIHandle *)self->hdl)->miName));
-    st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
-    free(self);
+      st = Cleanup((ProviderMIHandle*)self->hdl, context, terminating); 
+    if (terminating && st.rc == CMPI_RC_OK)
+      free(self);
     return st;
 }
 
@@ -354,7 +357,7 @@ EnumInstanceNames(CMPIInstanceMI * self,
 
     CMPIStatus status = {CMPI_RC_OK, NULL};
 
-    _SBLIM_TRACE(1,("EnumInstancesNames() called, context %p, result %p, reference %p", context, result, reference));
+    _SBLIM_TRACE(1,("EnumInstancesNames() called, self %p, context %p, result %p, reference %p", self, context, result, reference));
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -392,7 +395,7 @@ EnumInstances(CMPIInstanceMI * self,
     CMPIStatus status = {CMPI_RC_OK, NULL};  /* Return status of CIM operations */
     /*   char * namespace = CMGetCharPtr(CMGetNameSpace(reference, NULL));  Our current CIM namespace */
 
-    _SBLIM_TRACE(1,("EnumInstances() called, context %p, result %p, reference %p, properties %p", context, result, reference, properties));
+    _SBLIM_TRACE(1,("EnumInstances() called, self %p, context %p, result %p, reference %p, properties %p", self, context, result, reference, properties));
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -431,7 +434,7 @@ GetInstance(CMPIInstanceMI * self,
 
     CMPIStatus status = {CMPI_RC_OK, NULL};  /* Return status of CIM operations */
 
-    _SBLIM_TRACE(1,("GetInstance() called, context %p, results %p, reference %p, properties %p", context, results, reference, properties));
+    _SBLIM_TRACE(1,("GetInstance() called, self %p, context %p, results %p, reference %p, properties %p", self, context, results, reference, properties));
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _context = SWIG_NewPointerObj((void*) context, SWIGTYPE_p__CMPIContext, 0);
@@ -1205,7 +1208,6 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
         hdl->context = context; \
     } \
     if (createInit(hdl, st) != 0) { \
-        if (st) st->rc = CMPI_RC_ERR_FAILED;  \
         free(hdl->miName); \
         free(hdl); \
         return NULL; \
@@ -1215,8 +1217,8 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
         mi->hdl = hdl; \
         mi->ft = &ptype##MIFT__; \
     } \
-    /*_SBLIM_TRACE(1, ("\n>>>>>     returning mi=0x%08x  mi->hdl=0x%08x   mi->ft=0x%08x", mi, mi->hdl, mi->ft));*/ \
     ++_MI_COUNT; \
+    _SBLIM_TRACE(1, ("\n>>>>>_MI_COUNT %d:  returning mi=0x%08x  hdl=0x%08x, hdl->implementation=%p   mi->ft=0x%08x\n", _MI_COUNT, mi, mi->hdl, hdl->implementation, mi->ft)); \
     return mi; \
 }
 
