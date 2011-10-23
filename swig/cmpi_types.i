@@ -1387,7 +1387,6 @@ Python for compatibility */
     int result;
 
     result = CMHasNext($self, &st);
-    fprintf(stderr, "CMHasNext -> %d\n", result);
     RAISE_IF(st);
     return result;
   }
