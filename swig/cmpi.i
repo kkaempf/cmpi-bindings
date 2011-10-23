@@ -247,7 +247,7 @@ data_value(const CMPIData *dp)
   Target_Type result;
 
   if (dp->state & CMPI_notFound) {
-    SWIG_exception(SWIG_IndexError, "value not found");
+    result = Qnil;
   }
   else if (dp->state & (unsigned short)CMPI_badValue) {
     SWIG_exception(SWIG_ValueError, "bad value");
@@ -518,11 +518,21 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       case CMPI_sint64: /*       ((8+7)<<4) */
         value->sint64 = FIX2LONG(data);
         break;
+      case CMPI_instance: { /*     ((16+0)<<8) */
+        int res = SWIG_ConvertPtr(data, (void *)&(value->inst), SWIGTYPE_p__CMPIInstance, 0 |  0 );
+	if (!SWIG_IsOK(res)) {
+	  SWIG_exception_fail(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIInstance *","target_to_value", 1, data )); 
+	}
+        break;
+      }
+      case CMPI_ref: { /*          ((16+1)<<8) */
+        int res = SWIG_ConvertPtr(data, (void *)&(value->ref), SWIGTYPE_p__CMPIObjectPath, 0 |  0 );
+	if (!SWIG_IsOK(res)) {
+	  SWIG_exception_fail(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIObjectPath *","target_to_value", 1, data )); 
+	}
+        break;
+      }
 #if 0
-      case CMPI_instance: /*     ((16+0)<<8) */
-        break;
-      case CMPI_ref: /*          ((16+1)<<8) */
-        break;
       case CMPI_args: /*         ((16+2)<<8) */
         break;
       case CMPI_class: /*        ((16+3)<<8) */
@@ -565,6 +575,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       break;
     } /* switch (type) */
   }
+fail:
   return type;
 }
 
