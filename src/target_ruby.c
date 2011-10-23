@@ -72,6 +72,9 @@
 /* an optional environment variable pointing to a directory with Ruby providers */
 #define RUBY_PROVIDERS_DIR_ENV "RUBY_PROVIDERS_DIR"
 
+/* mutex to flag Ruby call in progress - the one aquiring the lock inits the stack */
+static pthread_mutex_t _stack_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /*
  * load_module - load provider
  * 
@@ -226,6 +229,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
   VALUE args[6];
   int error;
+  int have_lock = 0;
 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
    * so we call ruby_finalize() only once.
@@ -234,20 +238,34 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     perror("Can't lock _CMPI_INIT_MUTEX");
     abort();
   }
-  error = RbGlobalInitialize(hdl->broker, st); 
+  error = RbGlobalInitialize(hdl->broker, st);
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (error != 0) {
-   goto fail;
+    if (st != NULL) {
+      st->rc = CMPI_RC_ERR_INVALID_CLASS;
+      st->msg = CMNewString(hdl->broker, "Failed to init Ruby", NULL);
+    }
+    goto fail;
   }
 
   _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s'", getpid(), hdl->miName));
+
+  if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
+    have_lock = 1;
+    RUBY_INIT_STACK
+  }
 
   /* call   static VALUE load_provider(const char *classname)
      returns Cmpi::<Class>
    */
   args[0] = rb_protect(load_provider, (VALUE)hdl->miName, &error);
-  if (error)
+  if (error) {
+    if (st != NULL) {
+      st->rc = CMPI_RC_ERR_INVALID_CLASS;
+      st->msg = CMNewString(hdl->broker, "Failed to load provider", NULL);
+    }
     goto fail;
+  }
 
   args[1] = rb_intern("new");
   args[2] = 3;
@@ -265,6 +283,14 @@ fail:
       st->msg = trace;
     }
   }
+  else {
+    /* prevent Ruby GC from deallocating the provider
+     * found at http://www.lysator.liu.se/~norling/ruby_callbacks.html
+     */
+    rb_gc_register_address(&(hdl->implementation));
+  }
+  if (have_lock)
+    pthread_mutex_unlock(&_stack_init_mutex);
   _SBLIM_TRACE(1,("Initialize() %s", (error == 0)?"succeeded":"failed"));
   return error;
 }
@@ -280,18 +306,24 @@ static int
 TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, 
                  const char* opname, int nargs, ...)
 {
-  int i; 
+  int have_lock = 0;
+  int i;
+  int r;
   VALUE *args, result, op = rb_intern(opname);
   va_list vargs; 
 
+  if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
+    have_lock = 1;
+    RUBY_INIT_STACK
+  }
   /* add hdl->instance, op and nargs to the args array, so rb_protect can be called */
   nargs += 3;
   args = (VALUE *)malloc(nargs * sizeof(VALUE));
-  if (args == NULL)
-    {
-      _SBLIM_TRACE(1,("Out of memory")); 
-      abort();
-    }
+  if (args == NULL) {
+    _SBLIM_TRACE(1,("Out of memory")); 
+    abort();
+  }
+  _SBLIM_TRACE(1,("hdl %p, hdl->implementation %p", hdl, hdl->implementation));
   args[0] = (VALUE)(hdl->implementation);
   args[1] = op;
   args[2] = (VALUE)(nargs-3);
@@ -325,13 +357,15 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       _SBLIM_TRACE(1,("%s", str));
       st->rc = CMPI_RC_ERR_FAILED; 
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-      return 1;
+      r = 1;
+      goto done;
     }
   
   if (NIL_P(result)) /* not or wrongly implemented */
     {
       st->rc = CMPI_RC_ERR_NOT_SUPPORTED;
-      return 1;
+      r = 1;
+      goto done;
     }
 
   if (result != Qtrue)
@@ -343,7 +377,8 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 	  char* str = fmtstr("Ruby: calling '%s' returned unknown result", opname); 
 	  st->rc = CMPI_RC_ERR_FAILED;
 	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-	  return 1;
+	  r = 1;
+	  goto done;
 	}
   
       rc = rb_ary_entry(resulta, 0);
@@ -353,16 +388,22 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 	  char* str = fmtstr("Ruby: calling '%s' returned non-numeric rc code", opname); 
 	  st->rc = CMPI_RC_ERR_FAILED;
 	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-	  return 1;
+	  r = 1;
+	  goto done;
 	}
       st->rc = FIX2LONG(rc);
       st->msg = hdl->broker->eft->newString(hdl->broker, StringValuePtr(msg), NULL);
-      return 1;
+      r = 1;
+      goto done;
     }
   
   /* all is fine */
   st->rc = CMPI_RC_OK;
-  return 0;
+  r = 0;
+done:
+  if (have_lock)
+    pthread_mutex_unlock(&_stack_init_mutex);
+  return r;
 }
 
 
@@ -373,6 +414,35 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 static void
 TargetCleanup(ProviderMIHandle * hdl)
 {
-  ruby_finalize();
+  _SBLIM_TRACE(1,("TargetCleanup(hdl %p)", hdl));
+  /* free() provider instance */
+  if (hdl && hdl->implementation) {
+    _SBLIM_TRACE(1,("unregister(%p)", hdl->implementation));
+    rb_gc_unregister_address(&(hdl->implementation));
+  }
+
+  /* Decrement _MI_COUNT, protected by _CMPI_INIT_MUTEX
+   * call ruby_finalize when _MI_COUNT drops to zero
+   */
+  if (pthread_mutex_lock(&_CMPI_INIT_MUTEX))
+  {
+    perror("Can't lock _CMPI_INIT_MUTEX");
+    abort();
+  }
+  if (--_MI_COUNT > 0) 
+  {
+    pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
+    _SBLIM_TRACE(1,("_MI_COUNT > 0: %d", _MI_COUNT));
+    return;
+  }
+
+  if (_TARGET_INIT)  // if Ruby is initialized and _MI_COUNT == 0, call ruby_finalize
+  {
+    _SBLIM_TRACE(1,("Calling ruby_finalize()"));
+    ruby_finalize();
+    _TARGET_INIT=0; // false
+  }
+  pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   return;
 }
+
