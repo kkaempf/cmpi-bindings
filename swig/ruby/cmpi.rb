@@ -270,7 +270,7 @@ module Cmpi
 	v = args[0]
 	n = s.chop
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
-	@typemap ||= Cmpi.const_get(classname).typemap
+	@typemap ||= Cmpi.const_get(classname).typemap rescue nil
 	t = @typemap[n] if @typemap
         self[n,v] = t
       else
@@ -285,12 +285,9 @@ module Cmpi
   #
   class CMPIEnumeration
     def each
-      STDERR.puts "CMPIEnumeration.each"
       while has_next
-	STDERR.puts "has_next -> yield"
 	yield next_element
       end
-      STDERR.puts "CMPIEnumeration.each done"
     end
   end
   
