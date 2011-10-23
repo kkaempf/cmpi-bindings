@@ -285,20 +285,12 @@ module Cmpi
   #
   class CMPIEnumeration
     def each
-      unless empty?
-	yield self.next
-      end
-    end
-  end
-  
-  #
-  # CMPIEnumeration
-  #
-  class CMPIEnumeration
-    def each
+      STDERR.puts "CMPIEnumeration.each"
       while has_next
-	yield self.next
+	STDERR.puts "has_next -> yield"
+	yield next_element
       end
+      STDERR.puts "CMPIEnumeration.each done"
     end
   end
   

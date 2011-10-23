@@ -1360,11 +1360,12 @@ FIXME: if clone() is exposed, release() must also
   ~_CMPIEumeration() {
     CMRelease( $self );
   }
-#if defined(SWIGPERL)
-/* Warning(314): 'next' is a perl keyword */
-%rename("_next") next;
+#if defined(SWIGPYTHON)
+/* Warning(314): 'next' is a Perl and Ruby keyword; keep 'next' in
+Python for compatibility */
+%rename("next") next_element;
 #endif
-  CMPIData next() 
+  CMPIData next_element()
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData result;
@@ -1376,6 +1377,8 @@ FIXME: if clone() is exposed, release() must also
   }
 
 #if defined(SWIGRUBY)
+  %typemap(out) int hasNext
+    "$result = ($1 != 0) ? Qtrue : Qfalse;";
   %rename("has_next") hasNext;
 #endif
   int hasNext() 
@@ -1383,7 +1386,8 @@ FIXME: if clone() is exposed, release() must also
     CMPIStatus st = { CMPI_RC_OK, NULL };
     int result;
 
-    result = CMHasNext($self, NULL);
+    result = CMHasNext($self, &st);
+    fprintf(stderr, "CMHasNext -> %d\n", result);
     RAISE_IF(st);
     return result;
   }
