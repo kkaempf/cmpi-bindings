@@ -13,11 +13,13 @@ module Cmpi
   #  Required internally for callbacks like CMNewString
   #
 private
-  def self.broker= broker
-    @@broker = broker
+  def self.broker= _broker
+#    STDERR.puts "broker = #{_broker}"
+    @@broker = _broker
   end
 public
   def self.broker
+#    STDERR.puts "@@broker #{@@broker}"
     @@broker
   end
   def not_implemented klass, name
