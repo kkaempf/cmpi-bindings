@@ -106,7 +106,9 @@ module Cmpi
     ((16+10)<<8)
   end
   
-CMPI_ARRAY = ((1)<<13)
+  unless CMPI_ARRAY
+    CMPI_ARRAY = ((1)<<13)
+  end
 
   def self.booleanA
     CMPI_ARRAY | self.boolean
