@@ -89,13 +89,14 @@ load_provider(VALUE arg)
 {
   const char *classname = (const char *)arg;
   if (classname == NULL || *classname == 0) {
-    _SBLIM_TRACE(1,("Ruby: load_provider(%s) failed", classname));
+    _SBLIM_TRACE(1,("Ruby: load_provider(%s) no class given", classname));
     return Qfalse;
   }
   char *filename = alloca(strlen(classname) * 2 + 1);
   /* copy/decamelize classname */
   const char *cptr = classname;
   char *fptr = filename;
+  VALUE req; /* result of rb_require */
   while (*cptr) {
     if (isupper(*cptr)) {
       if (cptr > classname /* not first char */
@@ -112,7 +113,9 @@ load_provider(VALUE arg)
   *fptr = 0;
   ruby_script(filename);
   _SBLIM_TRACE(1,("Ruby: loading (%s)", filename));
-  if (rb_require(filename) != Qtrue) {
+  req = rb_require(filename);
+  /* Qtrue == just loaded, Qfalse = already loaded, else: fail */
+  if ((req != Qtrue) && (req != Qfalse)) {
     _SBLIM_TRACE(1,("<%d> require '%s' failed", getpid(), filename));
     return Qnil;
   }
