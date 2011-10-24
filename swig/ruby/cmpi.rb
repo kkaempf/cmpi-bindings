@@ -106,7 +106,7 @@ module Cmpi
     ((16+10)<<8)
   end
   
-  unless CMPI_ARRAY
+  unless defined? CMPI_ARRAY
     CMPI_ARRAY = ((1)<<13)
   end
 
@@ -313,6 +313,32 @@ module Cmpi
   class CMPIStatus
     def to_s
       (rc == 0) ? "Ok" : "#{rc}:#{msg}"
+    end
+  end
+  
+  #
+  # CMPIArgs
+  #
+  class CMPIArgs
+    def each
+      0.upto(size-1) do |i|
+	yield get_arg_at(i)
+      end
+    end
+    def to_hash
+      h = {}
+      each do |name,val|
+	h[name] = val
+      end
+      h
+    end
+    def to_s
+      s = ""
+      each do |name,val|
+	s << ", " unless s.empty?
+	s << "#{name.inspect} => #{value}"
+      end
+      "{ #{s} }"
     end
   end
 end
