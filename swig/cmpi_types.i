@@ -1193,7 +1193,8 @@ FIXME: if clone() is exposed, release() must also
    * Returns a pair of value and name
    *
    * call-seq:
-   *   get_arg_at(1) -> [ value, "name" ]
+   *   get_arg_at(1) -> [ "name", value ]
+   * ** Python returns value, name pair !
    *
    */
   __type get_arg_at(int index) 
@@ -1219,8 +1220,8 @@ FIXME: if clone() is exposed, release() must also
     PyTuple_SetItem(result, 1, PyString_FromString(CMGetCharPtr(s)));
 #else
     result = Target_SizedArray(2);
-    Target_Append(result, tdata);
     Target_Append(result, Target_String(CMGetCharPtr(s)));
+    Target_Append(result, tdata);
 #endif
     TARGET_THREAD_END_BLOCK;
     CMRelease(s);
