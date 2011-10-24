@@ -336,7 +336,7 @@ module Cmpi
       s = ""
       each do |name,val|
 	s << ", " unless s.empty?
-	s << "#{name.inspect} => #{value}"
+	s << "#{name.inspect} => #{val}"
       end
       "{ #{s} }"
     end
