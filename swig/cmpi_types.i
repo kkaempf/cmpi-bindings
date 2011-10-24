@@ -1229,7 +1229,7 @@ FIXME: if clone() is exposed, release() must also
   }
 
 #if defined(SWIGRUBY)
-  %alias get "size";
+  %alias arg_count "size";
 #endif
   /*
    * Gets the number of arguments contained in this Args.
