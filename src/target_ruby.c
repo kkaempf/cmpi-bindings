@@ -75,6 +75,27 @@
 /* mutex to flag Ruby call in progress - the one aquiring the lock inits the stack */
 static pthread_mutex_t _stack_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static void
+decamelize(const char *from, char *to)
+{
+  const char *start = from;
+  /* copy/decamelize classname */
+  while (*from) {
+    if (isupper(*from)) {
+      if (from > start /* not first char */
+	  && (*(to-1) != '_')
+	  && (islower(*(from-1)) || islower(*(from+1))) ) { /* last was lower or next is lower */
+	*to++ = '_';
+      }
+      *to++ = tolower(*from++);
+    }
+    else {
+      *to++ = *from++;
+    }
+  }
+  *to = 0;
+}
+
 /*
  * load_module - load provider
  * 
@@ -88,29 +109,13 @@ static VALUE
 load_provider(VALUE arg)
 {
   const char *classname = (const char *)arg;
+  VALUE req; /* result of rb_require */
   if (classname == NULL || *classname == 0) {
     _SBLIM_TRACE(1,("Ruby: load_provider(%s) no class given", classname));
     return Qfalse;
   }
   char *filename = alloca(strlen(classname) * 2 + 1);
-  /* copy/decamelize classname */
-  const char *cptr = classname;
-  char *fptr = filename;
-  VALUE req; /* result of rb_require */
-  while (*cptr) {
-    if (isupper(*cptr)) {
-      if (cptr > classname /* not first char */
-	  && (*(fptr-1) != '_')
-	  && (islower(*(cptr-1)) || islower(*(cptr+1))) ) { /* last was lower or next is lower */
-	*fptr++ = '_';
-      }
-      *fptr++ = tolower(*cptr++);
-    }
-    else {
-      *fptr++ = *cptr++;
-    }
-  }
-  *fptr = 0;
+  decamelize(classname, filename);
   ruby_script(filename);
   _SBLIM_TRACE(1,("Ruby: loading (%s)", filename));
   req = rb_require(filename);
