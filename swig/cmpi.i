@@ -519,14 +519,42 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         value->sint64 = FIX2LONG(data);
         break;
       case CMPI_instance: { /*     ((16+0)<<8) */
-        int res = SWIG_ConvertPtr(data, (void *)&(value->inst), SWIGTYPE_p__CMPIInstance, 0 |  0 );
+        CMPIData *cmpi_data;
+	/* try with CMPIData first */
+        int res = SWIG_ConvertPtr(data, (void *)&cmpi_data, SWIGTYPE_p__CMPIData, 0 |  0 );
+	if (SWIG_IsOK(res)) {
+	  if ((cmpi_data->state == CMPI_goodValue)
+	      && (cmpi_data->type == type)) {
+	    value->inst = cmpi_data->value.inst;
+	  }
+	  else {
+	    res = SWIG_ERROR;
+	  }
+	}
+	else {
+          res = SWIG_ConvertPtr(data, (void *)&(value->inst), SWIGTYPE_p__CMPIInstance, 0 |  0 );
+	}
 	if (!SWIG_IsOK(res)) {
 	  SWIG_exception_fail(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIInstance *","target_to_value", 1, data )); 
-	}
+        }
         break;
       }
       case CMPI_ref: { /*          ((16+1)<<8) */
-        int res = SWIG_ConvertPtr(data, (void *)&(value->ref), SWIGTYPE_p__CMPIObjectPath, 0 |  0 );
+        CMPIData *cmpi_data;
+	/* try with CMPIData first */
+        int res = SWIG_ConvertPtr(data, (void *)&cmpi_data, SWIGTYPE_p__CMPIData, 0 |  0 );
+	if (SWIG_IsOK(res)) {
+	  if ((cmpi_data->state == CMPI_goodValue)
+	      && (cmpi_data->type == type)) {
+	    value->ref = cmpi_data->value.ref;
+	  }
+	  else {
+	    res = SWIG_ERROR;
+	  }
+	}
+	else {
+          res = SWIG_ConvertPtr(data, (void *)&(value->ref), SWIGTYPE_p__CMPIObjectPath, 0 |  0 );
+	}
 	if (!SWIG_IsOK(res)) {
 	  SWIG_exception_fail(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIObjectPath *","target_to_value", 1, data )); 
 	}
