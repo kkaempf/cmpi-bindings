@@ -886,7 +886,6 @@ invokeMethod(
     Target_Type _objName;
     Target_Type _in;
     Target_Type _out;
-    Target_Type _method;
 
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
    
@@ -898,8 +897,18 @@ invokeMethod(
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
     _in = SWIG_NewPointerObj((void*) in, SWIGTYPE_p__CMPIArgs, 0);
     _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
+#if defined(SWIGRUBY)
+    char *methodname = alloca(strlen(method) * 2 + 1);
+    decamelize(method, methodname);
+    TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, 5, 
+                                                               _ctx,
+                                                               _rslt, 
+                                                               _objName,
+                                                               _in,
+                                                               _out);
+#else
+    Target_Type _method;
     _method = string2target(method); 
-
     TargetCall((ProviderMIHandle*)self->hdl, &status, "invoke_method", 6, 
                                                                _ctx,
                                                                _rslt, 
@@ -907,6 +916,7 @@ invokeMethod(
                                                                _method,
                                                                _in,
                                                                _out);
+#endif
     TARGET_THREAD_END_BLOCK;
     _SBLIM_TRACE(1,("invokeMethod() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
     return status;
