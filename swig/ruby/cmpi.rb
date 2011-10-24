@@ -272,6 +272,7 @@ module Cmpi
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
 	@typemap ||= Cmpi.const_get(classname).typemap rescue nil
 	t = @typemap[n] if @typemap
+#	STDERR.puts "ObjectPath.#{n} = #{v}:#{t}"
         self[n,v] = t
       else
 #	STDERR.puts "CMPIObjectPath.#{name} -> #{self[s].inspect}"
