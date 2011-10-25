@@ -884,8 +884,6 @@ invokeMethod(
     Target_Type _ctx;
     Target_Type _rslt;
     Target_Type _objName;
-    Target_Type _in;
-    Target_Type _out;
 
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
    
@@ -895,19 +893,17 @@ invokeMethod(
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
-    _in = SWIG_NewPointerObj((void*) in, SWIGTYPE_p__CMPIArgs, 0);
-    _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
 #if defined(SWIGRUBY)
     char *methodname = alloca(strlen(method) * 2 + 1);
     decamelize(method, methodname);
     int argsnamesize = strlen(methodname) + 5 + 1;
     char *argsname = alloca(argsnamesize); /* "<name>_args" */
     snprintf(argsname, argsnamesize, "%s_args", methodname);
-    /* get the args array */
+    /* get the args array, gives names of input and output arguments */
     VALUE args = rb_funcall(((ProviderMIHandle*)self->hdl)->implementation, rb_intern(argsname), 0);
     fprintf(stderr, "args at %x<%d>\n", args, TYPE(args));
     Check_Type(args, T_ARRAY);
-    VALUE argsin = rb_ary_entry(args, 0);
+    VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
     Check_Type(argsin, T_ARRAY);
     int number_of_input_arguments = RARRAY_LEN(argsin);
     /* 3 args will be added by TargetCall, 3 args are added here, others are input args to function */
@@ -915,14 +911,32 @@ invokeMethod(
     input[3] = _ctx;
     input[4] = _rslt;
     input[5] = _objName;
+    /* loop over input arg names and get CMPIData via CMGetArg() */
     int i;
     for (i = 0; i < number_of_input_arguments; ++i) {
-      input[6+i] = rb_ary_entry(argsin, i);
+      const char *argname;
+      CMPIData data;
+      argname = target_charptr(rb_ary_entry(argsin, i));
+      data = CMGetArg(in, argname, &status);
+      if (status.rc != CMPI_RC_OK) {
+	if ((data.state & CMPI_nullValue)
+	    ||(data.state & CMPI_notFound)) {
+	  input[6+i] = Target_Null;
+	  continue;
+	} 
+	_SBLIM_TRACE(1,("Failed (rc %d) to get input arg %d:%s for %s", status.rc, i, argname, method));
+	return status;
+      }
+      input[6+i] = data_value(&data);
     }
     VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(3+number_of_input_arguments), input);
     VALUE argsout = rb_ary_entry(args, 1);
     Check_Type(argsout, T_ARRAY);
 #else
+    Target_Type _in;
+    Target_Type _out;
+    _in = SWIG_NewPointerObj((void*) in, SWIGTYPE_p__CMPIArgs, 0);
+    _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
     Target_Type _method;
     _method = string2target(method); 
     TargetCall((ProviderMIHandle*)self->hdl, &status, "invoke_method", 6, 
