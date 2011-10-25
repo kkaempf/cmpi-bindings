@@ -368,7 +368,7 @@ cmpi_broker()
   VALUE broker = rb_funcall(mCmpi, rb_intern("broker"), 0);
   res1 = SWIG_ConvertPtr(broker, &ptr, SWIGTYPE_p__CMPIBroker, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "broker", 1, mCmpi));
+    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "broker", 1, broker));
   }
   return (CMPIBroker *)ptr;
 fail:
