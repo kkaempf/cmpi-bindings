@@ -899,22 +899,13 @@ invokeMethod(
     _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
 #if defined(SWIGRUBY)
     char *methodname = alloca(strlen(method) * 2 + 1);
-    VALUE impl = ((ProviderMIHandle*)self->hdl)->implementation;
-    VALUE method_class = rb_const_get(impl, rb_intern("Method"));
-    if (method_class == Qnil) {
-      _SBLIM_TRACE(1,("<%d> Provider '%s' does not implement 'Method'", getpid(), ((ProviderMIHandle*)self->hdl)->miName));
-      status.rc = CMPI_RC_ERR_METHOD_NOT_AVAILABLE;
-      return status;
-    }
     decamelize(method, methodname);
-    ((ProviderMIHandle*)self->hdl)->implementation = method_class;
     TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, 5, 
                                                                _ctx,
                                                                _rslt, 
                                                                _objName,
                                                                _in,
                                                                _out);
-    ((ProviderMIHandle*)self->hdl)->implementation = impl;
 #else
     Target_Type _method;
     _method = string2target(method); 
