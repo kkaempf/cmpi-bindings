@@ -910,13 +910,14 @@ invokeMethod(
     VALUE argsin = rb_ary_entry(args, 0);
     Check_Type(argsin, T_ARRAY);
     int number_of_input_arguments = RARRAY_LEN(argsin);
-    VALUE *input = alloca((3 + number_of_input_arguments) * sizeof(VALUE));
-    input[0] = _ctx;
-    input[1] = _rslt;
-    input[2] = _objName;
+    /* 3 args will be added by TargetCall, 3 args are added here, others are input args to function */
+    VALUE *input = alloca((6 + number_of_input_arguments) * sizeof(VALUE));
+    input[3] = _ctx;
+    input[4] = _rslt;
+    input[5] = _objName;
     int i;
     for (i = 0; i < number_of_input_arguments; ++i) {
-      input[3+i] = rb_ary_entry(argsin, i);
+      input[6+i] = rb_ary_entry(argsin, i);
     }
     VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(3+number_of_input_arguments), input);
     VALUE argsout = rb_ary_entry(args, 1);

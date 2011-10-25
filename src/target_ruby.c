@@ -330,18 +330,19 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     va_end(vargs);
     nargs = -nargs;
   }
-  else {
   /* add hdl->instance, op and nargs to the args array, so rb_protect can be called */
   nargs += 3;
-  args = (VALUE *)alloca(nargs * sizeof(VALUE));
-  if (args == NULL) {
-    _SBLIM_TRACE(1,("Out of memory")); 
-    abort();
+  if (!invoke) {
+    args = (VALUE *)alloca(nargs * sizeof(VALUE));
+    if (args == NULL) {
+      _SBLIM_TRACE(1,("Out of memory")); 
+      abort();
+    }
   }
   args[0] = (VALUE)(hdl->implementation);
   args[1] = op;
   args[2] = (VALUE)(nargs-3);
-  if (nargs > 3)
+  if (!invoke && (nargs > 3))
     {
       va_start(vargs, nargs);
       for (i = 3; i < nargs; ++i)
@@ -352,7 +353,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 	}
       va_end(vargs);
     }
-  }
 
   /* call the Ruby function
    * possible results:
@@ -372,14 +372,16 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
       goto done;
     }
-  if (invoke)
-    goto done;
-
   if (NIL_P(result)) /* not or wrongly implemented */
     {
       st->rc = CMPI_RC_ERR_NOT_SUPPORTED;
       goto done;
     }
+
+  if (invoke) {
+    st->rc = CMPI_RC_OK;
+    goto done;
+  }
 
   if (result != Qtrue)
     {
