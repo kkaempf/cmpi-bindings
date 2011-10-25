@@ -331,7 +331,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     _SBLIM_TRACE(1,("Out of memory")); 
     abort();
   }
-  _SBLIM_TRACE(1,("hdl %p, hdl->implementation %p", hdl, hdl->implementation));
   args[0] = (VALUE)(hdl->implementation);
   args[1] = op;
   args[2] = (VALUE)(nargs-3);
