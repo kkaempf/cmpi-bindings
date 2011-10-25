@@ -900,12 +900,27 @@ invokeMethod(
 #if defined(SWIGRUBY)
     char *methodname = alloca(strlen(method) * 2 + 1);
     decamelize(method, methodname);
-    TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, 5, 
-                                                               _ctx,
-                                                               _rslt, 
-                                                               _objName,
-                                                               _in,
-                                                               _out);
+    int argsnamesize = strlen(methodname) + 5 + 1;
+    char *argsname = alloca(argsnamesize); /* "<name>_args" */
+    snprintf(argsname, argsnamesize, "%s_args", methodname);
+    /* get the args array */
+    VALUE args = rb_funcall(((ProviderMIHandle*)self->hdl)->implementation, rb_intern(argsname), 0);
+    fprintf(stderr, "args at %x<%d>\n", args, TYPE(args));
+    Check_Type(args, T_ARRAY);
+    VALUE argsin = rb_ary_entry(args, 0);
+    Check_Type(argsin, T_ARRAY);
+    int number_of_input_arguments = RARRAY_LEN(argsin);
+    VALUE *input = alloca((3 + number_of_input_arguments) * sizeof(VALUE));
+    input[0] = _ctx;
+    input[1] = _rslt;
+    input[2] = _objName;
+    int i;
+    for (i = 0; i < number_of_input_arguments; ++i) {
+      input[3+i] = rb_ary_entry(argsin, i);
+    }
+    VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(3+number_of_input_arguments), input);
+    VALUE argsout = rb_ary_entry(args, 1);
+    Check_Type(argsout, T_ARRAY);
 #else
     Target_Type _method;
     _method = string2target(method); 

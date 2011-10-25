@@ -310,13 +310,13 @@ fail:
  * Call function 'opname' with nargs arguments within managed interface hdl->implementation
  */
 
-static int 
+static Target_Type
 TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, 
                  const char* opname, int nargs, ...)
 {
   int have_lock = 0;
+  int invoke = (nargs < 0) ? 1 : 0; /* invokeMethod style call */
   int i;
-  int r;
   VALUE *args, result, op = rb_intern(opname);
   va_list vargs; 
 
@@ -324,9 +324,16 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     have_lock = 1;
     RUBY_INIT_STACK
   }
+  if (invoke) {
+    va_start(vargs, nargs);
+    args = va_arg(vargs, VALUE *);
+    va_end(vargs);
+    nargs = -nargs;
+  }
+  else {
   /* add hdl->instance, op and nargs to the args array, so rb_protect can be called */
   nargs += 3;
-  args = (VALUE *)malloc(nargs * sizeof(VALUE));
+  args = (VALUE *)alloca(nargs * sizeof(VALUE));
   if (args == NULL) {
     _SBLIM_TRACE(1,("Out of memory")); 
     abort();
@@ -345,8 +352,8 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 	}
       va_end(vargs);
     }
+  }
 
-  
   /* call the Ruby function
    * possible results:
    *   i nonzero: Exception raised
@@ -355,7 +362,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
    *   result == Array: pair of CMPIStatus rc(int) and msg(string)
    */
   result = rb_protect(call_mi, (VALUE)args, &i);
-  free( args );
 
   if (i) /* exception ? */
     {
@@ -364,14 +370,14 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       _SBLIM_TRACE(1,("%s", str));
       st->rc = CMPI_RC_ERR_FAILED; 
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-      r = 1;
       goto done;
     }
-  
+  if (invoke)
+    goto done;
+
   if (NIL_P(result)) /* not or wrongly implemented */
     {
       st->rc = CMPI_RC_ERR_NOT_SUPPORTED;
-      r = 1;
       goto done;
     }
 
@@ -384,7 +390,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 	  char* str = fmtstr("Ruby: calling '%s' returned unknown result", opname); 
 	  st->rc = CMPI_RC_ERR_FAILED;
 	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-	  r = 1;
 	  goto done;
 	}
   
@@ -395,22 +400,19 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 	  char* str = fmtstr("Ruby: calling '%s' returned non-numeric rc code", opname); 
 	  st->rc = CMPI_RC_ERR_FAILED;
 	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-	  r = 1;
 	  goto done;
 	}
       st->rc = FIX2LONG(rc);
       st->msg = hdl->broker->eft->newString(hdl->broker, StringValuePtr(msg), NULL);
-      r = 1;
       goto done;
     }
   
   /* all is fine */
   st->rc = CMPI_RC_OK;
-  r = 0;
 done:
   if (have_lock)
     pthread_mutex_unlock(&_stack_init_mutex);
-  return r;
+  return result;
 }
 
 
