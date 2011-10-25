@@ -882,7 +882,6 @@ invokeMethod(
         CMPIArgs* out)
 {
     Target_Type _ctx;
-    Target_Type _rslt;
     Target_Type _objName;
 
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
@@ -891,7 +890,6 @@ invokeMethod(
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
-    _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
 #if defined(SWIGRUBY)
     char *methodname = alloca(strlen(method) * 2 + 1);
@@ -905,15 +903,14 @@ invokeMethod(
     Check_Type(args, T_ARRAY);
     VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
     Check_Type(argsin, T_ARRAY);
-    int number_of_input_arguments = RARRAY_LEN(argsin);
-    /* 3 args will be added by TargetCall, 3 args are added here, others are input args to function */
-    VALUE *input = alloca((6 + number_of_input_arguments) * sizeof(VALUE));
+    int number_of_arguments = RARRAY_LEN(argsin) / 2;
+    /* 3 args will be added by TargetCall, 2 args are added here, others are input args to function */
+    VALUE *input = alloca((3 + 2 + number_of_arguments) * sizeof(VALUE));
     input[3] = _ctx;
-    input[4] = _rslt;
-    input[5] = _objName;
-    /* loop over input arg names and get CMPIData via CMGetArg() */
+    input[4] = _objName;
+    /* loop over input arg names and types and get CMPIData via CMGetArg() */
     int i;
-    for (i = 0; i < number_of_input_arguments; ++i) {
+    for (i = 0; i < number_of_arguments; i += 2) {
       const char *argname;
       CMPIData data;
       argname = target_charptr(rb_ary_entry(argsin, i));
@@ -921,20 +918,55 @@ invokeMethod(
       if (status.rc != CMPI_RC_OK) {
 	if ((data.state & CMPI_nullValue)
 	    ||(data.state & CMPI_notFound)) {
-	  input[6+i] = Target_Null;
+	  input[5+(i>>1)] = Target_Null;
 	  continue;
 	} 
-	_SBLIM_TRACE(1,("Failed (rc %d) to get input arg %d:%s for %s", status.rc, i, argname, method));
+	_SBLIM_TRACE(1,("Failed (rc %d) to get input arg %d:%s for %s", status.rc, i>>1, argname, method));
 	return status;
       }
-      input[6+i] = data_value(&data);
+      input[5+(i>>1)] = data_value(&data);
     }
-    VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(3+number_of_input_arguments), input);
+    VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(2+number_of_arguments), input);
+    /* argsout is array of [<return_type>, <output_arg_name>, <output_arg_type>, ... */
     VALUE argsout = rb_ary_entry(args, 1);
+    CMPIValue value;
+    CMPIType expected_type;
+    CMPIType actual_type;
     Check_Type(argsout, T_ARRAY);
+    number_of_arguments = RARRAY_LEN(argsout) / 2 - 1;
+    if (i > 0) {
+      /* if output args are defined, result must be an array
+       * result[0] is the return value
+       * result[1..n] are the output args in argsout order
+       */
+      Check_Type(result, T_ARRAY);
+
+      /* loop over output arg names and types and set CMPIData via CMSetArg() */
+      for (i = 0; i < number_of_arguments; i += 2) {
+	const char *argname;
+	argname = target_charptr(rb_ary_entry(argsout, i+1));
+	expected_type = FIX2ULONG(rb_ary_entry(argsout, i+2));
+	actual_type = target_to_value(rb_ary_entry(result, (i >> 1) + 1), &value, expected_type);
+	status = CMAddArg(out, argname, &value, actual_type);
+	if (status.rc != CMPI_RC_OK) {
+	  _SBLIM_TRACE(1,("Failed (rc %d) to set output arg %d:%s for %s; expected type %x, actual type %x", status.rc, i>>1, argname, method, expected_type, actual_type));
+	  return status;
+	}
+      }
+      /* result[0] is the return value */
+      result = rb_ary_entry(result, 0);
+
+    }
+    expected_type = FIX2ULONG(rb_ary_entry(argsout, 0));
+    actual_type = target_to_value(rb_ary_entry(result, 0), &value, expected_type);
+    CMReturnData(rslt, &value, actual_type);
+    CMReturnDone(rslt);
+  
 #else
+    Target_Type _rslt;
     Target_Type _in;
     Target_Type _out;
+    _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
     _in = SWIG_NewPointerObj((void*) in, SWIGTYPE_p__CMPIArgs, 0);
     _out = SWIG_NewPointerObj((void*) out, SWIGTYPE_p__CMPIArgs, 0);
     Target_Type _method;
