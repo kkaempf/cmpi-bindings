@@ -934,6 +934,8 @@ invokeMethod(
     CMPIType actual_type;
     Check_Type(argsout, T_ARRAY);
     number_of_arguments = RARRAY_LEN(argsout) / 2 - 1;
+    _SBLIM_TRACE(1,("%s, status.rc, i>>1, argname, method, expected_type, actual_type));
+    
     if (i > 0) {
       /* if output args are defined, result must be an array
        * result[0] is the return value
@@ -958,7 +960,7 @@ invokeMethod(
 
     }
     expected_type = FIX2ULONG(rb_ary_entry(argsout, 0));
-    actual_type = target_to_value(rb_ary_entry(result, 0), &value, expected_type);
+    actual_type = target_to_value(result, &value, expected_type);
     CMReturnData(rslt, &value, actual_type);
     CMReturnDone(rslt);
   
