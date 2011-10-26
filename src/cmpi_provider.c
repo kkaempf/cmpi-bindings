@@ -933,10 +933,9 @@ invokeMethod(
     CMPIType expected_type;
     CMPIType actual_type;
     Check_Type(argsout, T_ARRAY);
-    number_of_arguments = RARRAY_LEN(argsout) / 2 - 1;
-    _SBLIM_TRACE(1,("%s, status.rc, i>>1, argname, method, expected_type, actual_type));
-    
-    if (i > 0) {
+    number_of_arguments = (RARRAY_LEN(argsout) - 1) / 2;
+
+    if (number_of_arguments > 0) {
       /* if output args are defined, result must be an array
        * result[0] is the return value
        * result[1..n] are the output args in argsout order
