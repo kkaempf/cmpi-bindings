@@ -899,7 +899,6 @@ invokeMethod(
     snprintf(argsname, argsnamesize, "%s_args", methodname);
     /* get the args array, gives names of input and output arguments */
     VALUE args = rb_funcall(((ProviderMIHandle*)self->hdl)->implementation, rb_intern(argsname), 0);
-    fprintf(stderr, "args at %x<%d>\n", args, TYPE(args));
     Check_Type(args, T_ARRAY);
     VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
     Check_Type(argsin, T_ARRAY);
