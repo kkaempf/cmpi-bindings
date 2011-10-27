@@ -916,24 +916,25 @@ FIXME: if clone() is exposed, release() must also
    *
    * See get_property_at to retrieve property name and value
    */
-  CMPIData get(VALUE property)
+  VALUE get(VALUE property)
   {
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData data;
     if (FIXNUM_P(property)) {
-      return CMGetPropertyAt($self, FIX2ULONG(property), NULL, NULL);
+      data = CMGetPropertyAt($self, FIX2ULONG(property), NULL, &st);
     }
     else {
       const char *name;
       name = target_charptr(property);
 
-      return CMGetProperty($self, name, NULL);
+      data = CMGetProperty($self, name, &st);
     }
+    RAISE_IF(st);
+    return data_value(&data);
   }
-#endif
 
+#else /* !defined(SWIGRUBY) */
 
-#if defined(SWIGRUBY)
-  %rename("property") get_property(const char *name);
-#endif
   /* Get property by name */
   CMPIData get_property(const char *name) 
   {
@@ -945,6 +946,7 @@ FIXME: if clone() is exposed, release() must also
 
     return result;
   }
+#endif
 
 #if defined (SWIGRUBY)
   VALUE
