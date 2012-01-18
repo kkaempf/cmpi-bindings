@@ -295,6 +295,8 @@ target_charptr(Target_Type target)
     VALUE target_s = rb_funcall(target, rb_intern("to_s"), 0 );
     str = StringValuePtr(target_s);
   }
+#elif defined (SWIGPYTHON)
+  str = PyString_AsString(target);
 #else
 #error target_charptr not defined
   str = NULL;
