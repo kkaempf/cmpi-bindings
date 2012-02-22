@@ -247,7 +247,7 @@ data_value(const CMPIData *dp)
   Target_Type result;
 
   if (dp->state & CMPI_notFound) {
-    result = Qnil;
+    result = Target_Null;
   }
   else if (dp->state & (unsigned short)CMPI_badValue) {
     SWIG_exception(SWIG_ValueError, "bad value");
