@@ -132,7 +132,7 @@ load_provider(VALUE arg)
   }
   val = rb_const_get(val, rb_intern(classname));
   if (val == Qnil) {
-    _SBLIM_TRACE(1,("<%d> No such class  '%s::%s'", getpid(), RB_MODULE_NAME, classname));
+    _SBLIM_TRACE(1,("<%d> No such class '%s::%s'", getpid(), RB_MODULE_NAME, classname));
   }
   return val;
 }
