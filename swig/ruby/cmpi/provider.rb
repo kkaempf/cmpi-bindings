@@ -13,14 +13,12 @@ module Cmpi
   #  Required internally for callbacks like CMNewString
   #
 private
-  def self.broker= _broker
-#    STDERR.puts "broker = #{_broker}"
-    @@broker = _broker
+  def self.cmpi_broker= broker
+    @@cmpi_broker = broker
   end
 public
-  def self.broker
-#    STDERR.puts "@@broker #{@@broker}"
-    @@broker
+  def self.cmpi_broker
+    @@cmpi_broker
   end
   def not_implemented klass, name
     STDERR.puts "#{klass}.#{name}: not implemented"
@@ -49,22 +47,19 @@ public
   module ProviderIF
     protected
     #
-    # Create provider
     # call-seq:
-    #   ProviderIF._init name, broker, context
+    #   ProviderIF.new broker
     #
-    def initialize name, broker, context
-      Cmpi::broker = broker
+    def initialize broker
+      Cmpi::cmpi_broker = broker
     end
-
-    public
     #
     # Cleanup provider, +terminating+: boolean
     #
     def cleanup context, terminating
     end
     def self.method_missing method, *args
-      true
+      not_implemented self.class, self.method
     end
   end
   
@@ -76,6 +71,7 @@ public
   # newinst : CMPIInstance
   #
   module InstanceProviderIF
+    protected
     def create_instance context, result, reference, newinst
     end
     def enum_instance_names context, result, reference
@@ -101,6 +97,7 @@ public
   #
   #
   module MethodProviderIF
+    protected
     # method : String
     # inargs : CMPIArgs
     # outargs : CMPIArgs
@@ -122,6 +119,7 @@ public
   # result_role : String
   #
   module AssociationProviderIF
+    protected
     def associator_names context, result, reference, assoc_class, result_class, role, result_role
     end
     def associators context, result, reference, assoc_class, result_class, role, result_role, properties
@@ -146,6 +144,7 @@ public
   # last_activation : Bool
   #
   module IndicationProviderIF
+    protected
     def authorize_filter context, filter, class_name, reference, owner
     end
     def activate_filter context, filter, class_name, reference, first_activation
