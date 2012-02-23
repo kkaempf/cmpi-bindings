@@ -252,11 +252,15 @@ data_value(const CMPIData *dp)
   else if (dp->state & CMPI_badValue) {
     SWIG_exception(SWIG_ValueError, "bad value");
   }
+  else if (dp->state & CMPI_nullValue) {
+    result = Target_Null;
+    Target_INCREF(result);
+  }
   else if ((dp->type) & CMPI_ARRAY) {
     int size = CMGetArrayCount(dp->value.array, NULL);
     int i;
     result = Target_SizedArray(size);
-    for (i = 0; i < size; --i) {
+    for (i = 0; i < size; i++) {
       CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
       Target_Type value = value_value(&(data.value), (dp->type) & ~CMPI_ARRAY);
       Target_ListSet(result, i, value);
@@ -291,6 +295,8 @@ target_charptr(Target_Type target)
     VALUE target_s = rb_funcall(target, rb_intern("to_s"), 0 );
     str = StringValuePtr(target_s);
   }
+#elif defined (SWIGPYTHON)
+  str = PyString_AsString(target);
 #else
 #error target_charptr not defined
   str = NULL;
@@ -314,20 +320,6 @@ data_data(const CMPIData *dp)
   }
   else if (dp->state & CMPI_badValue) {
     SWIG_exception(SWIG_ValueError, "bad value");
-  }
-  else if (dp->state & CMPI_nullValue) {
-    result = Target_Null;
-    Target_INCREF(result);
-  }
-  else if ((dp->type) & CMPI_ARRAY) {
-    int size = CMGetArrayCount(dp->value.array, NULL);
-    int i;
-    result = Target_SizedArray(size);
-    for (i = 0; i < size; --i) {
-      CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
-      Target_Type value = data_data(&data);
-      Target_ListSet(result, i, value);
-    }
   }
   else {
     result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, SWIG_POINTER_OWN);

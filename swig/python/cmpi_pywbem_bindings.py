@@ -873,6 +873,8 @@ class CMPIProxyProvider(object):
                 pdata = self.cmpi2pywbem_data(adata, _type, is_array=False)
                 rv.append(pdata)
             return rv
+        if cdata.is_null():
+            return None
         if attr == 'datetime':
             attr = 'dateTime'
         if attr == 'reference':
