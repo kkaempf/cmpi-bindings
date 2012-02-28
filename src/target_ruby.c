@@ -191,6 +191,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
   int error = 0;
   char *loadpath;
+  VALUE searchpath;
 
   if (_TARGET_INIT) {
     return error; 
@@ -204,11 +205,14 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   extern void SWIG_init();
   SWIG_init();
 
+  searchpath = rb_gv_get("$:");
+  /* Append /usr/share/cmpi to $: */
+  rb_ary_push(searchpath, rb_str_new2("/usr/share/cmpi"));
+
   /* Check RUBY_PROVIDERS_DIR_ENV if its a dir, append to $: */
   loadpath = getenv(RUBY_PROVIDERS_DIR_ENV);
   if (loadpath) {
     struct stat buf;
-    VALUE search;
     if (stat(loadpath, &buf)) {
       _SBLIM_TRACE(1,("<%d> Can't stat $RUBY_PROVIDERS_DIR '%s'", getpid(), loadpath)); 
       return -1;
@@ -217,8 +221,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
       _SBLIM_TRACE(1,("<%d> Not a directory: $RUBY_PROVIDERS_DIR '%s'", getpid(), loadpath)); 
       return -1;
     }
-    search = rb_gv_get("$:");
-    rb_ary_push(search, rb_str_new2(loadpath));
+    rb_ary_push(searchpath, rb_str_new2(loadpath));
   }
   return error; 
 }
