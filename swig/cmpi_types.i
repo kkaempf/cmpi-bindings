@@ -1046,7 +1046,6 @@ FIXME: if clone() is exposed, release() must also
     CMPIObjectPath* cop;
     CMPICount n;
     CMPICount i;
-    CMPIData cd;
     char** props;
 
     /* Make copy of property list (we may modify it) */
@@ -1084,7 +1083,7 @@ FIXME: if clone() is exposed, release() must also
         CMPIString* pn = NULL;
         const char* str;
 
-        cd = CMGetKeyAt(cop, i, &pn, &st);
+        (void)CMGetKeyAt(cop, i, &pn, &st); /* get key name at i */
 
         if (st.rc)
         {
