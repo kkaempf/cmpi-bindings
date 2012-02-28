@@ -72,7 +72,12 @@
 #define TARGET_THREAD_BEGIN_ALLOW do {} while(0)
 #define TARGET_THREAD_END_ALLOW do {} while(0)
 #include <ruby.h>
+#include <ruby.h>
+#if HAVE_RUBY_IO_H
+#include <ruby/io.h> /* Ruby 1.9 style */
+#else
 #include <rubyio.h>
+#endif
 #endif
 
 #if defined(SWIGPERL)
