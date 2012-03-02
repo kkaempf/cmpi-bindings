@@ -357,7 +357,19 @@ class BrokerCIMOMHandle(object):
         inst = self.proxy.pywbem2cmpi_inst(instance, allow_null_ns)
         rv = self.broker.deliverIndication(self.ctx, ns, inst)
         return rv
-    
+
+    def PrepareAttachThread(self):
+        # Return new *BrokerCIMOMHandle*, the context itself would be useless
+        new_ctx = self.broker.prepareAttachThread(self.ctx)
+        new_broker = BrokerCIMOMHandle(self.proxy, new_ctx)
+        return new_broker
+
+    def AttachThread(self):
+        return self.broker.attachThread(self.ctx)
+
+    def DetachThread(self):
+        return self.broker.detachThread(self.ctx)
+
     def is_subclass(self, ns, super, sub):
         subObjPath=self.broker.new_object_path(ns, sub)
         return bool(self.broker.classPathIsA(subObjPath,super))

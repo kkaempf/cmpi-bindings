@@ -74,6 +74,24 @@ typedef struct _CMPIBroker {} CMPIBroker;
     RAISE_IF(CBDeliverIndication($self, ctx, ns, ind));
   }
 
+  CMPIContext* prepareAttachThread(
+    const CMPIContext * ctx)
+  {
+    return CBPrepareAttachThread($self, ctx);
+  }
+
+  void attachThread(
+    const CMPIContext * ctx)
+  {
+    RAISE_IF(CBAttachThread($self, ctx));
+  }
+
+  void detachThread(
+    const CMPIContext * ctx)
+  {
+    RAISE_IF(CBDetachThread($self, ctx));
+  }
+
   CMPIEnumeration* enumInstanceNames(
     const CMPIContext * ctx, 
     const CMPIObjectPath * op) 
