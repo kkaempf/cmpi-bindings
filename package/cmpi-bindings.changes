@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Mon Mar  5 14:58:44 UTC 2012 - kkaempf@suse.com
+
+- Update to 0.5.0
+  Bugfixes
+  - plug many memory leaks
+  - proper handling of Null value in Python
+  Features
+  - switch to a *much* simpler Ruby API
+  - provide cmpi-bindings as a Ruby gem
+
+-------------------------------------------------------------------
 Sun Oct  2 18:44:39 UTC 2011 - kkaempf@suse.com
 
 - Proper error handling in CMPIObjectPath constructor
