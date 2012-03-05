@@ -458,7 +458,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 	/* CMPIType not given, deduce it from Ruby type */
 	switch (TYPE(data)) {
 	case T_FLOAT:
-            value->Float = RFLOAT(data)->value;
+            value->Float = RFLOAT_VALUE(data);
             type = CMPI_real32;
 	break;
 	case T_STRING:
@@ -495,10 +495,10 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         value->string = to_cmpi_string(data);
         break;
       case CMPI_real32: /*       ((2+0)<<2) */
-        value->Float = RFLOAT(data)->value;
+        value->Float = RFLOAT_VALUE(data);
         break;
       case CMPI_real64: /*       ((2+1)<<2) */
-        value->Double = RFLOAT(data)->value;
+        value->Double = RFLOAT_VALUE(data);
         break;
       case CMPI_uint8: /*        ((8+0)<<4) */
         value->uint8 = FIX2ULONG(data);
