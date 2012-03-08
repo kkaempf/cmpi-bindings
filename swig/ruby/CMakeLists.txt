@@ -109,15 +109,18 @@ ADD_CUSTOM_COMMAND (
   COMMAND "rm" "-rf" "ext"
   COMMAND "mkdir" "-p" "ext/cmpi-bindings"
   COMMAND "cp" "${CMAKE_CURRENT_SOURCE_DIR}/extconf.rb" "ext/cmpi-bindings"
-  COMMAND "cp" "${CMAKE_SOURCE_DIR}/src/cmpi_provider.c" "ext/cmpi-bindings"
-  COMMAND "cp" "${CMAKE_SOURCE_DIR}/src/target_ruby.c" "ext/cmpi-bindings"
+  COMMAND "cp" "${CMAKE_SOURCE_DIR}/swig/*.h" "ext/cmpi-bindings"
   COMMAND "cp" "${CMAKE_CURRENT_BINARY_DIR}/*.c" "ext/cmpi-bindings"
+  COMMAND "mkdir" "-p" "ext/src"
+  COMMAND "cp" "${CMAKE_SOURCE_DIR}/src/cmpi_provider.c" "ext/src"
+  COMMAND "cp" "${CMAKE_SOURCE_DIR}/src/target_ruby.c" "ext/src"
   COMMAND "mkdir" "-p" "lib"
   COMMAND "cp" "${CMAKE_CURRENT_SOURCE_DIR}/cmpi.rb" "lib"
   COMMAND "cp" "-a" "${CMAKE_CURRENT_SOURCE_DIR}/cmpi" "lib"
 
   DEPENDS ${CMAKE_SOURCE_DIR}/src/cmpi_provider.c
   DEPENDS ${CMAKE_SOURCE_DIR}/src/target_ruby.c
+  DEPENDS ${CMAKE_SOURCE_DIR}/swig/*.h
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/extconf.rb
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmpi.rb
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmpi/*.rb
