@@ -79,5 +79,51 @@ ADD_CUSTOM_TARGET(ruby_rdoc ALL DEPENDS "${rdoc_dir}")
 ADD_DEPENDENCIES(ruby_rdoc ${NAME})
 
 #
+# Ruby GEM
+#
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmpi-bindings.gemspec.in ${CMAKE_CURRENT_BINARY_DIR}/cmpi-bindings.gemspec)
+
+SET(GEM_NAME "cmpi-bindings-${VERSION}.gem")
+ADD_CUSTOM_TARGET(ruby_gem ALL DEPENDS ${GEM_NAME})
+ADD_DEPENDENCIES(ruby_gem ${SWIG_OUTPUT})
+
+ADD_CUSTOM_COMMAND (
+   OUTPUT  ${GEM_NAME}
+   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+   COMMAND "gem" "build" "${CMAKE_CURRENT_BINARY_DIR}/cmpi-bindings.gemspec"
+   DEPENDS "ext"
+   DEPENDS ${rdoc_dir}
+   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmpi-bindings.gemspec
+)
+
+#
+# Prep GEM files
+# gemspec needs _relative_ pathes
+# so create ext and lib here and copy files
+#
+ADD_CUSTOM_COMMAND (
+  OUTPUT "ext"
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMAND "rm" "-rf" "lib"
+  COMMAND "rm" "-rf" "ext"
+  COMMAND "mkdir" "-p" "ext/cmpi-bindings"
+  COMMAND "cp" "${CMAKE_CURRENT_SOURCE_DIR}/extconf.rb" "ext/cmpi-bindings"
+  COMMAND "cp" "${CMAKE_SOURCE_DIR}/src/cmpi_provider.c" "ext/cmpi-bindings"
+  COMMAND "cp" "${CMAKE_SOURCE_DIR}/src/target_ruby.c" "ext/cmpi-bindings"
+  COMMAND "cp" "${CMAKE_CURRENT_BINARY_DIR}/*.c" "ext/cmpi-bindings"
+  COMMAND "mkdir" "-p" "lib"
+  COMMAND "cp" "${CMAKE_CURRENT_SOURCE_DIR}/cmpi.rb" "lib"
+  COMMAND "cp" "-a" "${CMAKE_CURRENT_SOURCE_DIR}/cmpi" "lib"
+
+  DEPENDS ${CMAKE_SOURCE_DIR}/src/cmpi_provider.c
+  DEPENDS ${CMAKE_SOURCE_DIR}/src/target_ruby.c
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/extconf.rb
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmpi.rb
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmpi/*.rb
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/*.c
+)
+
+#
 # Leave this to %doc in the .spec file
 #INSTALL(DIRECTORY "${rdoc_dir}" DESTINATION ${DOC_INSTALL_DIR})
