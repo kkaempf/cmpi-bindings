@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Mar 12 09:33:14 UTC 2012 - kkaempf@suse.com
+
+- Update to 0.5.1
+  Confine data_data to wrapping CMPIData, don't convert the value
+  (fixes issue #3 reported by mibanescu)
+
+-------------------------------------------------------------------
 Mon Mar  5 14:58:44 UTC 2012 - kkaempf@suse.com
 
 - Update to 0.5.0

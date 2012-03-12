@@ -330,20 +330,6 @@ data_data(const CMPIData *dp)
   else if (dp->state & (unsigned short)CMPI_badValue) {
     SWIG_exception(SWIG_ValueError, "bad value");
   }
-  else if (dp->state & CMPI_nullValue) {
-    result = Target_Null;
-    Target_INCREF(result);
-  }
-  else if ((dp->type) & CMPI_ARRAY) {
-    int size = CMGetArrayCount(dp->value.array, NULL);
-    int i;
-    result = Target_SizedArray(size);
-    for (i = 0; i < size; ++i) {
-      CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
-      Target_Type value = data_data(&data);
-      Target_ListSet(result, i, value);
-    }
-  }
   else {
     result = SWIG_NewPointerObj((void*) data_clone(dp), SWIGTYPE_p__CMPIData, SWIG_POINTER_OWN);
   }
