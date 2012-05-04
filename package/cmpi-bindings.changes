@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri May  4 13:44:17 UTC 2012 - kkaempf@suse.com
+
+- Update to 0.5.2
+  - Fix CMPIValue <-> CMPIData confusion in Python (Jan Safranek)
+  - Don't build RPM and GEM in parallel
+
+-------------------------------------------------------------------
 Mon Mar 12 09:33:14 UTC 2012 - kkaempf@suse.com
 
 - Update to 0.5.1
