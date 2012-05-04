@@ -281,6 +281,7 @@ fail:
   return result;
 }
 
+
 /*
  * target_charptr
  * Convert target type to const char *
