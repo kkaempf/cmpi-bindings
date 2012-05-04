@@ -78,6 +78,7 @@ ADD_CUSTOM_COMMAND (
 ADD_CUSTOM_TARGET(ruby_rdoc ALL DEPENDS "${rdoc_dir}")
 ADD_DEPENDENCIES(ruby_rdoc ${NAME})
 
+IF( BUILD_RUBY_GEM )
 #
 # Ruby GEM
 #
@@ -126,6 +127,8 @@ ADD_CUSTOM_COMMAND (
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmpi/*.rb
   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/*.c
 )
+
+ENDIF( BUILD_RUBY_GEM )
 
 #
 # Leave this to %doc in the .spec file
