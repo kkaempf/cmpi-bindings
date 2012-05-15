@@ -5,16 +5,17 @@
 enable_testing()
 ADD_SUBDIRECTORY(tests)
 
-EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorarchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
-EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['vendorlibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
+EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['vendorarchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
+EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['vendorlibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
 
 IF( "${RUBY_ARCH_DIR}" STREQUAL "nil" OR "${RUBY_LIB_DIR}" STREQUAL "nil")
   MESSAGE(STATUS "Ruby too old, no vendor_dir, going for site_dir")
-  EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['sitearchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
-  EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print Config::CONFIG['sitelibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
+  EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['sitearchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
+  EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['sitelibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
 ENDIF( "${RUBY_ARCH_DIR}" STREQUAL "nil" OR "${RUBY_LIB_DIR}" STREQUAL "nil")
 
 MESSAGE(STATUS "Ruby executable: ${RUBY_EXECUTABLE}")
+MESSAGE(STATUS "Ruby library: ${RUBY_LIBRARY}")
 MESSAGE(STATUS "Ruby arch dir: ${RUBY_ARCH_DIR}")
 MESSAGE(STATUS "Ruby lib dir: ${RUBY_LIB_DIR}")
 MESSAGE(STATUS "Ruby include path: ${RUBY_INCLUDE_PATH}")
@@ -82,6 +83,8 @@ IF( BUILD_RUBY_GEM )
 #
 # Ruby GEM
 #
+
+MESSAGE(STATUS "Building Ruby GEM")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmpi-bindings.gemspec.in ${CMAKE_CURRENT_BINARY_DIR}/cmpi-bindings.gemspec)
 
