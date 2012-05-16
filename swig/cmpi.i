@@ -397,7 +397,6 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
    * Array-type
    *
    */
-
   if (type & CMPI_ARRAY) {
 
     const CMPIBroker* broker = cmpi_broker();
@@ -571,18 +570,21 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         break;
       case CMPI_dateTime: { /*     ((16+8)<<8) */
         const CMPIBroker* broker = cmpi_broker();
-	if (FIXNUM_P(data)) { /* Integer -> seconds since Epoch */
-	  data = rb_funcall(rb_cTime, rb_intern("at"), 1, data );
+        const char *s;
+        VALUE format;
+        /* Create Time object from Fixnum */
+        if (CLASS_OF(data) != rb_cTime) {
+	  if (!FIXNUM_P(data)) { /* Not Fixnum, convert! */
+	    data = rb_funcall(data, rb_intern("to_i"), 0 );
+          }
+	  data = rb_funcall(rb_cTime, rb_intern("at"), 1, data ); /* Integer -> seconds since Epoch */
 	}
-	VALUE usecs = rb_funcall(data, rb_intern("usec"), 0 );
-	VALUE secs = rb_funcall(data, rb_intern("to_i"), 0 );
-	CMPIUint64 bintime = INT2FIX(usecs);
-	fprintf(stderr, "CMPI_dateTime: usecs %lld\n", bintime);
-	CMPIUint64 sectime = INT2FIX(secs);
-	fprintf(stderr, "CMPI_dateTime: secs %lld\n", sectime);
-	bintime += sectime * (CMPIUint64)1000 * (CMPIUint64)1000;
-	value->dateTime = CMNewDateTimeFromBinary(broker, bintime, 0, &st);
-	fprintf(stderr, "CMPI_dateTime: %lld => %d\n", bintime, st.rc); /* , CMGetCharPtr(st.msg) */
+        /* data is a rb_cTime instance now */
+	data = rb_funcall(data, rb_intern("utc"), 0 ); /* utc ! */
+        format = rb_str_new2("%Y%m%d%H%M%S.000000:000");
+        data = rb_funcall(data, rb_intern("strftime"), 1, format);
+        s = StringValuePtr(data);
+        value->dateTime = CMNewDateTimeFromChars(broker, s, &st);
       }
       break;
 #if 0
