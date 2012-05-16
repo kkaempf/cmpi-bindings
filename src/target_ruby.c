@@ -117,7 +117,7 @@ load_provider(VALUE arg)
   char *filename = alloca(strlen(classname) * 2 + 1);
   decamelize(classname, filename);
   ruby_script(filename);
-  _SBLIM_TRACE(1,("Ruby: loading (%s)", filename));
+  _SBLIM_TRACE(1,("<%d> Ruby: loading (%s)", getpid(), filename));
   req = rb_require(filename);
   /* Qtrue == just loaded, Qfalse = already loaded, else: fail */
   if ((req != Qtrue) && (req != Qfalse)) {
@@ -126,12 +126,12 @@ load_provider(VALUE arg)
   }
   /* Get Cmpi::Provider */
   VALUE val = rb_const_get(rb_cObject, rb_intern(RB_MODULE_NAME));
-  if (val == Qnil) {
+  if (NIL_P(val)) {
     _SBLIM_TRACE(1,("<%d> No such module '%s'", getpid(), RB_MODULE_NAME));
     return val;
   }
   val = rb_const_get(val, rb_intern(classname));
-  if (val == Qnil) {
+  if (NIL_P(val)) {
     _SBLIM_TRACE(1,("<%d> No such class '%s::%s'", getpid(), RB_MODULE_NAME, classname));
   }
   return val;
@@ -198,7 +198,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   }
   _TARGET_INIT=1; /* safe, since mutex is locked */
   
-  _SBLIM_TRACE(1,("<%d> Ruby: Loading", getpid()));
+  _SBLIM_TRACE(1,("<%d> Ruby: RbGlobalInitialize", getpid()));
   
   ruby_init();
   ruby_init_loadpath();
@@ -238,7 +238,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 static int
 TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
-  VALUE args[6];
+  VALUE args[6] = { Qnil };
   int error;
   int have_lock = 0;
 
@@ -271,6 +271,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
    */
   args[0] = rb_protect(load_provider, (VALUE)hdl->miName, &error);
   if (error) {
+    _SBLIM_TRACE(1,("Ruby: load_provider(%s) failed !", hdl->miName));
     if (st != NULL) {
       st->rc = CMPI_RC_ERR_INVALID_CLASS;
       st->msg = CMNewString(hdl->broker, "Failed to load provider", NULL);
@@ -284,11 +285,13 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   args[4] = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
   args[5] = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
   hdl->implementation = rb_protect(call_mi, (VALUE)args, &error);
+  if (error) {
+    _SBLIM_TRACE(1,("Ruby: %s.new() failed !", hdl->miName));
+  }
 
 fail:
   if (error) {
     CMPIString *trace = get_exc_trace(hdl->broker);
-    _SBLIM_TRACE(1,("Ruby: FAILED creating %s: %s", hdl->miName, CMGetCharPtr(trace)));
     if (st != NULL) {
       st->rc = CMPI_RC_ERR_INVALID_CLASS;
       st->msg = trace;
