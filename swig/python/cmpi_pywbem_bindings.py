@@ -310,7 +310,18 @@ class BrokerCIMOMHandle(object):
             # must have namespace
             raise pywbem.CIMError(pywbem.CIM_ERR_INVALID_NAMESPACE)
         cop = self.proxy.pywbem2cmpi_instname(path)
-        inargs=self.proxy.pywbem2cmpi_args(params)
+
+        # dirty hack to get upcall agrument to correct format,
+        # i.e. dictionary of (type, value)
+        wparams = {}
+        for name, value in params.items():
+            if isinstance(value, list):
+                data, _type = self.proxy.pywbem2cmpi_value(value[0])
+            else:
+                data, _type = self.proxy.pywbem2cmpi_value(value)
+            wparams[name] = (_type, value)
+
+        inargs=self.proxy.pywbem2cmpi_args(wparams)
         poutargs = self.broker.new_args()
         rc=self.broker.invokeMethod(self.ctx, cop, method, inargs, poutargs)
         outrc = self.proxy.cmpi2pywbem_data(rc)
