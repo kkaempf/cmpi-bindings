@@ -348,17 +348,15 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
   args[0] = (VALUE)(hdl->implementation);
   args[1] = op;
   args[2] = (VALUE)(nargs-3);
-  if (!invoke && (nargs > 3))
-    {
-      va_start(vargs, nargs);
-      for (i = 3; i < nargs; ++i)
-	{
-	  VALUE value;
-	  value = va_arg(vargs, VALUE);
-	  args[i] = (value == (VALUE)NULL) ? Qnil : value;
-	}
-      va_end(vargs);
+  if (!invoke && (nargs > 3)) {
+    va_start(vargs, nargs);
+    for (i = 3; i < nargs; ++i) {
+      VALUE value;
+      value = va_arg(vargs, VALUE);
+      args[i] = (value == (VALUE)NULL) ? Qnil : value;
     }
+    va_end(vargs);
+  }
 
   /* call the Ruby function
    * possible results:
@@ -369,51 +367,46 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
    */
   result = rb_protect(call_mi, (VALUE)args, &i);
 
-  if (i) /* exception ? */
-    {
-      CMPIString *trace = get_exc_trace(hdl->broker);
-      char* str = fmtstr("Ruby: calling '%s' failed: %s", opname, CMGetCharPtr(trace)); 
-      _SBLIM_TRACE(1,("%s", str));
-      st->rc = CMPI_RC_ERR_FAILED; 
-      st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-      goto done;
-    }
-  if (NIL_P(result)) /* not or wrongly implemented */
-    {
-      st->rc = CMPI_RC_ERR_NOT_SUPPORTED;
-      goto done;
-    }
+  if (i) { /* exception ? */
+    CMPIString *trace = get_exc_trace(hdl->broker);
+    char* str = fmtstr("Ruby: calling '%s' failed: %s", opname, CMGetCharPtr(trace)); 
+    _SBLIM_TRACE(1,("%s", str));
+    st->rc = CMPI_RC_ERR_FAILED; 
+    st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+    goto done;
+  }
+  if (NIL_P(result)) { /* not or wrongly implemented */
+    st->rc = CMPI_RC_ERR_NOT_SUPPORTED;
+    goto done;
+  }
 
   if (invoke) {
     st->rc = CMPI_RC_OK;
     goto done;
   }
 
-  if (result != Qtrue)
-    {
-      VALUE resulta = rb_check_array_type(result);
-      VALUE rc, msg;
-      if (NIL_P(resulta))
-	{
-	  char* str = fmtstr("Ruby: calling '%s' returned unknown result", opname); 
-	  st->rc = CMPI_RC_ERR_FAILED;
-	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-	  goto done;
-	}
-  
-      rc = rb_ary_entry(resulta, 0);
-      msg = rb_ary_entry(resulta, 1);
-      if (!FIXNUM_P(rc))
-	{
-	  char* str = fmtstr("Ruby: calling '%s' returned non-numeric rc code", opname); 
-	  st->rc = CMPI_RC_ERR_FAILED;
-	  st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
-	  goto done;
-	}
-      st->rc = FIX2LONG(rc);
-      st->msg = hdl->broker->eft->newString(hdl->broker, StringValuePtr(msg), NULL);
+  if (result != Qtrue) {
+    VALUE resulta = rb_check_array_type(result);
+    VALUE rc, msg;
+    if (NIL_P(resulta)) {
+      char* str = fmtstr("Ruby: calling '%s' returned unknown result", opname); 
+      st->rc = CMPI_RC_ERR_FAILED;
+      st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
       goto done;
     }
+
+    rc = rb_ary_entry(resulta, 0);
+    msg = rb_ary_entry(resulta, 1);
+    if (!FIXNUM_P(rc)){
+      char* str = fmtstr("Ruby: calling '%s' returned non-numeric rc code", opname); 
+      st->rc = CMPI_RC_ERR_FAILED;
+      st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+      goto done;
+    }
+    st->rc = FIX2LONG(rc);
+    st->msg = hdl->broker->eft->newString(hdl->broker, StringValuePtr(msg), NULL);
+    goto done;
+  }
   
   /* all is fine */
   st->rc = CMPI_RC_OK;
