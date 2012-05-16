@@ -142,20 +142,23 @@ proplist2target(const char** cplist)
 static char *
 fmtstr(const char* fmt, ...)
 {
+    static char buf[1];
     va_list ap; 
     int len; 
     char* str;
 
     va_start(ap, fmt); 
-    len = vsnprintf(NULL, 0, fmt, ap); 
+    len = vsnprintf(buf, 1, fmt, ap); /* vsnprintf(NULL, 0, ...) should work. bnc#762684 */
     va_end(ap); 
     if (len <= 0)
     {
+        fprintf(stderr, "*Err: vsnprintf(%s) = %d\n", fmt, len);
         return NULL; 
     }
     str = (char*)malloc(len+1); 
     if (str == NULL)
     {
+        fprintf(stderr, "*Err: malloc(%d) failed\n", len+1);
         return NULL; 
     }
     va_start(ap, fmt); 
