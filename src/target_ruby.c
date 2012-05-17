@@ -167,13 +167,15 @@ call_mi(VALUE args)
 static CMPIString *
 get_exc_trace(const CMPIBroker* broker)
 {
-    VALUE exception = rb_gv_get("$!"); /* get last exception */
-    VALUE reason = rb_funcall(exception, rb_intern("to_s"), 0 );
-    VALUE trace = rb_gv_get("$@"); /* get last exception trace */
-    VALUE backtrace = rb_funcall(trace, rb_intern("join"), 1, rb_str_new("\n\t", 2));
-
-    char* tmp = fmtstr("%s\n\t%s", StringValuePtr(reason), StringValuePtr(backtrace)); 
-    return broker->eft->newString(broker, tmp, NULL); 
+  VALUE exception = rb_gv_get("$!"); /* get last exception */
+  VALUE reason = rb_funcall(exception, rb_intern("to_s"), 0 );
+  VALUE trace = rb_gv_get("$@"); /* get last exception trace */
+  VALUE backtrace = rb_funcall(trace, rb_intern("join"), 1, rb_str_new("\n\t", 2));
+  
+  char* tmp = fmtstr("%s\n\t%s", StringValuePtr(reason), StringValuePtr(backtrace)); 
+  CMPIString *result = broker->eft->newString(broker, tmp, NULL); 
+  free(tmp);
+  return result;
 }
 
 
@@ -373,6 +375,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     _SBLIM_TRACE(1,("%s", str));
     st->rc = CMPI_RC_ERR_FAILED; 
     st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+    free(str);
     goto done;
   }
   if (NIL_P(result)) { /* not or wrongly implemented */
@@ -392,6 +395,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       char* str = fmtstr("Ruby: calling '%s' returned unknown result", opname); 
       st->rc = CMPI_RC_ERR_FAILED;
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+      free(str);
       goto done;
     }
 
@@ -401,6 +405,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
       char* str = fmtstr("Ruby: calling '%s' returned non-numeric rc code", opname); 
       st->rc = CMPI_RC_ERR_FAILED;
       st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+      free(str);
       goto done;
     }
     st->rc = FIX2LONG(rc);
