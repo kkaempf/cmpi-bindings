@@ -206,6 +206,7 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = Target_String(value->chars);
       break;
       case CMPI_dateTime:     /* ((16+8)<<8) */
+      /* FIXME CMPI_dateTime */
         result = Target_DateTime(value->dateTime);
       break;
       case CMPI_ptr:          /* ((16+9)<<8) */
@@ -581,7 +582,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 	}
         /* data is a rb_cTime instance now */
 	data = rb_funcall(data, rb_intern("utc"), 0 ); /* utc ! */
-        format = rb_str_new2("%Y%m%d%H%M%S.000000:000");
+        format = rb_str_new2("%Y%m%d%H%M%S.000000+000");
         data = rb_funcall(data, rb_intern("strftime"), 1, format);
         s = StringValuePtr(data);
         value->dateTime = CMNewDateTimeFromChars(broker, s, &st);
