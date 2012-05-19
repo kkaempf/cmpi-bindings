@@ -66,7 +66,7 @@
 #define Target_SizedArray(len) rb_ary_new2(len)
 #define Target_ListSet(x,n,y) rb_ary_store(x,n,y)
 #define Target_Append(x,y) rb_ary_push(x,y)
-#define Target_DateTime(x) Qnil
+#define Target_DateTime(x) datetime_value(x)
 #define TARGET_THREAD_BEGIN_BLOCK do {} while(0)
 #define TARGET_THREAD_END_BLOCK do {} while(0)
 #define TARGET_THREAD_BEGIN_ALLOW do {} while(0)
@@ -124,6 +124,24 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #include <cmpi/cmpipl.h>
 
 #include <pthread.h>
+
+static Target_Type
+datetime_value(CMPIDateTime *datetime)
+{
+  Target_Type result;
+  if (datetime) {
+    CMPIUint64 bintime;
+    bintime = datetime->ft->getBinaryFormat(datetime, NULL);
+#if defined(SWIGRUBY)
+    result = rb_time_new((time_t) (bintime / 1000000L), (time_t) (bintime % 1000000));
+#endif
+  }
+  else {
+    result = Target_Null;
+  }
+  return result;
+}
+
 
 /*
  * value_value
@@ -206,7 +224,6 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = Target_String(value->chars);
       break;
       case CMPI_dateTime:     /* ((16+8)<<8) */
-      /* FIXME CMPI_dateTime */
         result = Target_DateTime(value->dateTime);
       break;
       case CMPI_ptr:          /* ((16+9)<<8) */
