@@ -33,7 +33,7 @@
 #define Target_Null Py_None
 #define Target_Type PyObject*
 #define Target_Bool(x) PyBool_FromLong(x)
-#define Target_WChar(x) PyInt_FromLong(x)
+#define Target_Char16(x) PyInt_FromLong(x)
 #define Target_Int(x) PyInt_FromLong(x)
 #define Target_String(x) PyString_FromString(x)
 #define Target_Real(x) Py_None
@@ -58,7 +58,7 @@
 #define Target_Null Qnil
 #define Target_Type VALUE
 #define Target_Bool(x) ((x)?Qtrue:Qfalse)
-#define Target_WChar(x) INT2FIX(x)
+#define Target_Char16(x) INT2FIX(x)
 #define Target_Int(x) INT2FIX(x)
 #define Target_String(x) rb_str_new2(x)
 #define Target_Real(x) rb_float_new(x)
@@ -98,7 +98,7 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #define Target_Null NULL
 #define Target_Type SV *
 #define Target_Bool(x) (x)?Target_True:Target_False
-#define Target_WChar(x) NULL
+#define Target_Char16(x) SWIG_From_long(x)
 #define Target_Int(x) SWIG_From_long(x)
 #define Target_String(x) SWIG_FromCharPtr(x)
 #define Target_Real(x) SWIG_From_double(x)
@@ -128,10 +128,14 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 static Target_Type
 datetime_value(CMPIDateTime *datetime)
 {
+  CMPIStatus st;
   Target_Type result;
   if (datetime) {
     CMPIUint64 bintime;
-    bintime = datetime->ft->getBinaryFormat(datetime, NULL);
+    bintime = datetime->ft->getBinaryFormat(datetime, &st);
+    if (st.rc) {
+      SWIG_exception(SWIG_ValueError, "bad CMPIDateTime value");
+    }
 #if defined(SWIGRUBY)
     result = rb_time_new((time_t) (bintime / 1000000L), (time_t) (bintime % 1000000));
 #endif
@@ -163,7 +167,7 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = Target_Bool(value->boolean);
       break;
       case CMPI_char16:    /* (2+1) */
-        result = Target_WChar(value->char16);
+        result = Target_Char16(value->char16);
       break;
 
       case CMPI_real32:    /* ((2+0)<<2) */
@@ -286,7 +290,7 @@ data_value(const CMPIData *dp)
     result = Target_SizedArray(size);
     for (i = 0; i < size; ++i) {
       CMPIData data = CMGetArrayElementAt(dp->value.array, i, NULL);
-      Target_Type value = value_value(&(data.value), (dp->type) & ~CMPI_ARRAY);
+      Target_Type value = data_value(&data);
       Target_ListSet(result, i, value);
     }
   }
@@ -595,6 +599,9 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 	  if (!FIXNUM_P(data)) { /* Not Fixnum, convert! */
 	    data = rb_funcall(data, rb_intern("to_i"), 0 );
           }
+          if (FIX2LONG(data) < 0) {
+            SWIG_exception(SWIG_ValueError, "CMPIDateTime value is before epoch");
+          }
 	  data = rb_funcall(rb_cTime, rb_intern("at"), 1, data ); /* Integer -> seconds since Epoch */
 	}
         /* data is a rb_cTime instance now */
@@ -603,6 +610,11 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         data = rb_funcall(data, rb_intern("strftime"), 1, format);
         s = StringValuePtr(data);
         value->dateTime = CMNewDateTimeFromChars(broker, s, &st);
+        if (st.rc) {
+          static char msg[256];
+          snprintf(msg, 255, "CMNewDateTimeFromChars(%s) failed with %d", s, st.rc);
+          SWIG_exception(SWIG_ValueError, msg);
+        }
       }
       break;
 #if 0
