@@ -500,7 +500,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         value->boolean = RTEST(data) ? 1 : 0;
         break;
       case CMPI_char16: /*       (2+1) */
-        value->string = to_cmpi_string(data);
+        value->char16 = FIX2INT(data);
         break;
       case CMPI_real32: /*       ((2+0)<<2) */
         value->Float = RFLOAT_VALUE(data);
