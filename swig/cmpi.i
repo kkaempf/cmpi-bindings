@@ -500,7 +500,16 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         value->boolean = RTEST(data) ? 1 : 0;
         break;
       case CMPI_char16: /*       (2+1) */
-        value->char16 = FIX2INT(data);
+        if (FIXNUM_P(data)) {
+          value->char16 = FIX2INT(data);
+        }
+        else {
+          const char *s = target_charptr(data);
+          if (s)
+            value->char16 = *s + (*(s+1)<<8);
+          else
+            value->char16 = 0;
+        }
         break;
       case CMPI_real32: /*       ((2+0)<<2) */
         value->Float = RFLOAT_VALUE(data);
