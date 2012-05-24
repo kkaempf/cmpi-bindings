@@ -134,6 +134,9 @@ datetime_value(CMPIDateTime *datetime)
     CMPIUint64 bintime;
     bintime = datetime->ft->getBinaryFormat(datetime, &st);
     if (st.rc) {
+#if !defined (SWIGRUBY)
+      result = Target_Null;
+#endif
       SWIG_exception(SWIG_ValueError, "bad CMPIDateTime value");
     }
 #if defined(SWIGRUBY)
@@ -143,6 +146,9 @@ datetime_value(CMPIDateTime *datetime)
   else {
     result = Target_Null;
   }
+#if !defined (SWIGRUBY)
+fail:
+#endif
   return result;
 }
 
