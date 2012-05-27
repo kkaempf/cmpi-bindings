@@ -40,7 +40,7 @@
 # and the broker.
 #
 
-%nodefault CMPIError;
+%nodefault _CMPIError;
 %rename(CMPIError) _CMPIError;
 typedef struct _CMPIError {} CMPIError;
 
@@ -116,14 +116,14 @@ typedef struct _CMPIException {} CMPIException;
  * description
  *
  */
-%extend CMPIException 
+%extend _CMPIException 
 {
-  CMPIException() 
+  _CMPIException() 
   {
       return (CMPIException*)calloc(1, sizeof(CMPIException));
   }
 
-  ~CMPIException() 
+  ~_CMPIException() 
   {
       free($self->description);
       free($self);
@@ -186,7 +186,7 @@ typedef struct _CMPIException {} CMPIException;
  */
 %extend _CMPIError 
 {
-  ~CMPIError() { }
+  ~_CMPIError() { }
 
 /* Gets the type of this Error */
   CMPIErrorType type() {
@@ -420,12 +420,12 @@ typedef struct _CMPIException {} CMPIException;
 {
 #if HAVE_CMPI_BROKER
 #if defined(SWIGRUBY)
-  CMPIObjectPath(VALUE ns_t, VALUE cn_t = Qnil) /* Can't use Target_Type here, this is SWIG level */
+  _CMPIObjectPath(VALUE ns_t, VALUE cn_t = Qnil) /* Can't use Target_Type here, this is SWIG level */
 #else
-  CMPIObjectPath(const char *ns, const char *cn = NULL)
+  _CMPIObjectPath(const char *ns, const char *cn = NULL)
 #endif
 #else
-  CMPIObjectPath(const CMPIBroker* broker, const char *ns, const char *cn = NULL)
+  _CMPIObjectPath(const CMPIBroker* broker, const char *ns, const char *cn = NULL)
 #endif
   {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -520,7 +520,7 @@ fail:
     return path;
   }
 
-  ~CMPIObjectPath() 
+  ~_CMPIObjectPath() 
   { 
 /* FIXME    CMRelease( $self ); */
   }
@@ -852,9 +852,9 @@ FIXME: if clone() is exposed, release() must also
 {
   /* path: ObjectPath containing namespace and classname. */
 #if HAVE_CMPI_BROKER
-  CMPIInstance(CMPIObjectPath *path)
+  _CMPIInstance(CMPIObjectPath *path)
 #else
-  CMPIInstance(const CMPIBroker* broker, CMPIObjectPath *path)
+  _CMPIInstance(const CMPIBroker* broker, CMPIObjectPath *path)
 #endif
   {
     CMPIInstance *instance;
@@ -867,7 +867,7 @@ FIXME: if clone() is exposed, release() must also
     return instance;
   }
 
-  ~CMPIInstance() 
+  ~_CMPIInstance() 
   { 
 /* FIXME    CMRelease( $self ); */
   }
@@ -1145,7 +1145,7 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIArgs 
 {
-  ~CMPIArgs() 
+  ~_CMPIArgs() 
   { 
     CMRelease( $self );
   }
@@ -1257,7 +1257,7 @@ FIXME: if clone() is exposed, release() must also
  *       and provides mechanism to operate on the query.
  */
 %extend _CMPISelectExp {
-  ~CMPISelectExp()
+  ~_CMPISelectExp()
   {
     CMRelease( $self );
   }
@@ -1359,7 +1359,7 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPIEnumeration 
 {
-  ~_CMPIEumeration() {
+  ~_CMPIEnumeration() {
     CMRelease( $self );
   }
 #if defined(SWIGPYTHON)
@@ -1600,7 +1600,7 @@ Python for compatibility */
  *
  */
 %extend _CMPIDateTime {
-  ~CMPIDateTime()
+  ~_CMPIDateTime()
   {
     CMRelease( $self );
   }

@@ -78,16 +78,16 @@
 # CMPIData
 #
 
-%extend CMPIData {
+%extend _CMPIData {
 /*
   type, state, value are created by SWIG via %include cmpidt above
 
 */
-  CMPIData(CMPIData *data)
+  _CMPIData(CMPIData *data)
   {
     return data_clone(data);
   }
-  ~CMPIData()
+  ~_CMPIData()
   {
     free($self);
   }
@@ -148,14 +148,14 @@
 # CMPIStatus
 #
 
-%extend CMPIStatus {
-  CMPIStatus()
+%extend _CMPIStatus {
+  _CMPIStatus()
   {
     CMPIStatus *status = (CMPIStatus *)calloc(1, sizeof(CMPIStatus));
     status->rc = CMPI_RC_OK;
     return status;
   }
-  ~CMPIStatus()
+  ~_CMPIStatus()
   {
     free( $self );
   }
