@@ -119,12 +119,12 @@ Provides:       %{name} = %{version}-%{release}
 %if 0%{?fedora} + 0%{?rhel_version} + 0%{?centos_version} > 0
 Requires:       ruby(abi) = 1.8
 %endif
-%if 0%{?suse_version} > 1110
-Requires:       ruby(abi) = 1.8
+%if 0%{?rb_ver}
+Requires:       ruby(abi) = %rb_ver
 %endif
 %if 0%{?ruby_sitelib} == 0
-%{!?ruby_sitelib: %global ruby_sitelib %(ruby -r rbconfig -e 'vd = Config::CONFIG["vendorlibdir"]; print(vd ? vd : Config::CONFIG["sitelibdir"])')}
-%{!?ruby_sitearch: %global ruby_sitearch %(ruby -r rbconfig -e 'vad = Config::CONFIG["vendorarchdir"]; print(vad ? vad : Config::CONFIG["sitearchdir"])')}
+%{!?ruby_sitelib: %global ruby_sitelib %(ruby -r rbconfig -e 'vd = RbConfig::CONFIG["vendorlibdir"]; print(vd ? vd : RbConfig::CONFIG["sitelibdir"])')}
+%{!?ruby_sitearch: %global ruby_sitearch %(ruby -r rbconfig -e 'vad = RbConfig::CONFIG["vendorarchdir"]; print(vad ? vad : RbConfig::CONFIG["sitearchdir"])')}
 %endif
 
 %description -n cmpi-bindings-ruby
