@@ -894,48 +894,60 @@ invokeMethod(
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
+  
+    /* Ruby style method invocation */
 #if defined(SWIGRUBY)
+  
+    /* de-camelize method name, might need 2time length */
     char *methodname = alloca(strlen(method) * 2 + 1);
     decamelize(method, methodname);
+  
+    /* access method arguments information via <decamelized>_args */
     int argsnamesize = strlen(methodname) + 5 + 1;
     char *argsname = alloca(argsnamesize); /* "<name>_args" */
     snprintf(argsname, argsnamesize, "%s_args", methodname);
+  
     /* get the args array, gives names of input and output arguments */
     VALUE args = rb_funcall(((ProviderMIHandle*)self->hdl)->implementation, rb_intern(argsname), 0);
     Check_Type(args, T_ARRAY);
+  
     VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
     Check_Type(argsin, T_ARRAY);
     int number_of_arguments = RARRAY_LEN(argsin) / 2;
+    _SBLIM_TRACE(1,("%s -> %d input args", argsname, number_of_arguments));
     /* 3 args will be added by TargetCall, 2 args are added here, others are input args to function */
     VALUE *input = alloca((3 + 2 + number_of_arguments) * sizeof(VALUE));
     input[3] = _ctx;
     input[4] = _objName;
     /* loop over input arg names and types and get CMPIData via CMGetArg() */
     int i;
-    for (i = 0; i < number_of_arguments; i += 2) {
+    for (i = 0; i < number_of_arguments; ++i) {
       const char *argname;
       CMPIData data;
-      argname = target_charptr(rb_ary_entry(argsin, i));
+      argname = target_charptr(rb_ary_entry(argsin, i*2));
       data = CMGetArg(in, argname, &status);
       if (status.rc != CMPI_RC_OK) {
 	if ((data.state & CMPI_nullValue)
 	    ||(data.state & CMPI_notFound)) {
-	  input[5+(i>>1)] = Target_Null;
+	  input[5+i] = Target_Null;
 	  continue;
 	} 
 	_SBLIM_TRACE(1,("Failed (rc %d) to get input arg %d:%s for %s", status.rc, i>>1, argname, method));
 	return status;
       }
-      input[5+(i>>1)] = data_value(&data);
+      input[5+i] = data_value(&data);
     }
+
+    /* actual provider call, passes output args and return value via 'result' */
     VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(2+number_of_arguments), input);
+
     /* argsout is array of [<return_type>, <output_arg_name>, <output_arg_type>, ... */
     VALUE argsout = rb_ary_entry(args, 1);
     CMPIValue value;
     CMPIType expected_type;
     CMPIType actual_type;
     Check_Type(argsout, T_ARRAY);
-    number_of_arguments = (RARRAY_LEN(argsout) - 1) / 2;
+    number_of_arguments = (RARRAY_LEN(argsout) - 1);
 
     if (number_of_arguments > 0) {
       /* if output args are defined, result must be an array
