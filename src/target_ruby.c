@@ -316,6 +316,15 @@ fail:
  * TargetCall
  * 
  * Call function 'opname' with nargs arguments within managed interface hdl->implementation
+ * 
+ * If nargs < 0: 'invoke method' call to provider
+ *               nargs is followed by a VALUE* array of -nargs+3 elements
+ *               [0] = undef
+ *               [1] = undef
+ *               [2] = undef
+ *               [3] = _ctx;
+ *               [4] = _objName;
+ *               [5...] = function arguments
  */
 
 static Target_Type
@@ -333,6 +342,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     RUBY_INIT_STACK
   }
   if (invoke) {
+    /* invoke style: get pre-allocated array of arguments */
     va_start(vargs, nargs);
     args = va_arg(vargs, VALUE *);
     va_end(vargs);
