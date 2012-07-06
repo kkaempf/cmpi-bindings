@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jul  6 08:53:56 UTC 2012 - kkaempf@suse.com
+
+- Adapt trace level according to CMPI_BINDINGS_TRACE_LEVEL
+  environment variable (bnc#767533)
+
+-------------------------------------------------------------------
 Sun May 27 21:33:02 UTC 2012 - kkaempf@suse.com
 
 - Update to 0.5.4

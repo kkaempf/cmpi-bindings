@@ -46,10 +46,12 @@
 /* Needed for kill() */
 #include <signal.h>
 
+static int cmpi_bindings_trace_level = 0;
+
 /* A simple stderr logging/tracing facility. */
 #ifndef _SBLIM_TRACE
-#define _SBLIM_TRACE(tracelevel,args) _logstderr args 
-void _logstderr(char *fmt,...)
+#define _SBLIM_TRACE(tracelevel,args) if (tracelevel <= cmpi_bindings_trace_level) { _logstderr args; }
+static void _logstderr(char *fmt,...)
 {
    va_list ap;
    va_start(ap,fmt);
@@ -1275,7 +1277,13 @@ static CMPIInstanceMIFT InstanceMIFT__={
 static int
 createInit(ProviderMIHandle* miHdl, CMPIStatus* st)
 {
-    _SBLIM_TRACE(1,("\n>>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p\n", miHdl->broker, miHdl->miName, miHdl->context, st));
+    const char *trace_level = getenv("CMPI_BINDINGS_TRACE_LEVEL");
+    _SBLIM_TRACE(0,("\n>>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p, trace_level %s\n", miHdl->broker, miHdl->miName, miHdl->context, st, trace_level?trace_level:"(null)"));
+
+    if (trace_level) {
+      cmpi_bindings_trace_level = *trace_level - '0';
+      _SBLIM_TRACE(0,("tracing at level %d\n", cmpi_bindings_trace_level));
+    }
     return TargetInitialize(miHdl, st);
 }
 
