@@ -136,6 +136,11 @@ Wed Mar 17 15:48:45 UTC 2010 - coolo@novell.com
 - various fixes for other distributions
 
 -------------------------------------------------------------------
+Wed Nov  4 10:15:50 MST 2009 - bwhiteley@suse.de
+
+- Fixed References up-calls in python bindings (bnc#552571)
+
+-------------------------------------------------------------------
 Sun Aug  9 08:45:29 CEST 2009 - coolo@novell.com
 
 - use new python macros
