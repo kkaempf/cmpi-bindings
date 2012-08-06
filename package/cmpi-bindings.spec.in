@@ -26,14 +26,16 @@ License:        BSD-3-Clause ; EPL-1.0
 Summary:        Adapter to write and run CMPI-type CIM providers
 Group:          Development/Libraries/Other
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  cmake gcc-c++
+BuildRequires:  cmake
+BuildRequires:  gcc-c++
 
 # We need swig threads support.
 BuildRequires:  swig >= 1.3.34
 
 BuildRequires:  sblim-cmpi-devel
 
-BuildRequires:  perl python-devel
+BuildRequires:  perl
+BuildRequires:  python-devel
 
 %if 0%{?rhel_version} > 0
 BuildRequires:  -vim
@@ -41,7 +43,10 @@ BuildRequires:  -vim
 
 %if 0%{?fedora} + 0%{?rhel_version} + 0%{?centos_version}  > 0
 
-BuildRequires:  curl-devel pkgconfig ruby ruby-devel
+BuildRequires:  curl-devel
+BuildRequires:  pkgconfig
+BuildRequires:  ruby
+BuildRequires:  ruby-devel
 BuildRequires:  ruby-libs
 
 %if 0%{?rhel_version} < 500
@@ -54,9 +59,7 @@ BuildRequires:  irb
 BuildRequires:  ruby-rdoc
 %endif
 
-%if 0%{?fedora} > 0
 BuildRequires:  perl-devel
-%endif
 
 %endif
 
@@ -75,7 +78,8 @@ BuildRequires:  curl-devel
 
 # SLE9
 %if 0%{?suse_version} < 920
-BuildRequires:  pkgconfig ruby
+BuildRequires:  pkgconfig
+BuildRequires:  ruby
 %else
 BuildRequires:  ruby-devel
 BuildRequires:  pkg-config
