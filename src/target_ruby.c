@@ -336,6 +336,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
   int i;
   VALUE *args, result, op = rb_intern(opname);
   va_list vargs; 
+  _SBLIM_TRACE(5,("TargetCall([hdl %p]%s:%d args)", hdl, opname, nargs));
 
   if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
     have_lock = 1;
