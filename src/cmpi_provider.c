@@ -873,6 +873,28 @@ references(
     return status;
 }
 
+
+#if defined(SWIGRUBY)
+/*
+ * Check type of VALUE
+ *
+ * return 0 if ok
+ * return -1 if bad type, set status accordingly
+ *
+ */
+
+static int
+check_ruby_type( VALUE value, int type, const char *message, CMPIStatus *status, ProviderMIHandle* hdl )
+{
+  if (TYPE(value) != type) {
+    status->rc = CMPI_RC_ERR_TYPE_MISMATCH;
+    status->msg = CMNewString(hdl->broker, message, NULL);
+    return -1;
+  }
+  return 0;
+}
+#endif
+
 /*
  * invokeMethod
  */
@@ -911,10 +933,13 @@ invokeMethod(
   
     /* get the args array, gives names of input and output arguments */
     VALUE args = rb_funcall(((ProviderMIHandle*)self->hdl)->implementation, rb_intern(argsname), 0);
-    Check_Type(args, T_ARRAY);
+    if (check_ruby_type(args, T_ARRAY, "invoke: <method>_args must be Array",  &status, (ProviderMIHandle*)self->hdl ) < 0)
+      return status;
   
     VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
-    Check_Type(argsin, T_ARRAY);
+    if (check_ruby_type(argsin, T_ARRAY, "invoke: Input arguments must be Array", &status, (ProviderMIHandle*)self->hdl ) < 0)
+      return status;
+
     int number_of_arguments = RARRAY_LEN(argsin) / 2;
     _SBLIM_TRACE(1,("%s -> %d input args", argsname, number_of_arguments));
     /* 3 args will be added by TargetCall, 2 args are added here, others are input args to function */
@@ -948,7 +973,8 @@ invokeMethod(
     CMPIValue value;
     CMPIType expected_type;
     CMPIType actual_type;
-    Check_Type(argsout, T_ARRAY);
+    if (check_ruby_type(argsout, T_ARRAY, "invoke: Output arguments must be Array", &status, (ProviderMIHandle*)self->hdl) < 0)
+      return status;
     number_of_arguments = (RARRAY_LEN(argsout) - 1);
 
     if (number_of_arguments > 0) {
@@ -956,7 +982,8 @@ invokeMethod(
        * result[0] is the return value
        * result[1..n] are the output args in argsout order
        */
-      Check_Type(result, T_ARRAY);
+      if (check_ruby_type(result, T_ARRAY, "invoke: function with output arguments must return Array", &status, (ProviderMIHandle*)self->hdl) < 0)
+        return status;
 
       /* loop over output arg names and types and set CMPIData via CMSetArg() */
       for (i = 0; i < number_of_arguments; i += 2) {
