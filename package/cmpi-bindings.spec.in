@@ -59,7 +59,9 @@ BuildRequires:  irb
 BuildRequires:  ruby-rdoc
 %endif
 
+%if 0%{?fedora} || 0%{?rhel_version} >= 600 || 0%{?centos_version} >= 600
 BuildRequires:  perl-devel
+%endif
 
 %endif
 
@@ -166,10 +168,8 @@ Provides:       %{name} = %{version}-%{release}
 %dir %{_libdir}/cmpi
 %{_libdir}/cmpi/libpyCmpiProvider.so
 %dir %{_datadir}/cmpi
-%{python_sitelib}/cmpi_pywbem_bindings.py
-%{python_sitelib}/cmpi_pywbem_bindings.pyc
-%{python_sitelib}/cmpi.py
-%{python_sitelib}/cmpi.pyc
+%{python_sitelib}/cmpi_pywbem_bindings.py*
+%{python_sitelib}/cmpi.py*
 
 %package -n cmpi-bindings-perl
 License:        BSD-3-Clause ; EPL-1.0
