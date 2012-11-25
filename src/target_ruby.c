@@ -195,15 +195,10 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   char *loadpath;
   VALUE searchpath;
 
-  if (_TARGET_INIT) {
-    return error; 
-  }
-  _TARGET_INIT=1; /* safe, since mutex is locked */
-  
   _SBLIM_TRACE(1,("<%d> Ruby: RbGlobalInitialize", getpid()));
-  
   ruby_init();
   ruby_init_loadpath();
+
   extern void SWIG_init();
   SWIG_init();
 
@@ -216,14 +211,18 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   if (loadpath) {
     struct stat buf;
     if (stat(loadpath, &buf)) {
-      _SBLIM_TRACE(1,("<%d> Can't stat $RUBY_PROVIDERS_DIR '%s'", getpid(), loadpath)); 
+      _SBLIM_TRACE(1,("<%d> Can't stat $%s '%s'", getpid(), RUBY_PROVIDERS_DIR_ENV, loadpath)); 
       return -1;
     }
     if ((buf.st_mode & S_IFDIR) == 0) {
-      _SBLIM_TRACE(1,("<%d> Not a directory: $RUBY_PROVIDERS_DIR '%s'", getpid(), loadpath)); 
+      _SBLIM_TRACE(1,("<%d> Not a directory: $%s '%s'", getpid(), RUBY_PROVIDERS_DIR_ENV, loadpath)); 
       return -1;
     }
+    _SBLIM_TRACE(1,("<%d> Loading providers from: $%s '%s'", getpid(), RUBY_PROVIDERS_DIR_ENV, loadpath)); 
     rb_ary_push(searchpath, rb_str_new2(loadpath));
+  }
+  else {
+    _SBLIM_TRACE(0, ("<%d> Hmm, %s not set ?!", getpid(), RUBY_PROVIDERS_DIR_ENV)); 
   }
   return error; 
 }
@@ -251,7 +250,10 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     perror("Can't lock _CMPI_INIT_MUTEX");
     abort();
   }
-  error = RbGlobalInitialize(hdl->broker, st);
+  if (_TARGET_INIT == 0) {
+    _TARGET_INIT = 1; /* safe, since mutex is locked */
+    error = RbGlobalInitialize(hdl->broker, st);
+  }
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (error != 0) {
     if (st != NULL) {
@@ -466,7 +468,7 @@ TargetCleanup(ProviderMIHandle * hdl)
   {
     _SBLIM_TRACE(1,("Calling ruby_finalize()"));
     ruby_finalize();
-    _TARGET_INIT=0; // false
+    _TARGET_INIT = 0; // false
   }
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   return;
