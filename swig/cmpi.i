@@ -420,6 +420,12 @@ to_cmpi_string(VALUE data)
 static CMPIType
 target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 {
+  /* A NULL value always has CMPIType CMPI_null */
+  if (Target_Null_p(data)) {
+    value->chars = NULL;
+    return CMPI_null;
+  }
+#if defined(SWIGRUBY)
   CMPIStatus st;
   /*
    * Array-type
@@ -429,21 +435,15 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 
     const CMPIBroker* broker = cmpi_broker();
     int size, i;
-#if defined(SWIGRUBY)
     if (TYPE(data) != T_ARRAY) {
       data = rb_funcall(data, rb_intern("to_a"), 0 );
     }
     size = RARRAY_LEN(data);
     value->array = CMNewArray (broker, size, type, NULL);
-#else
-#error Undefined
-#endif
     type &= ~CMPI_ARRAY;
     for (i = 0; i < size; ++i) {
       CMPIValue val;
-#if defined(SWIGRUBY)
       Target_Type elem = rb_ary_entry(data, i);
-#endif
       target_to_value(elem, &val, type);
       CMSetArrayElementAt(value->array, i, &val, type);
     }
@@ -645,6 +645,9 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
   }
 fail:
   return type;
+#else
+#error Undefined
+#endif
 }
 
 
