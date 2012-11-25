@@ -46,7 +46,7 @@
 /* Needed for kill() */
 #include <signal.h>
 
-static int cmpi_bindings_trace_level = 0;
+static int cmpi_bindings_trace_level = 0; /* increase by setenv CMPI_BINDINGS_TRACE_LEVEL */
 
 /* A simple stderr logging/tracing facility. */
 #ifndef _SBLIM_TRACE
