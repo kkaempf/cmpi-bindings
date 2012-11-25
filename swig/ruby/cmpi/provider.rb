@@ -50,7 +50,7 @@ public
     # call-seq:
     #   ProviderIF.new broker
     #
-    def initialize broker
+    def initialize( name, broker, context )
       Cmpi::broker = broker
     end
     #
