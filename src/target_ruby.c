@@ -161,6 +161,7 @@ call_mi(VALUE args)
 /*
  * get Ruby exception trace -> CMPIString
  * 
+ * returns NULL if called without exception
  */
 
 #define TB_ERROR(str) {tbstr = str; goto cleanup;}
@@ -170,10 +171,16 @@ get_exc_trace(const CMPIBroker* broker)
   VALUE exception = rb_gv_get("$!"); /* get last exception */
   VALUE reason = rb_funcall(exception, rb_intern("to_s"), 0 );
   VALUE trace = rb_gv_get("$@"); /* get last exception trace */
-  VALUE backtrace = rb_funcall(trace, rb_intern("join"), 1, rb_str_new("\n\t", 2));
-  
-  char* tmp = fmtstr("%s\n\t%s", StringValuePtr(reason), StringValuePtr(backtrace)); 
-  CMPIString *result = broker->eft->newString(broker, tmp, NULL); 
+  VALUE backtrace;
+  char* tmp;
+  CMPIString *result;
+
+  if (NIL_P(exception)) {
+    return NULL;
+  }
+  backtrace = rb_funcall(trace, rb_intern("join"), 1, rb_str_new("\n\t", 2));
+  tmp = fmtstr("%s\n\t%s", StringValuePtr(reason), StringValuePtr(backtrace)); 
+  result = broker->eft->newString(broker, tmp, NULL); 
   free(tmp);
   return result;
 }
@@ -191,11 +198,10 @@ get_exc_trace(const CMPIBroker* broker)
 static int
 RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
-  int error = 0;
   char *loadpath;
   VALUE searchpath;
 
-  _SBLIM_TRACE(1,("<%d> Ruby: RbGlobalInitialize", getpid()));
+  _SBLIM_TRACE(1,("<%d> Ruby: RbGlobalInitialize, stack @ %p", getpid(), &searchpath));
   ruby_init();
   ruby_init_loadpath();
 
@@ -224,7 +230,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   else {
     _SBLIM_TRACE(0, ("<%d> Hmm, %s not set ?!", getpid(), RUBY_PROVIDERS_DIR_ENV)); 
   }
-  return error; 
+  return 0;
 }
 
 
@@ -240,7 +246,8 @@ static int
 TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
   VALUE args[6] = { Qnil };
-  int error;
+  VALUE gc = Qnil;
+  int error = 0;
   int have_lock = 0;
 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
@@ -254,6 +261,17 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     _TARGET_INIT = 1; /* safe, since mutex is locked */
     error = RbGlobalInitialize(hdl->broker, st);
   }
+  else {
+    /* Enforce GC.disable in provider upcalls; Ruby 1.9 crashes without */
+    gc = rb_const_get(rb_cObject, rb_intern("GC"));
+    if (NIL_P(gc)) {
+      _SBLIM_TRACE(0,("<%d> No such module 'GC'", getpid()));
+    }
+    else {
+      rb_funcall(gc, rb_intern("disable"), 0 );
+    }
+  }
+
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (error != 0) {
     if (st != NULL) {
@@ -263,10 +281,11 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     goto fail;
   }
 
-  _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s'", getpid(), hdl->miName));
+  _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s', stack @ %p, pthread %p", getpid(), hdl->miName, &have_lock, pthread_self()));
 
   if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
     have_lock = 1;
+    _SBLIM_TRACE(1,("<%d> RUBY_INIT_STACK for pthread %p", getpid(), pthread_self()));
     RUBY_INIT_STACK
   }
 
@@ -309,7 +328,10 @@ fail:
   }
   if (have_lock)
     pthread_mutex_unlock(&_stack_init_mutex);
-  _SBLIM_TRACE(1,("Initialize() %s", (error == 0)?"succeeded":"failed"));
+  if (!NIL_P(gc)) {
+    rb_funcall(gc, rb_intern("enable"), 0 );
+  }
+  _SBLIM_TRACE(1,("TargetInitialize() %s", (error == 0)?"succeeded":"failed"));
   return error;
 }
 
@@ -338,11 +360,14 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
   int i;
   VALUE *args, result, op = rb_intern(opname);
   va_list vargs; 
-  _SBLIM_TRACE(5,("TargetCall([hdl %p]%s:%d args)", hdl, opname, nargs));
+  _SBLIM_TRACE(5,("TargetCall([hdl %p]%s:%d args, pthread %p)", hdl, opname, nargs, pthread_self()));
 
   if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
     have_lock = 1;
+#if (RUBY_API_VERSION_MAJOR > 1) || (RUBY_API_VERSION_MAJOR == 1 && RUBY_API_VERSION_MINOR < 9)
+    _SBLIM_TRACE(1,("<%d> RUBY_INIT_STACK", getpid()));
     RUBY_INIT_STACK
+#endif
   }
   if (invoke) {
     /* invoke style: get pre-allocated array of arguments */
@@ -384,7 +409,17 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
 
   if (i) { /* exception ? */
     CMPIString *trace = get_exc_trace(hdl->broker);
-    char* str = fmtstr("Ruby: calling '%s' failed: %s", opname, CMGetCharPtr(trace)); 
+    char *trace_s;
+    char* str;
+    if (trace) {
+      trace_s = CMGetCharPtr(trace);
+    }
+    else {
+      trace_s = "Unknown reason";
+    }
+    str = fmtstr("Ruby: calling '%s' failed: %s", opname, trace_s); 
+    if (trace)
+      trace->ft->release(trace);
     _SBLIM_TRACE(1,("%s", str));
     st->rc = CMPI_RC_ERR_FAILED; 
     st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
@@ -442,7 +477,7 @@ done:
 static void
 TargetCleanup(ProviderMIHandle * hdl)
 {
-  _SBLIM_TRACE(1,("TargetCleanup(hdl %p)", hdl));
+  _SBLIM_TRACE(1,("Ruby: TargetCleanup(hdl %p)", hdl));
   /* free() provider instance */
   if (hdl && hdl->implementation) {
     _SBLIM_TRACE(1,("unregister(%p)", hdl->implementation));
