@@ -230,10 +230,18 @@ value_value(const CMPIValue *value, const CMPIType type)
         result = SWIG_NewPointerObj((void*) (value->Enum), SWIGTYPE_p__CMPIEnumeration, SWIG_POINTER_OWN);
       break;
       case CMPI_string:       /* ((16+6)<<8) */
-        result = Target_String(CMGetCharPtr(value->string));
+      {
+        const char *s = CMGetCharPtr(value->string);
+        if (s == NULL) /* yes, this is possible */
+          s = "";
+        result = Target_String(s);
+      }
       break;
       case CMPI_chars:        /* ((16+7)<<8) */
-        result = Target_String(value->chars);
+        if (value->chars == NULL)
+          result = Target_String("");
+        else
+          result = Target_String(value->chars);
       break;
       case CMPI_dateTime:     /* ((16+8)<<8) */
         result = Target_DateTime(value->dateTime);
@@ -417,6 +425,7 @@ to_cmpi_string(VALUE data)
  * If type  != CMPI_null, convert to ctype
  * else convert to best matching CMPIType
  *
+ * return actual type
  */
 
 static CMPIType
