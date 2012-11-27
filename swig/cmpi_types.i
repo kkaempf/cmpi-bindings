@@ -1573,12 +1573,13 @@ Python for compatibility */
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data;
+    const char *name;
 #if defined (SWIGRUBY)
     if (FIXNUM_P(pos)) {
       data = CMGetContextEntryAt($self, FIX2LONG(pos), &s, &st);      
     }
     else {
-      const char *name = target_charptr(pos);
+      name = target_charptr(pos);
       data = CMGetContextEntry($self, name, &st);
     }
 #else
@@ -1592,19 +1593,22 @@ Python for compatibility */
 	Target_INCREF(result);
         return result;
     }
+    if (s)
+      name = CMGetCharPtr(s);
     TARGET_THREAD_BEGIN_BLOCK;
     tdata = data_data(&data);
 #if defined (SWIGPYTHON)
     result = PyTuple_New(2);
-    PyTuple_SetItem(result, 0, PyString_FromString(CMGetCharPtr(s)));
+    PyTuple_SetItem(result, 0, PyString_FromString(name));
     PyTuple_SetItem(result, 1, tdata);
 #else
     result = Target_SizedArray(2);
-    Target_Append(result, Target_String(CMGetCharPtr(s)));
+    Target_Append(result, Target_String(name));
     Target_Append(result, tdata);
 #endif
     TARGET_THREAD_END_BLOCK;
-    CMRelease(s);
+    if (s)
+      CMRelease(s);
     return result;
   }
 
