@@ -1533,15 +1533,25 @@ Python for compatibility */
    * Get entry by name
    */
   CMPIData get_entry(const char* name) {
-    return CMGetContextEntry($self, name, NULL); // TODO CMPIStatus exception handling
+    CMPIStatus st = { CMPI_RC_OK, NULL };
+    CMPIData data = CMGetContextEntry($self, name, &st);
+    if (st.rc)
+    {
+        RAISE_IF(st);
+	data.type = CMPI_null;
+        data.state = CMPI_notFound;
+        data.value.chars = NULL;
+    }
+    return data;
   }
 
   /*
-   * Get entry by index
+   * Get entry by index or name
    *
    * returns a name:string,value:CMPIData pair
    */
 #if defined (SWIGRUBY)
+  %alias get_entry_at "[]";
   VALUE
 #endif
 #if defined (SWIGPYTHON)
@@ -1550,12 +1560,30 @@ Python for compatibility */
 #if defined (SWIGPERL)
   SV* 
 #endif
-  __type get_entry_at(int index) {
+  __type get_entry_at(
+#if defined (SWIGRUBY)
+  VALUE pos
+#else
+  int index
+#endif
+  )
+  {
     Target_Type tdata;
     Target_Type result;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPIData data = CMGetContextEntryAt($self, index, &s, &st);
+    CMPIData data;
+#if defined (SWIGRUBY)
+    if (FIXNUM_P(pos)) {
+      data = CMGetContextEntryAt($self, FIX2LONG(pos), &s, &st);      
+    }
+    else {
+      const char *name = target_charptr(pos);
+      data = CMGetContextEntry($self, name, &st);
+    }
+#else
+    data = CMGetContextEntryAt($self, index, &s, &st);
+#endif
 
     if (st.rc)
     {
