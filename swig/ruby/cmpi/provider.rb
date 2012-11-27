@@ -50,7 +50,10 @@ public
     # call-seq:
     #   ProviderIF.new broker
     #
-    def initialize( name, broker, context )
+    # Attn: This is different from the derived provider
+    #       which gets name, broker, context passed to initialize
+    #
+    def initialize broker
       Cmpi::broker = broker
     end
     #
