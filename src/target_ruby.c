@@ -72,9 +72,6 @@
 /* an optional environment variable pointing to a directory with Ruby providers */
 #define RUBY_PROVIDERS_DIR_ENV "RUBY_PROVIDERS_DIR"
 
-/* mutex to flag Ruby call in progress - the one aquiring the lock inits the stack */
-static pthread_mutex_t _stack_init_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 static void
 decamelize(const char *from, char *to)
 {
@@ -199,18 +196,17 @@ static int
 RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
   char *loadpath;
-  VALUE searchpath;
 
-  _SBLIM_TRACE(1,("<%d> Ruby: RbGlobalInitialize, stack @ %p", getpid(), &searchpath));
-  ruby_init();
-  ruby_init_loadpath();
+  _SBLIM_TRACE(1,("<%d> Ruby: RbGlobalInitialize, stack @ %p", getpid(), &loadpath));
 
   extern void SWIG_init();
   SWIG_init();
 
-  searchpath = rb_gv_get("$:");
-  /* Append /usr/share/cmpi to $: */
-  rb_ary_push(searchpath, rb_str_new2("/usr/share/cmpi"));
+#if RUBY_VERSION >= 0x10900
+  VALUE gem = rb_define_module("Gem");
+  rb_const_set(gem, rb_intern("Enable"), Qtrue);
+  ruby_init_prelude();
+#endif
 
   /* Check RUBY_PROVIDERS_DIR_ENV if its a dir, append to $: */
   loadpath = getenv(RUBY_PROVIDERS_DIR_ENV);
@@ -225,7 +221,7 @@ RbGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
       return -1;
     }
     _SBLIM_TRACE(1,("<%d> Loading providers from: $%s '%s'", getpid(), RUBY_PROVIDERS_DIR_ENV, loadpath)); 
-    rb_ary_push(searchpath, rb_str_new2(loadpath));
+    ruby_incpush(loadpath);
   }
   else {
     _SBLIM_TRACE(0, ("<%d> Hmm, %s not set ?!", getpid(), RUBY_PROVIDERS_DIR_ENV)); 
@@ -246,9 +242,10 @@ static int
 TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 {
   VALUE args[6] = { Qnil };
-  VALUE gc = Qnil;
   int error = 0;
-  int have_lock = 0;
+  pthread_attr_t attr;
+  size_t stacksize;
+  void *stackaddr;
 
   /* Set _CMPI_INIT, protected by _CMPI_INIT_MUTEX
    * so we call ruby_finalize() only once.
@@ -259,17 +256,15 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
   }
   if (_TARGET_INIT == 0) {
     _TARGET_INIT = 1; /* safe, since mutex is locked */
+   pthread_attr_init(&attr);
+   pthread_attr_getstacksize (&attr, &stacksize);
+   pthread_attr_getstackaddr (&attr, &stackaddr);
+#ifdef RUBY_INIT_STACK
+    RUBY_INIT_STACK
+#endif
+    ruby_init();
+    ruby_init_loadpath();
     error = RbGlobalInitialize(hdl->broker, st);
-  }
-  else {
-    /* Enforce GC.disable in provider upcalls; Ruby 1.9 crashes without */
-    gc = rb_const_get(rb_cObject, rb_intern("GC"));
-    if (NIL_P(gc)) {
-      _SBLIM_TRACE(0,("<%d> No such module 'GC'", getpid()));
-    }
-    else {
-      rb_funcall(gc, rb_intern("disable"), 0 );
-    }
   }
 
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
@@ -281,13 +276,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     goto fail;
   }
 
-  _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s', stack @ %p, pthread %p", getpid(), hdl->miName, &have_lock, pthread_self()));
-
-  if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
-    have_lock = 1;
-    _SBLIM_TRACE(1,("<%d> RUBY_INIT_STACK for pthread %p", getpid(), pthread_self()));
-    RUBY_INIT_STACK
-  }
+  _SBLIM_TRACE(1,("<%d> TargetInitialize(Ruby) called, miName '%s', stack @ %p, pthread %p, stacksize %p, stackaddr %p", getpid(), hdl->miName, &error, pthread_self(), stacksize, stackaddr));
 
   /* call   static VALUE load_provider(const char *classname)
      returns Cmpi::<Class>
@@ -326,11 +315,6 @@ fail:
      */
     rb_gc_register_address(&(hdl->implementation));
   }
-  if (have_lock)
-    pthread_mutex_unlock(&_stack_init_mutex);
-  if (!NIL_P(gc)) {
-    rb_funcall(gc, rb_intern("enable"), 0 );
-  }
   _SBLIM_TRACE(1,("TargetInitialize() %s", (error == 0)?"succeeded":"failed"));
   return error;
 }
@@ -355,20 +339,19 @@ static Target_Type
 TargetCall(ProviderMIHandle* hdl, CMPIStatus* st, 
                  const char* opname, int nargs, ...)
 {
-  int have_lock = 0;
   int invoke = (nargs < 0) ? 1 : 0; /* invokeMethod style call */
   int i;
   VALUE *args, result, op = rb_intern(opname);
   va_list vargs; 
-  _SBLIM_TRACE(5,("TargetCall([hdl %p]%s:%d args, pthread %p)", hdl, opname, nargs, pthread_self()));
+  pthread_attr_t attr;
+  size_t stacksize;
+  void *stackaddr;
 
-  if (pthread_mutex_trylock(&_stack_init_mutex) == 0) {
-    have_lock = 1;
-#if (RUBY_API_VERSION_MAJOR > 1) || (RUBY_API_VERSION_MAJOR == 1 && RUBY_API_VERSION_MINOR < 9)
-    _SBLIM_TRACE(1,("<%d> RUBY_INIT_STACK", getpid()));
-    RUBY_INIT_STACK
-#endif
-  }
+  pthread_attr_init(&attr);
+  pthread_attr_getstacksize (&attr, &stacksize);
+  pthread_attr_getstackaddr (&attr, &stackaddr);
+  _SBLIM_TRACE(5,("TargetCall([hdl %p]%s:%d args, stack @%p, pthread %p, stacksize %p, stackaddr %p)", hdl, opname, nargs, &i, pthread_self(), stacksize, stackaddr));
+
   if (invoke) {
     /* invoke style: get pre-allocated array of arguments */
     va_start(vargs, nargs);
@@ -464,8 +447,6 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
   /* all is fine */
   st->rc = CMPI_RC_OK;
 done:
-  if (have_lock)
-    pthread_mutex_unlock(&_stack_init_mutex);
   return result;
 }
 
