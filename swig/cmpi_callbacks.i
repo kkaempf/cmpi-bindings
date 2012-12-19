@@ -44,6 +44,14 @@ typedef struct _CMPIBroker {} CMPIBroker;
     RAISE_IF(CMLogMessage($self, severity, id, text, NULL)); 
   }
 
+  void TraceMessage(
+    int severity,
+    const char *component,
+    const char *text)
+  {
+    RAISE_IF(CMTraceMessage($self, severity, component, text, NULL));
+  }
+
   int version() 
   {
     return CBBrokerVersion($self);

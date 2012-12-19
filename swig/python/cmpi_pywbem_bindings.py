@@ -395,6 +395,12 @@ _log_pri_map = {
         cmpi.CMPI_DEV_DEBUG    :syslog.LOG_DEBUG,
         }
 
+_trace_prefix_map = {
+    cmpi.CMPI_LEV_VERBOSE      :"DEBG",
+    cmpi.CMPI_LEV_INFO         :"INFO",
+    cmpi.CMPI_LEV_WARNING      :"WARN",
+}
+
 class Logger(object):
     def __init__(self, broker, miname):
         #self.broker = ExceptionClassWrapper(broker)
@@ -407,6 +413,14 @@ class Logger(object):
             if e.get_error_code() == cmpi.CMPI_RC_ERR_NOT_SUPPORTED: 
                 syslog.syslog(syslog.LOG_DAEMON | _log_pri_map[severity], 
                         '%s: %s' % (self.miname, msg))
+    def __trace_message(self, severity, component, msg):
+        try:
+            self.broker.TraceMessage(severity, component, msg);
+        except cmpi.CMPIException, e:
+            if e.get_error_code() == cmpi.CMPI_RC_ERR_NOT_SUPPORTED:
+                # fall back to log_debug if tracing is not supported
+                self.log_debug("%s:%s: %s" % (
+                        component, _trace_prefix_map[severity], msg))
     def log_error(self, msg):
         self.__log_message(cmpi.CMPI_SEV_ERROR, msg);
     def log_info(self, msg):
@@ -415,6 +429,12 @@ class Logger(object):
         self.__log_message(cmpi.CMPI_SEV_WARNING, msg);
     def log_debug(self, msg):
         self.__log_message(cmpi.CMPI_DEV_DEBUG, msg);
+    def trace_verbose(self, component, msg):
+        self.__trace_message(cmpi.CMPI_LEV_VERBOSE, component, msg)
+    def trace_info(self, component, msg):
+        self.__trace_message(cmpi.CMPI_LEV_INFO, component, msg)
+    def trace_warn(self, component, msg):
+        self.__trace_message(cmpi.CMPI_LEV_WARNING, component, msg)
 
 class ProviderEnvironment(object):
     def __init__(self, proxy, ctx):
