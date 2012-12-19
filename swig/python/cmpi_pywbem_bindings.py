@@ -903,6 +903,8 @@ class CMPIProxyProvider(object):
     def cmpi2pywbem_data(self, cdata, _type=None, is_array=None):
         #TODO check for valid cdata.state
         #TODO error handling
+        if (cdata.state & cmpi.CMPI_nullValue) > 0:
+            return None
         if _type is None:
             _type, is_array = _cmpi_type2string(cdata.type)
         attr = _type

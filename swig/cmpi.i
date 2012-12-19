@@ -300,7 +300,10 @@ data_value(const CMPIData *dp)
     result = Target_Null;
     Target_INCREF(result);
   }
-  else if ((dp->type) & CMPI_ARRAY) {
+  else if (dp->state & CMPI_null) {
+    result = value_value(&(dp->value), CMPI_null);
+  }
+  else if (!(dp->state & CMPI_nullValue) && (dp->type & CMPI_ARRAY)) {
     int size = CMGetArrayCount(dp->value.array, NULL);
     int i;
     result = Target_SizedArray(size);
