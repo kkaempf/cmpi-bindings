@@ -877,7 +877,7 @@ FIXME: if clone() is exposed, release() must also
   /*
    * Property setting in Ruby
    * instance[:propname] = data    # set by name (symbol)
-   * instance[:propname, CMPI::uint16] = data    # set by name (symbol)
+   * instance[:propname, data] = CMPI::uint16    # set by name (symbol)
    * instance["propname"] = data   # set by name (string)
    */
   CMPIStatus set(VALUE property, VALUE data, VALUE expected_type = Qnil)
