@@ -454,6 +454,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
     }
     size = RARRAY_LEN(data);
     value->array = CMNewArray (broker, size, type, NULL);
+    /* take away ARRAY flag to process elements */
     type &= ~CMPI_ARRAY;
     for (i = 0; i < size; ++i) {
       CMPIValue val;
@@ -461,6 +462,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       target_to_value(elem, &val, type);
       CMSetArrayElementAt(value->array, i, &val, type);
     }
+    /* re-add ARRAY flag */
     type |= CMPI_ARRAY;
   }
   else {
@@ -627,9 +629,6 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         if (CLASS_OF(data) != rb_cTime) {
 	  if (!FIXNUM_P(data)) { /* Not Fixnum, convert! */
 	    data = rb_funcall(data, rb_intern("to_i"), 0 );
-          }
-          if (FIX2LONG(data) < 0) {
-            SWIG_exception(SWIG_ValueError, "CMPIDateTime value is before epoch");
           }
 	  data = rb_funcall(rb_cTime, rb_intern("at"), 1, data ); /* Integer -> seconds since Epoch */
 	}
