@@ -181,16 +181,15 @@ module Cmpi
 
   #
   # Convert CIM DateTime string representation (see DSP0004, 2.2.1)
-  # to Ruby DateTime
+  # to Ruby Time (timestamp) or Float (interval, as seconds with fraction)
   #           00000000001111111111222222
   #           01234567890123456789012345
-  # East:     yyyymmddhhmmss.mmmmmm+utc 
-  # West:     yyyymmddhhmmss.mmmmmm-utc 
-  # Interval: ddddddddhhmmss.mmmmmm:000
+  # East:     yyyymmddhhmmss.mmmmmm+utc -> Time (utc = offset in minutes)
+  # West:     yyyymmddhhmmss.mmmmmm-utc -> Time
+  # Interval: ddddddddhhmmss.mmmmmm:000 -> Float (interval in seconds, with fraction)
   #
-  require 'date'
-  def self.cim_to_datetime str
-    puts "Cmpi.cim_to_datetime(#{str})"
+  def self.cimdatetime_to_ruby str
+    puts "Cmpi.cimdatetime_to_ruby(#{str})"
     case str[21,1]
     when '+', '-'
       # create Time from yyyymmddhhmmss and utc
@@ -201,11 +200,64 @@ module Cmpi
       # Add fractional part
       return t + off
     when ':'
+      # time offset
+      off = str[0,8].to_i * 24 * 60 * 60
+      off += str[8,2].to_i * 60 * 60 + str[10,2].to_i * 60 + str[12,2].to_i
+      off += str[15,6].to_i / 1000
+      return off
     else
-      raise "Invalid DateTime '#{str}'"
+      raise "Invalid CIM DateTime '#{str}'"
     end
   end
 
+  #
+  # Convert Ruby value to CIM DateTime string representation (see DSP0004, 2.2.1)
+  #           00000000001111111111222222
+  #           01234567890123456789012345
+  # East:     yyyymmddhhmmss.mmmmmm+utc -> Time (utc = offset in minutes, mmmmmm is the microsecond within the second
+  # West:     yyyymmddhhmmss.mmmmmm-utc -> Time
+  # Interval: ddddddddhhmmss.mmmmmm:000 -> Float (interval in seconds, with fraction)
+  #
+  def self.ruby_to_cimdatetime val
+    require 'date'
+    puts "Cmpi.ruby_to_cimdatetime(#{val}[#{val.class}])"
+    t = nil
+    case val
+    when Time
+      s = val.strftime "%Y%m%d%H%M%S.%6N"
+      utc = val.utc_offset # offset in seconds
+      if utc < 0
+        s << "-"
+        utc = -utc
+      else
+        s << "+"
+      end
+      val = s + ("%03d" % (utc/60))
+    when Numeric
+      if val < 0
+        # treat it as seconds before epoch
+        val = self.ruby_to_cimdatetime( Time.at(val) )
+      else
+        # treat as interval in microseconds
+        secs = (val / 1000000).to_i
+        usecs = (val % 1000000).to_i
+        days = secs / (24 * 60 * 60)
+        secs = secs % (24 * 60 * 60) # seconds within the day
+        hours = (secs / (60 * 60)).to_i
+        secs = secs % (60 * 60)
+        mins = (secs / 60).to_i
+        secs = secs % 60
+        val = "%08d%02d%02d%02d.%06d:000" % [ days, hours, mins, secs, usecs ]
+      end
+    when /^\d{14}\.\d{6}[-+:]\d{3}$/
+      # fallthru
+    when String
+      val = self.ruby_to_cimdatetime val.to_f # retry as Numeric
+    else
+      val = self.ruby_to_cimdatetime val.to_s # retry as string
+    end
+    val
+  end
   #
   # Base class for ValueMap/Values classes from genprovider
   #
@@ -274,7 +326,8 @@ module Cmpi
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
 	@typemap ||= Cmpi.const_get(self.objectpath.classname).typemap
 	t = @typemap[n] if @typemap
-#	STDERR.puts "Instance.#{n} = #{v}:#{t}"
+#	STDERR.printf "Instance.#{n} = #{v}[#{v.class}]:#{t}" % [n, v, v.class, t]
+     	STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
         self[n,v] = t
       else
 #	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"

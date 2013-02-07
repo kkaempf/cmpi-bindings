@@ -41,7 +41,6 @@
 #define Target_SizedArray(len) PyList_New(len)
 #define Target_ListSet(x,n,y) PyList_SetItem(x,n,y)
 #define Target_Append(x,y) PyList_Append(x,y)
-#define Target_DateTime(x) Py_None
 #include <Python.h>
 #define TARGET_THREAD_BEGIN_BLOCK SWIG_PYTHON_THREAD_BEGIN_BLOCK
 #define TARGET_THREAD_END_BLOCK SWIG_PYTHON_THREAD_END_BLOCK
@@ -66,7 +65,6 @@
 #define Target_SizedArray(len) rb_ary_new2(len)
 #define Target_ListSet(x,n,y) rb_ary_store(x,n,y)
 #define Target_Append(x,y) rb_ary_push(x,y)
-#define Target_DateTime(x) datetime_value(x)
 #define TARGET_THREAD_BEGIN_BLOCK do {} while(0)
 #define TARGET_THREAD_END_BLOCK do {} while(0)
 #define TARGET_THREAD_BEGIN_ALLOW do {} while(0)
@@ -108,7 +106,6 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #define Target_SizedArray(len) (SV *)newAV()
 #define Target_ListSet(x,n,y) av_store((AV *)(x),n,y)
 #define Target_Append(x,y) av_push(((AV *)(x)), y)
-#define Target_DateTime(x) NULL
 #include <perl.h>
 #include <EXTERN.h>
 #endif
@@ -127,14 +124,23 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 
 #include <pthread.h>
 
+/*
+ * Convert CMPIDateTime to native representation as Target_Type
+ *
+ * Calls Cmpi#datetime in Ruby
+ */
+
 static Target_Type
-datetime_value(CMPIDateTime *datetime)
+Target_DateTime(CMPIDateTime *datetime)
 {
   CMPIStatus st;
   Target_Type result;
   if (datetime) {
-    CMPIUint64 bintime;
-    bintime = datetime->ft->getBinaryFormat(datetime, &st);
+    /* this used to call datetime->ft->getBinaryFormat(datetime, &st)
+     * but was abandoned since getBinaryFormat cannot handle pre-epoch
+     * times (as per CMPI 2.0 standard).
+     */
+    CMPIString *dtstr = datetime->ft->getStringFormat(datetime, &st);
     if (st.rc) {
 #if !defined (SWIGRUBY)
       result = Target_Null;
@@ -142,7 +148,9 @@ datetime_value(CMPIDateTime *datetime)
       SWIG_exception(SWIG_ValueError, "bad CMPIDateTime value");
     }
 #if defined(SWIGRUBY)
-    result = rb_time_new((time_t) (bintime / 1000000L), (time_t) (bintime % 1000000));
+    result = rb_funcall(mCmpi, rb_intern("cimdatetime_to_ruby"), 1, Target_String(CMGetCharPtr(dtstr)));
+#else
+    SWIG_exception(SWIG_RuntimeError, "CMPIDate conversion not implemented");
 #endif
   }
   else {
@@ -212,7 +220,8 @@ value_value(const CMPIValue *value, const CMPIType type)
       break;
 
       case CMPI_instance:     /* ((16+0)<<8) */
-        result = SWIG_NewPointerObj((void*) (value->inst), SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
+        result = SWIG_NewPointerObj((void*) (value->inst),
+SWIGTYPE_p__CMPIInstance, SWIG_POINTER_OWN);
       break;
       case CMPI_ref:          /* ((16+1)<<8) */
         result = SWIG_NewPointerObj((void*) (value->ref), SWIGTYPE_p__CMPIObjectPath, SWIG_POINTER_OWN);
@@ -440,7 +449,6 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
     return CMPI_null;
   }
 #if defined(SWIGRUBY)
-  CMPIStatus st;
   /*
    * Array-type
    *
@@ -623,19 +631,10 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         break;
       case CMPI_dateTime: { /*     ((16+8)<<8) */
         const CMPIBroker* broker = cmpi_broker();
+        CMPIStatus st;
         const char *s;
-        VALUE format;
-        /* Create Time object from Fixnum */
-        if (CLASS_OF(data) != rb_cTime) {
-	  if (!FIXNUM_P(data)) { /* Not Fixnum, convert! */
-	    data = rb_funcall(data, rb_intern("to_i"), 0 );
-          }
-	  data = rb_funcall(rb_cTime, rb_intern("at"), 1, data ); /* Integer -> seconds since Epoch */
-	}
-        /* data is a rb_cTime instance now */
-	data = rb_funcall(data, rb_intern("utc"), 0 ); /* utc ! */
-        format = rb_str_new2("%Y%m%d%H%M%S.000000+000");
-        data = rb_funcall(data, rb_intern("strftime"), 1, format);
+
+        data = rb_funcall(mCmpi, rb_intern("ruby_to_cimdatetime"), 1, data);
         s = StringValuePtr(data);
         value->dateTime = CMNewDateTimeFromChars(broker, s, &st);
         if (st.rc) {
