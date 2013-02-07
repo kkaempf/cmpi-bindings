@@ -180,6 +180,33 @@ module Cmpi
   end
 
   #
+  # Convert CIM DateTime string representation (see DSP0004, 2.2.1)
+  # to Ruby DateTime
+  #           00000000001111111111222222
+  #           01234567890123456789012345
+  # East:     yyyymmddhhmmss.mmmmmm+utc 
+  # West:     yyyymmddhhmmss.mmmmmm-utc 
+  # Interval: ddddddddhhmmss.mmmmmm:000
+  #
+  require 'date'
+  def self.cim_to_datetime str
+    puts "Cmpi.cim_to_datetime(#{str})"
+    case str[21,1]
+    when '+', '-'
+      # create Time from yyyymmddhhmmss and utc
+      t = Time.new(str[0,4].to_i, str[4,2].to_i, str[6,2].to_i, str[8,2].to_i, str[10,2].to_i, str[12,2].to_i, str[22,3].to_i * ((str[21,1]=='+')?60:-60))
+      puts "t #{t}"
+      off = str[15,6].to_i / 1000
+      puts "off #{off}"
+      # Add fractional part
+      return t + off
+    when ':'
+    else
+      raise "Invalid DateTime '#{str}'"
+    end
+  end
+
+  #
   # Base class for ValueMap/Values classes from genprovider
   #
   class ValueMap

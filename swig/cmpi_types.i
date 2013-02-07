@@ -1652,7 +1652,7 @@ Python for compatibility */
     return result;
   }
   
-  /* Return integer representation */
+  /* Return integer representation in miliseconds since the epoch */
   uint64_t to_i() {
     return CMGetBinaryFormat($self, NULL);
   }
