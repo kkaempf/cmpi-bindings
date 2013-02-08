@@ -535,10 +535,17 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         }
         else {
           const char *s = target_charptr(data);
-          if (s)
+          if (s) {
             value->char16 = *s + (*(s+1)<<8);
-          else
+          }
+          else {
             value->char16 = 0;
+          }
+        }
+        if (value->char16 == 0) {
+          static char msg[64];
+          snprintf(msg, 63, "target_to_value: invalid value %d for char16 type", value->char16);
+          SWIG_exception(SWIG_ValueError, msg);
         }
         break;
       case CMPI_real32: /*       ((2+0)<<2) */
@@ -638,8 +645,8 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
         s = StringValuePtr(data);
         value->dateTime = CMNewDateTimeFromChars(broker, s, &st);
         if (st.rc) {
-          static char msg[256];
-          snprintf(msg, 255, "CMNewDateTimeFromChars(%s) failed with %d", s, st.rc);
+          static char msg[64];
+          snprintf(msg, 63, "CMNewDateTimeFromChars(%s) failed with %d", s, st.rc);
           SWIG_exception(SWIG_ValueError, msg);
         }
       }
@@ -650,8 +657,11 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       case CMPI_charsptr: /*     ((16+10)<<8) */
         break;
 #endif
-      default:
-      fprintf(stderr, "*** target_to_value: Unhandled type %08x\n", type);
+      default: {
+        static char msg[64];
+        snprintf(msg, 63, "target_to_value unhandled type 0x%04x", type);
+        SWIG_exception(SWIG_ValueError, msg);
+      }
       break;
     } /* switch (type) */
   }
