@@ -1,0 +1,17 @@
+//
+// RCP_Processor.mof - Ruby Cim Provider for CIM_Processor
+//
+//
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+// ===================================================================
+// 	Cmpi_Swig
+// ===================================================================
+
+[ Description ("Realisation of CIM_Processor in Ruby" )
+]
+class RCP_Processor : CIM_Processor
+{ 
+};

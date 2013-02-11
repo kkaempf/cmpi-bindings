@@ -1,0 +1,7 @@
+[ Description ("A simple class to detect memory leaks in cmpi-bindings" ) 
+]
+class RCP_SimpleClass
+{
+  [Key]
+  string Name;
+};

@@ -1,0 +1,5 @@
+[RCP_ComputerSystem]
+  location: rbCmpiProvider
+  provider: RCP_ComputerSystem
+  type: instance method
+  namespace: root/cimv2

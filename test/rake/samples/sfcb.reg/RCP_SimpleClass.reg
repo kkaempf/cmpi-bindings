@@ -1,0 +1,5 @@
+[RCP_SimpleClass]
+  location: rbCmpiProvider
+  provider: RCP_SimpleClass
+  type: instance
+  namespace: root/cimv2

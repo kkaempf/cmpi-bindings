@@ -1,0 +1,13 @@
+//
+// RCP_RunningOS.mof - Ruby Cim Provider for CIM_RunningOS
+//
+//
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+[ Description ("Realisation of CIM_RunningOS in Ruby" )
+]
+class RCP_RunningOS : CIM_RunningOS
+{ 
+};

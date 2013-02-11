@@ -1,0 +1,10 @@
+[ Description ("Passing CDATA string property values" ) 
+]
+class RCP_PassCData
+{
+  [Key]
+  string Name;
+  string Strange;
+  string CData;
+  string XmlData;
+};

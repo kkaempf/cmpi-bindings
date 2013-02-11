@@ -1,0 +1,13 @@
+//
+// RCP_PhysicalMemory.mof - Ruby Cim Provider for CIM_PhysicalMemory
+//
+//
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+[ Description ("Realisation of CIM_PhysicalMemory in Ruby" )
+]
+class RCP_PhysicalMemory : CIM_PhysicalMemory
+{ 
+};

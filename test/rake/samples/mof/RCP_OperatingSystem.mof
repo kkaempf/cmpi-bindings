@@ -1,0 +1,17 @@
+//
+// RCP_OperatingSystem.mof - Ruby Cim Provider for CIM_OperatingSystem
+//
+//
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+// ===================================================================
+// 	Cmpi_Swig
+// ===================================================================
+
+[ Description ("Realisation of CIM_OperatingSystem in Ruby" )
+]
+class RCP_OperatingSystem : CIM_OperatingSystem
+{ 
+};

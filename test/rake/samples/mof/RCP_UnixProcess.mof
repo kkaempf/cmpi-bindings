@@ -1,0 +1,17 @@
+//
+// RCP_UnixProcess.mof - Ruby Cim Provider for CIM_UnixProcess
+//
+//
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+// ===================================================================
+// 	Cmpi_Swig
+// ===================================================================
+
+[ Description ("Realisation of CIM_UnixProcess in Ruby" )
+]
+class RCP_UnixProcess : CIM_UnixProcess
+{ 
+};

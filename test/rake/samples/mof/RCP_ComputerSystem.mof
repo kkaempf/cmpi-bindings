@@ -1,0 +1,17 @@
+//
+// RCP_ComputerSystem.mof - Ruby Cim Provider for CIM_ComputerSystem
+//
+//
+
+#pragma locale ("en_US")
+//#pragma namespace ("root/cimv2")
+
+// ===================================================================
+// 	Cmpi_Swig
+// ===================================================================
+
+[ Description ("Realisation of CIM_ComputerSystem in Ruby" )
+]
+class RCP_ComputerSystem : CIM_ComputerSystem
+{ 
+};

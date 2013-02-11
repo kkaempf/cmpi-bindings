@@ -1,0 +1,13 @@
+/*
+ * sample indication generator
+ * modeled after
+ *   http://sourceforge.net/apps/mediawiki/pywbem/index.php?title=Indications_Tutorial
+ */
+
+class RCP_IndicationGenerator
+{
+  [Static, Description("Generate one or more indications")]
+  uint16 generate_indications(
+           string ind_text,
+           uint16 num_to_send );                                        
+};

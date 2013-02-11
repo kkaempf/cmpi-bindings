@@ -1,0 +1,9 @@
+[ Description ("A simple class to implement methods" ) 
+]
+class RCP_SimpleMethod
+{
+  [Key]
+  string Name;
+
+  boolean ReturnTrue();
+};

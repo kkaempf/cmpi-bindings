@@ -1,0 +1,14 @@
+[ Description ("A class to implement complex methods" ) 
+]
+class RCP_ComplexMethod
+{
+  [Key]
+  string Name;
+  
+  [Description("A method to concatenate count * str, passing the"
+   "result via an out parameter. Returning the result length")]
+  uint32 InOut(uint32 count, [in] string str, [out] string result);
+  
+  [Description("A method to count array elements")]
+  uint32 Size([in] string strA[]);
+};

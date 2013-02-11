@@ -1,0 +1,11 @@
+[ Description ("A class to return the CMPIContext passed by the CIMOM" ) 
+]
+class RCP_ShowContext
+{
+  [Key]
+  string name;
+  [ Description ("Array of alternating key, value strings from"
+                 "CMPIContext." )
+  ]
+  string context[];
+};

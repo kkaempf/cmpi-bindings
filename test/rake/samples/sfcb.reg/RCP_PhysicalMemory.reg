@@ -1,0 +1,5 @@
+[RCP_PhysicalMemory]
+  location: rbCmpiProvider
+  provider: RCP_PhysicalMemory
+  type: instance
+  namespace: root/cimv2

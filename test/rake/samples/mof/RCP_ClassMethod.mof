@@ -1,0 +1,7 @@
+[ Description ("A class method" ) 
+]
+class RCP_ClassMethod
+{
+  [Static, Description("A class method")]
+  string Classname();
+};
