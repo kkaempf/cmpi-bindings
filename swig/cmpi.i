@@ -298,21 +298,16 @@ data_value(const CMPIData *dp)
 {
   Target_Type result;
 
-  if (dp->state & CMPI_notFound) {
+  if ((dp->state & CMPI_notFound)  /* should CMPI_notFound raise or return NULL ? */
+      || (dp->state & CMPI_nullValue)
+      || (dp->type == CMPI_null)) {
     result = Target_Null;
     Target_INCREF(result);
   }
   else if (dp->state & (unsigned short)CMPI_badValue) {
     SWIG_exception(SWIG_ValueError, "bad value");
   }
-  else if (dp->state & CMPI_nullValue) {
-    result = Target_Null;
-    Target_INCREF(result);
-  }
-  else if (dp->state & CMPI_null) {
-    result = value_value(&(dp->value), CMPI_null);
-  }
-  else if (!(dp->state & CMPI_nullValue) && (dp->type & CMPI_ARRAY)) {
+  else if (dp->type & CMPI_ARRAY) {
     int size = CMGetArrayCount(dp->value.array, NULL);
     int i;
     result = Target_SizedArray(size);
