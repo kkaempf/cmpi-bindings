@@ -189,14 +189,12 @@ module Cmpi
   # Interval: ddddddddhhmmss.mmmmmm:000 -> Float (interval in seconds, with fraction)
   #
   def self.cimdatetime_to_ruby str
-    puts "Cmpi.cimdatetime_to_ruby(#{str})"
+#    puts "Cmpi.cimdatetime_to_ruby(#{str})"
     case str[21,1]
     when '+', '-'
       # create Time from yyyymmddhhmmss and utc
       t = Time.new(str[0,4].to_i, str[4,2].to_i, str[6,2].to_i, str[8,2].to_i, str[10,2].to_i, str[12,2].to_i, str[22,3].to_i * ((str[21,1]=='+')?60:-60))
-      puts "t #{t}"
       off = str[15,6].to_i / 1000
-      puts "off #{off}"
       # Add fractional part
       return t + off
     when ':'
@@ -220,7 +218,7 @@ module Cmpi
   #
   def self.ruby_to_cimdatetime val
     require 'date'
-    puts "Cmpi.ruby_to_cimdatetime(#{val}[#{val.class}])"
+#    puts "Cmpi.ruby_to_cimdatetime(#{val}[#{val.class}])"
     t = nil
     case val
     when Time
