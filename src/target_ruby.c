@@ -261,6 +261,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     _TARGET_INIT = 1; /* safe, since mutex is locked */
     error = RbGlobalInitialize(hdl->broker, st);
   }
+#if 0
   else {
     /* Enforce GC.disable in provider upcalls; Ruby 1.9 crashes without */
     gc = rb_const_get(rb_cObject, rb_intern("GC"));
@@ -271,7 +272,7 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
       rb_funcall(gc, rb_intern("disable"), 0 );
     }
   }
-
+#endif
   pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
   if (error != 0) {
     if (st != NULL) {
