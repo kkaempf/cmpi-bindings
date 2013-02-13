@@ -68,13 +68,14 @@ class Sfcb
       # child
       sfcb_trace_file = File.join($sfcb.dir, "sfcb_trace_file")
       sblim_trace_file = File.join($sfcb.dir, "sblim_trace_file")
+      ruby_providers_dir = File.expand_path(File.join(TOPLEVEL,"samples","provider"))
       Dir.chdir File.expand_path("..", File.dirname(__FILE__))
       {
 #	"SFCB_TRACE_FILE" => sfcb_trace_file,
 #        "SFCB_TRACE" => "4",
 #        "SBLIM_TRACE_FILE" => sblim_trace_file,
 #        "SBLIM_TRACE" => "4",
-	"RUBY_PROVIDERS_DIR" => File.expand_path(File.join(TOPLEVEL,"samples","provider"))
+	"RUBY_PROVIDERS_DIR" => ruby_providers_dir
       }.each do |k,v|
         ENV[k] = v
       end
