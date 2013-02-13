@@ -122,6 +122,7 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 /* CMPI platform check */
 #include <cmpi/cmpipl.h>
 
+#include <syslog.h>
 #include <pthread.h>
 
 /*
@@ -780,6 +781,37 @@ static void _raise_ex(const CMPIStatus* st)
             _raise_ex(&__st__); \
     } \
     while (0)
+
+
+
+/*
+ * Called by LogMessage and TraceMessage
+ */
+
+static void log_message(
+    const CMPIBroker *broker,
+    int severity, 
+    const char *id, 
+    const char *text) 
+{
+  CMPIStatus st = CMLogMessage(broker, severity, id, text, NULL);
+  if (st.rc == CMPI_RC_ERR_NOT_SUPPORTED) {
+    int priority = LOG_DAEMON;
+    openlog("cmpi-bindings", LOG_CONS|LOG_PID, LOG_DAEMON);
+    switch(severity) {
+      case CMPI_SEV_ERROR:   priority |= LOG_ERR; break;
+      case CMPI_SEV_INFO:    priority |= LOG_INFO; break;
+      case CMPI_SEV_WARNING: priority |= LOG_WARNING; break;
+      case CMPI_DEV_DEBUG:   priority |= LOG_DEBUG; break;
+      default:               priority |= LOG_NOTICE;
+    }
+    syslog(priority, "%s: %s", id, text);
+  }
+  else {
+    RAISE_IF(st);
+  }
+}
+
 
 /*
 **==============================================================================

@@ -35,21 +35,57 @@ typedef struct _CMPIBroker {} CMPIBroker;
   int __eq__( const CMPIBroker *broker )
 #endif
   { return $self == broker; }
-  
+
+  /*
+   * standard log messages are intended for user / system admin.
+   * severity: Cmpi.CMPI_SEV_ERROR	Error
+   *           Cmpi.CMPI_SEV_INFO       General info
+   *           Cmpi.CMPI_SEV_WARNING	Warning message
+   *           Cmpi.CMPI_DEV_DEBUG	Debug message
+   */
+
+#if defined(SWIGRUBY)
+  %rename("log") LogMessage(int severity, const char *id, const char *text);
+#endif
   void LogMessage(
     int severity, 
     const char *id, 
     const char *text) 
   {
-    RAISE_IF(CMLogMessage($self, severity, id, text, NULL)); 
+    log_message($self, severity, id, text);
   }
 
+  /*
+   * The trace messages are intended for developer
+   * level: Cmpi.CMPI_LEV_INFO   	Generic information
+   *        Cmpi.CMPI_LEV_WARNING       warnings
+   *        Cmpi.CMPI_LEV_VERBOSE	detailed/specific information
+   *
+   */
+
+#if defined(SWIGRUBY)
+  %rename("trace") TraceMessage(int level, const char *component, const char *text);
+#endif
+
   void TraceMessage(
-    int severity,
+    int level,
     const char *component,
     const char *text)
   {
-    RAISE_IF(CMTraceMessage($self, severity, component, text, NULL));
+    CMPIStatus st = CMTraceMessage($self, level, component, text, NULL);
+    if (st.rc == CMPI_RC_ERR_NOT_SUPPORTED) {
+      int severity;
+      switch (level) {
+        case CMPI_LEV_INFO:    severity = CMPI_SEV_INFO; break;
+        case CMPI_LEV_WARNING: severity = CMPI_SEV_WARNING; break;
+        case CMPI_LEV_VERBOSE: severity = CMPI_SEV_INFO; break;
+        default:               severity = CMPI_SEV_ERROR;
+      }
+      log_message($self, severity, component, text);
+    }
+    else {
+      RAISE_IF(st);
+    }    
   }
 
   int version() 
