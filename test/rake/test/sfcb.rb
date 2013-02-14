@@ -75,7 +75,8 @@ class Sfcb
 #        "SFCB_TRACE" => "4",
 #        "SBLIM_TRACE_FILE" => sblim_trace_file,
 #        "SBLIM_TRACE" => "4",
-	"RUBY_PROVIDERS_DIR" => ruby_providers_dir
+#        "CMPISFCC_DEBUG" => "true",
+        "RUBY_PROVIDERS_DIR" => ruby_providers_dir
       }.each do |k,v|
         ENV[k] = v
       end
