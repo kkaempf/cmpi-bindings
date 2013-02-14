@@ -84,6 +84,16 @@ devel packages.  It will skip any others.
   cimoms.
 
 
+Testing
+-------
+
+The test/ subdir contains a couple of tests and some sample code. If
+you have Ruby, rake, sblim-sfcb, sblim-sfcc and sfcc.gem installed,
+test/rake gives you a more complete testsuite.
+
+See test/rake/README for details.
+
+
 Language-specific documentation
 -------------------------------
 
@@ -91,6 +101,3 @@ Language-specific documentation
   -----
   Visit http://pywbem.wiki.sourceforge.net/Provider+Home for QuickStart Guide,
   Tutorials, sample providers, etc.
-
-
-

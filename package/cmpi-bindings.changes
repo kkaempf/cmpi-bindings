@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Feb 14 14:35:32 UTC 2013 - kkaempf@suse.com
+
+- Update to 0.9.0
+  - Added full testsuite
+  - Improved CMPI_DateTime handling in Ruby
+  - bug fixes
+
+-------------------------------------------------------------------
 Fri Jul  6 08:53:56 UTC 2012 - kkaempf@suse.com
 
 - Adapt trace level according to CMPI_BINDINGS_TRACE_LEVEL
@@ -14,7 +22,7 @@ Sun May 27 21:33:02 UTC 2012 - kkaempf@suse.com
 Thu May 24 08:38:17 UTC 2012 - kkaempf@suse.com
 
 - Update to 0.5.3
-  - Implement CMPI_DateTime <-> Ruby converions
+  - Implement CMPI_DateTime <-> Ruby conversions
   - Fix Char16 handling
   - Plug one memory leak
   - Support Ruby 1.9
