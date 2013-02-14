@@ -787,7 +787,7 @@ class CMPIProxyProvider(object):
             except TypeError, te:
                 raise TypeError('Error converting Property %s: Value %s, Type %s; %s' % (prop.name, prop.value, prop.type, str(te)))
             ctype = _pywbem2cmpi_typemap[_type]
-            if isinstance(prop.value, list):
+            if isinstance(prop.value, list) or prop.is_array:
                 ctype = ctype | cmpi.CMPI_ARRAY
             cinst.set_property(str(prop.name), data, ctype)
         return cinst

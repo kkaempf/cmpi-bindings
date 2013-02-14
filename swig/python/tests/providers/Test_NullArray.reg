@@ -1,0 +1,5 @@
+[Test_NullArray]
+provider: Test_NullArray
+location: pyCmpiProvider
+type: instance
+namespace: root/cimv2
