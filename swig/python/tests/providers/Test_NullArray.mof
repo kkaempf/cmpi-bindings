@@ -1,0 +1,8 @@
+[ Description("This is just a simple test class, which has OperationalStatus"
+    " and StatusDescriptions array properties.")]
+class Test_NullArray : CIM_ManagedSystemElement
+{
+    [ Key, Override("InstanceID"),
+      Description("Unique ID of the instance.")]
+    string InstanceID;
+};
