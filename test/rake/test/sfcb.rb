@@ -51,6 +51,7 @@ class Sfcb
 	"enableHttps" => false,
 	"enableSlp" => false,
 	"providerTimeoutInterval" => 10,
+        "keepaliveTimeout" => 0,
 	"registrationDir" => @registration_dir,
 	"localSocketPath" => File.join(@dir, "sfcbLocalSocket"),
 	"httpSocketPath" => File.join(@dir, "sfcbHttpSocket"),
@@ -66,15 +67,15 @@ class Sfcb
     @pid = fork
     if @pid.nil?
       # child
-      sfcb_trace_file = File.join($sfcb.dir, "sfcb_trace_file")
-      sblim_trace_file = File.join($sfcb.dir, "sblim_trace_file")
+      sfcb_trace_file = File.join(TMPDIR, "sfcb_trace_file")
+      sblim_trace_file = File.join(TMPDIR, "sblim_trace_file")
       ruby_providers_dir = File.expand_path(File.join(TOPLEVEL,"samples","provider"))
       Dir.chdir File.expand_path("..", File.dirname(__FILE__))
       {
-#	"SFCB_TRACE_FILE" => sfcb_trace_file,
-#        "SFCB_TRACE" => "4",
-#        "SBLIM_TRACE_FILE" => sblim_trace_file,
-#        "SBLIM_TRACE" => "4",
+	"SFCB_TRACE_FILE" => sfcb_trace_file,
+        "SFCB_TRACE" => "4",
+        "SBLIM_TRACE_FILE" => sblim_trace_file,
+        "SBLIM_TRACE" => "4",
 #        "CMPISFCC_DEBUG" => "true",
         "RUBY_PROVIDERS_DIR" => ruby_providers_dir
       }.each do |k,v|
@@ -82,9 +83,9 @@ class Sfcb
       end
       File.delete(sfcb_trace_file) rescue nil
       File.delete(sblim_trace_file) rescue nil
-      $stderr.reopen("#{TMPDIR}/sfcbd.err", "w")
-      $stdout.reopen("#{TMPDIR}/sfcbd.out", "w")
-      Kernel.exec "#{@execfile}", "-c", "#{@cfgfile}"#, "-t", "32768"
+      $stderr.reopen(File.join(TMPDIR, "sfcbd.err"), "w")
+      $stdout.reopen(File.join(TMPDIR, "sfcbd.out"), "w")
+      Kernel.exec "#{@execfile}", "-t", "8", "-c", "#{@cfgfile}"#, "-t", "32768"
     end
     @pid
   end
