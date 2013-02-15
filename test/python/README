@@ -43,7 +43,8 @@ Setup
 - Restart sfcbd or tog-pegasus (cimserver)
 
 
-- now run TestMethod_Test.py, TestAtomProvider_Test.py, test_assoc.py, UpcallAtomTest.py, and TestIndications.py as root.
+- now run TestMethod_Test.py, TestAtomProvider_Test.py, test_assoc.py,
+  UpcallAtomTest.py, TestNullArray.py and TestIndications.py as root.
   (they only need to run as root because they use the passwordless local unix connection).
   (To run against Pegasus, run with option: '-u /var/run/tog-pegasus/cimxml.socket' to use the local unix connection)
   They should all pass.
