@@ -1,0 +1,28 @@
+instance of PG_ProviderModule
+{
+    Name = "NullArray_Module";
+    Location = "pyCmpiProvider";
+    Vendor = "RedHat";
+    Version = "0.0.1";
+    InterfaceType = "CMPI";
+    InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+    Name = "NullArray";
+    ProviderModuleName = "NullArray_Module";
+};
+
+instance of PG_ProviderCapabilities
+{
+   ProviderModuleName = "NullArray_Module";
+   ProviderName = "NullArray";
+   CapabilityID = "NullArray";
+   ClassName = "Test_NullArray";
+   Namespaces = { "root/cimv2" };
+   ProviderType = { 2 };
+   SupportedProperties = NULL;
+   SupportedMethods = NULL;
+};
+
