@@ -55,7 +55,7 @@ class Sfcb
 	"registrationDir" => @registration_dir,
 	"localSocketPath" => File.join(@dir, "sfcbLocalSocket"),
 	"httpSocketPath" => File.join(@dir, "sfcbHttpSocket"),
-	"providerDirs" => " #{@providers_dir} /usr/lib64/sfcb /usr/lib64 /usr/lib64/cmpi"
+	"providerDirs" => " #{@providers_dir} /usr/lib64/sfcb /usr/lib/sfcb /usr/lib64 /usr/lib /usr/lib64/cmpi /usr/lib/cmpi"
       }.each do |k,v|
 	f.puts "#{k}: #{v}"
       end
