@@ -782,8 +782,10 @@ class CMPIProxyProvider(object):
         #            prop.name.lower() not in pinst.property_list:
         #        continue
             try:
-                data, _type = self.pywbem2cmpi_value(prop.value, 
-                                                     _type=prop.type)
+                _type = prop.type
+                if _type == "string" and prop.embedded_object:
+                    _type = prop.embedded_object
+                data, _type = self.pywbem2cmpi_value(prop.value, _type=_type)
             except TypeError, te:
                 raise TypeError('Error converting Property %s: Value %s, Type %s; %s' % (prop.name, prop.value, prop.type, str(te)))
             ctype = _pywbem2cmpi_typemap[_type]
