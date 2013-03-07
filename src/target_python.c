@@ -370,11 +370,13 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
     return -1; 
   }
   PyObject *broker = SWIG_NewPointerObj((void*) hdl->broker, SWIGTYPE_p__CMPIBroker, 0);
-  PyObject *args = PyTuple_New(2); 
+  PyObject *ctx = SWIG_NewPointerObj((void*) hdl->context, SWIGTYPE_p__CMPIContext, 0);
+  PyObject *args = PyTuple_New(3);
   _SBLIM_TRACE(1,("\n<%d/0x%x> >>>>> TargetInitialize(Python) called, MINAME=%s\n",
                getpid(), pthread_self(), hdl->miName));
-  PyTuple_SetItem(args, 0, string2target(hdl->miName)); 
-  PyTuple_SetItem(args, 1, broker); 
+  PyTuple_SetItem(args, 0, string2target(hdl->miName));
+  PyTuple_SetItem(args, 1, broker);
+  PyTuple_SetItem(args, 2, ctx);
   
   /* provinst = cmpi_pywbem_bindings::get_cmpi_proxy_provider( miName, broker ) */
   PyObject *provinst = PyObject_CallObject(provclass, args); 

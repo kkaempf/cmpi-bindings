@@ -447,25 +447,25 @@ class ProviderEnvironment(object):
 
 g_proxies = {}
 
-def get_cmpi_proxy_provider(miname, broker):
+def get_cmpi_proxy_provider(miname, broker, ctx):
     try:
         prox = g_proxies[miname]
         if prox.proxy.env.proxy.broker != broker:
                 raise pywbem.CIMError(pywbem.CIM_ERR_FAILED, 
                         'New broker not the same as cached broker!')
     except KeyError:
-        prox = ExceptionClassWrapper(CMPIProxyProvider(miname, broker))
+        prox = ExceptionClassWrapper(CMPIProxyProvider(miname, broker, ctx))
         g_proxies[miname] = prox
     return prox
 
 
 class CMPIProxyProvider(object):
 
-    def __init__(self, miname, broker):
+    def __init__(self, miname, broker, ctx):
         print 'called CMPIProxyProvider(', miname, ',', broker, ')'
         self.miname = miname
         self.broker = broker
-        env = ProviderEnvironment(self, None)
+        env = ProviderEnvironment(self, ctx)
         provmod = miname
         if provmod[0] != '/':
             provmod = '/usr/lib/pycim/' + provmod
