@@ -1,4 +1,4 @@
-task :registration => [:prepstage] do |t|
+task :sfcb_registration => [:sfcb_configuration] do |t|
   puts "Register all providers"
   
   require_relative "../test/registration"
@@ -7,4 +7,9 @@ task :registration => [:prepstage] do |t|
     register_klass :klass => klass
   end
   mkrepos
+end
+
+
+task :pegasus_registration => [:pegasus_configuration] do
+  puts "Registering Pegasus providers"
 end
