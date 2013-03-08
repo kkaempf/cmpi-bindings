@@ -322,8 +322,14 @@ module Cmpi
 	v = args[0]
 	n = s.chop
 	# -> http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
-	@typemap ||= Cmpi.const_get(self.objectpath.classname).typemap
-	t = @typemap[n] if @typemap
+        unless @typemap
+          begin
+            @typemap = Cmpi.const_get(self.objectpath.classname).typemap
+          rescue
+            raise "Cmpi.#{self.objectpath.classname}.typemap not defined"
+          end
+        end
+	t = @typemap[n]
 #	STDERR.printf "Instance.#{n} = #{v}[#{v.class}]:#{t}" % [n, v, v.class, t]
      	STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
         self[n,v] = t
