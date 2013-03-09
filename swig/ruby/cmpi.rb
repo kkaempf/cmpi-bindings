@@ -105,7 +105,14 @@ module Cmpi
   def self.charsptr
     ((16+10)<<8)
   end
-  
+  def self.embedded_object
+    ((1)<<14)
+  end
+  def self.embedded_instance
+    ((1)<<15)
+  end
+
+
   unless defined? CMPI_ARRAY
     CMPI_ARRAY = ((1)<<13)
   end
@@ -177,6 +184,12 @@ module Cmpi
   end
   def self.charsptrA
     CMPI_ARRAY | self.charsptrA
+  end
+  def self.embedded_objectA
+    CMPI_ARRAY | self.embedded_object
+  end
+  def self.embedded_instanceA
+    CMPI_ARRAY | self.embedded_instance
   end
 
   #
@@ -325,13 +338,13 @@ module Cmpi
         unless @typemap
           begin
             @typemap = Cmpi.const_get(self.objectpath.classname).typemap
-          rescue
-            raise "Cmpi.#{self.objectpath.classname}.typemap not defined"
+          rescue NoMethodError
+            raise "Cmpi::#{self.objectpath.classname}.typemap not defined"
           end
         end
 	t = @typemap[n]
-#	STDERR.printf "Instance.#{n} = #{v}[#{v.class}]:#{t}" % [n, v, v.class, t]
-     	STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
+#      STDERR.printf "Instance.#{n} = #{v}[#{v.class}]:#{t}" % [n, v, v.class, t]
+       STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
         self[n,v] = t
       else
 #	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"

@@ -653,6 +653,31 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       case CMPI_charsptr: /*     ((16+10)<<8) */
         break;
 #endif
+      case ((1)<<14): { /* cmpi-bindings-ruby: EmbeddedObject */
+        /* class or instance */
+        /* need CMPIClass as Ruby class */
+        int res;
+        res = SWIG_ConvertPtr(data, (void *)&(value->inst), SWIGTYPE_p__CMPIInstance, 0 |  0 );
+	if (!SWIG_IsOK(res)) {
+          SWIG_exception(SWIG_ValueError, "EmbeddedObject supports CMPI::Instance only");
+        }
+        else {
+          type = CMPI_instance;
+        }
+      }
+      break;
+      case ((1)<<15): { /* cmpi-bindings-ruby: EmbeddedInstance */
+        /* class or instance */
+        int res;
+        res = SWIG_ConvertPtr(data, (void *)&(value->inst), SWIGTYPE_p__CMPIInstance, 0 |  0 );
+	if (!SWIG_IsOK(res)) {
+          SWIG_exception(SWIG_ValueError, "EmbeddedInstance expects CMPI::Instance");
+        }
+        else {
+          type = CMPI_instance;
+        }
+      }
+      break;
       default: {
         static char msg[64];
         snprintf(msg, 63, "target_to_value unhandled type 0x%04x", type);

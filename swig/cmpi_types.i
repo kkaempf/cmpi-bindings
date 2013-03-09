@@ -554,7 +554,7 @@ FIXME: if clone() is exposed, release() must also
   %alias set "[]=";
   /*
    * Property setting in Ruby
-   *  Set property by name and type
+   *  Set property of ObjectPath by name and type
    *  type is optional for string and boolean
    * reference[:propname] = data    # set by name (symbol)
    * reference[:propname, CMPI::uint16] = data    # set by name (symbol)
@@ -565,7 +565,16 @@ FIXME: if clone() is exposed, release() must also
     const char *name;
     CMPIValue value;
     CMPIType actual_type;
-    CMPIType type = FIXNUM_P(expected_type) ? FIX2LONG(expected_type) : CMPI_null;
+    CMPIType type;
+    if (NIL_P(expected_type)) {
+      type = CMPI_null;
+    }
+    else if (FIXNUM_P(expected_type)) {
+      type = FIX2LONG(expected_type);
+    }
+    else {
+      SWIG_exception(SWIG_ValueError, "bad expected_type");
+    }
     name = target_charptr(property);
     actual_type = target_to_value(data, &value, type);
     return CMAddKey($self, name, &value, actual_type);
@@ -876,6 +885,7 @@ FIXME: if clone() is exposed, release() must also
   %alias set "[]=";
   /*
    * Property setting in Ruby
+   *   set property of Instance by name and type
    * instance[:propname] = data    # set by name (symbol)
    * instance[:propname, data] = CMPI::uint16    # set by name (symbol)
    * instance["propname"] = data   # set by name (string)
@@ -885,7 +895,16 @@ FIXME: if clone() is exposed, release() must also
     const char *name;
     CMPIValue value;
     CMPIType actual_type;
-    CMPIType type = FIXNUM_P(expected_type) ? FIX2LONG(expected_type) : CMPI_null;
+    CMPIType type;
+    if (NIL_P(expected_type)) {
+      type = CMPI_null;
+    }
+    else if (FIXNUM_P(expected_type)) {
+      type = FIX2LONG(expected_type);
+    }
+    else {
+      SWIG_exception(SWIG_ValueError, "bad expected_type");
+    }
     name = target_charptr(property);
     actual_type = target_to_value(data, &value, type);
     return CMSetProperty($self, name, &value, actual_type);
