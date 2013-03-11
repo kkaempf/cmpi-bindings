@@ -1,0 +1,8 @@
+/*
+ * Class Array embedded into Property via EmbeddedObject attribute
+ */
+class RCP_EmbeddedObjectClassArray
+{
+    [Key] string InstanceID;
+    [EmbeddedObject("CIM_ManagedElement")] string EmbeddedClassA;
+};

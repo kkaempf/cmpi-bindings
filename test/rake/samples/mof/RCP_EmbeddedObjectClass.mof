@@ -1,0 +1,8 @@
+/*
+ * Class embedded into Property via EmbeddedObject attribute
+ */
+class RCP_EmbeddedObjectClass
+{
+    [Key] string InstanceID;
+    [EmbeddedObject("CIM_ManagedElement")] string EmbeddedClass;
+};
