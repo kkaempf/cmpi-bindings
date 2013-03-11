@@ -52,12 +52,23 @@ class Test_LMI_Embedded < Test::Unit::TestCase
       puts "instance.InstanceID #{instance.InstanceID.inspect}"
       assert instance.InstanceID
       assert_kind_of String, instance.InstanceID # string
-      puts "instance.Embedded #{instance.Embedded.inspect}"
-      assert instance.Embedded
-      assert_kind_of Sfcc::Cim::Instance, instance.Embedded # string
       puts "instance.Str #{instance.Str.inspect}"
       assert instance.Str
       assert_kind_of String, instance.Str # string
+      embedded = instance.Embedded
+      puts "instance.Embedded #{instance.Embedded.inspect}"
+      assert embedded
+      assert_kind_of Sfcc::Cim::Instance, embedded # string
+      assert embedded.InstanceID
+      assert_kind_of String, embedded.InstanceID
+      assert embedded.Caption
+      assert_kind_of String, embedded.Caption
+      assert embedded.Description
+      assert_kind_of String, embedded.Description
+      assert embedded.ElementName
+      assert_kind_of String, embedded.ElementName
+      assert embedded.Generation
+      assert_kind_of Integer, embedded.Generation
     end
   end
 

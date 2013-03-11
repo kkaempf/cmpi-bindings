@@ -55,6 +55,10 @@ module Cmpi
       ns = reference.namespace
       pembedded = Cmpi::CMPIObjectPath.new ns, "CIM_ManagedElement"
       pembedded.InstanceID = "id"
+      pembedded.Caption = "Embedded caption"
+      pembedded.Description = "Embedded description"
+      pembedded.ElementName = "Embedded element name"
+      pembedded.Generation = 42
       @trace_file.puts "pembedded #{pembedded}"
       
       embedded = Cmpi::CMPIInstance.new pembedded
