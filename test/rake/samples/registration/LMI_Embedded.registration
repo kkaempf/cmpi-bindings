@@ -1,0 +1,6 @@
+#
+# Registration for LMI_Embedded
+#
+#
+# Classname - Namespace - Providername - Libraryname - Capabilities ...
+LMI_Embedded test/test LMI_Embedded rbCmpiProvider instance
