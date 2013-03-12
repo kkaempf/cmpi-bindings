@@ -453,6 +453,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 
     const CMPIBroker* broker = cmpi_broker();
     int size, i;
+    CMPIType element_type = 0;
     if (TYPE(data) != T_ARRAY) {
       data = rb_funcall(data, rb_intern("to_a"), 0 );
     }
@@ -462,9 +463,22 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
     type &= ~CMPI_ARRAY;
     for (i = 0; i < size; ++i) {
       CMPIValue val;
+      CMPIType new_type;
       Target_Type elem = rb_ary_entry(data, i);
-      target_to_value(elem, &val, type);
-      CMSetArrayElementAt(value->array, i, &val, type);
+      new_type = target_to_value(elem, &val, type);
+      if (element_type) {
+        /* ensure all array elements have same type */
+        if (new_type != element_type) {
+          SWIG_exception(SWIG_ValueError, "non-uniform element types in array");
+        }
+      }
+      else {
+        element_type = new_type;
+      }      
+      CMSetArrayElementAt(value->array, i, &val, element_type);
+    }
+    if (type & ((1<<15)|(1<<14))) { /* embedded instance or object */
+      type = element_type;
     }
     /* re-add ARRAY flag */
     type |= CMPI_ARRAY;
