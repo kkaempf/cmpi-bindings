@@ -1,0 +1,8 @@
+/*
+ * Instance Array embedded into Property via EmbeddedInstance attribute
+ */
+class RCP_EmbeddedInstanceArray
+{
+    [Key] string InstanceID;
+    [EmbeddedInstance("CIM_ManagedElement")] string EmbeddedInstanceA[];
+};

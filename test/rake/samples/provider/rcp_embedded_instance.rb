@@ -1,5 +1,6 @@
 #
-# Provider LMI_Embedded for class LMI_Embedded:CIM::Class
+# Provider RCP_Embedded_Instance
+# Instance embedded into Property via EmbeddedInstance attribute
 #
 require 'syslog'
 
@@ -20,7 +21,7 @@ module Cmpi
     end
   end
   #
-  class LMI_Embedded < InstanceProvider
+  class RCP_EmbeddedInstance < InstanceProvider
     
     #
     # Provider initialization
@@ -38,8 +39,7 @@ module Cmpi
     def self.typemap
       {
         "InstanceID" => Cmpi::string,
-        "Embedded" => Cmpi::embedded_instance,
-        "Str" => Cmpi::string,
+        "EmbeddedInstance" => Cmpi::embedded_instance,
       }
     end
 
@@ -49,38 +49,33 @@ module Cmpi
     #  yields references matching reference and properties
     #
     def each( context, reference, properties = nil, want_instance = false )
-      value = "Hello world"
       
       # create embedded instance
-      ns = reference.namespace
-      pembedded = Cmpi::CMPIObjectPath.new ns, "CIM_ManagedElement"
-      pembedded.InstanceID = "id"
-      pembedded.Caption = "Embedded caption"
-      pembedded.Description = "Embedded description"
-      pembedded.ElementName = "Embedded element name"
-      pembedded.Generation = 42
-      @trace_file.puts "pembedded #{pembedded}"
+      ref = Cmpi::CMPIObjectPath.new reference.namespace, "CIM_ManagedElement"
+      ref.InstanceID = "id"
+      ref.Caption = "Embedded caption"
+      ref.Description = "Embedded description"
+      ref.ElementName = "Embedded element name"
+      ref.Generation = 42                             
       
-      embedded = Cmpi::CMPIInstance.new pembedded
-      embedded.Description = "descr"
+      embedded = Cmpi::CMPIInstance.new ref
 
-      result = Cmpi::CMPIObjectPath.new reference.namespace, "LMI_Embedded"
+      result = Cmpi::CMPIObjectPath.new reference.namespace, "RCP_EmbeddedInstance"
       if want_instance
         result = Cmpi::CMPIInstance.new result
       end
     
       # Set key properties
       
-      result.InstanceID = "Hello world" # string  (-> LMI_Embedded)
+      result.InstanceID = "Hello world" # string  (-> RCP_Embedded_Instance)
       unless want_instance
         yield result
         return
       end
-      
+
       # Instance: Set non-key properties
-      
-      result.Embedded = embedded
-      result.Str = "sample string"
+
+      result.EmbeddedInstance = embedded
       yield result
     end
     public

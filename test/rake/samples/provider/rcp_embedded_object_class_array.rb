@@ -1,5 +1,5 @@
 #
-# Provider LMI_Embedded for class LMI_Embedded:CIM::Class
+# Provider RCP_Embedded_Object_Class_Array
 #
 require 'syslog'
 
@@ -20,7 +20,7 @@ module Cmpi
     end
   end
   #
-  class LMI_Embedded < InstanceProvider
+  class RCP_Embedded_Object_Class_Array < InstanceProvider
     
     #
     # Provider initialization
@@ -55,23 +55,19 @@ module Cmpi
       ns = reference.namespace
       pembedded = Cmpi::CMPIObjectPath.new ns, "CIM_ManagedElement"
       pembedded.InstanceID = "id"
-      pembedded.Caption = "Embedded caption"
-      pembedded.Description = "Embedded description"
-      pembedded.ElementName = "Embedded element name"
-      pembedded.Generation = 42
       @trace_file.puts "pembedded #{pembedded}"
       
       embedded = Cmpi::CMPIInstance.new pembedded
       embedded.Description = "descr"
 
-      result = Cmpi::CMPIObjectPath.new reference.namespace, "LMI_Embedded"
+      result = Cmpi::CMPIObjectPath.new reference.namespace, "RCP_Embedded_Object_Class_Array"
       if want_instance
         result = Cmpi::CMPIInstance.new result
       end
     
       # Set key properties
       
-      result.InstanceID = "Hello world" # string  (-> LMI_Embedded)
+      result.InstanceID = "Hello world" # string  (-> RCP_Embedded_Object_Class_Array)
       unless want_instance
         yield result
         return
@@ -80,7 +76,6 @@ module Cmpi
       # Instance: Set non-key properties
       
       result.Embedded = embedded
-      result.Str = "sample string"
       yield result
     end
     public

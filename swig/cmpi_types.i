@@ -566,6 +566,7 @@ FIXME: if clone() is exposed, release() must also
     CMPIValue value;
     CMPIType actual_type;
     CMPIType type;
+    CMPIStatus status;
     if (NIL_P(expected_type)) {
       type = CMPI_null;
     }
@@ -577,7 +578,9 @@ FIXME: if clone() is exposed, release() must also
     }
     name = target_charptr(property);
     actual_type = target_to_value(data, &value, type);
-    return CMAddKey($self, name, &value, actual_type);
+    status = CMAddKey($self, name, &value, actual_type);
+    RAISE_IF(status);
+    return status;
   }
 #endif
 
@@ -896,6 +899,7 @@ FIXME: if clone() is exposed, release() must also
     CMPIValue value;
     CMPIType actual_type;
     CMPIType type;
+    CMPIStatus status;
     if (NIL_P(expected_type)) {
       type = CMPI_null;
     }
@@ -907,7 +911,9 @@ FIXME: if clone() is exposed, release() must also
     }
     name = target_charptr(property);
     actual_type = target_to_value(data, &value, type);
-    return CMSetProperty($self, name, &value, actual_type);
+    status = CMSetProperty($self, name, &value, actual_type);
+    RAISE_IF(status);
+    return status;
   }
 #endif
 

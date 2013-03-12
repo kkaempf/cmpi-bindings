@@ -1,0 +1,6 @@
+#
+# Registration for RCP_EmbeddedObjectClassArray
+#
+#
+# Classname - Namespace - Providername - Libraryname - Capabilities ...
+RCP_EmbeddedObjectClassArray test/test RCP_EmbeddedObjectClassArray rbCmpiProvider instance
