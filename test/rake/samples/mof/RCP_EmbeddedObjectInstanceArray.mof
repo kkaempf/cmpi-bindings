@@ -4,5 +4,5 @@
 class RCP_EmbeddedObjectInstanceArray
 {
     [Key] string InstanceID;
-    [EmbeddedObject("CIM_ManagedElement")] string EmbeddedInstanceA;
+    [EmbeddedObject("CIM_ManagedElement")] string EmbeddedObjectInstanceArray[];
 };
