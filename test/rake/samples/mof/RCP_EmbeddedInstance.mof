@@ -4,5 +4,5 @@
 class RCP_EmbeddedInstance
 {
     [Key] string InstanceID;
-    [EmbeddedInstance("CIM_ManagedElement")] string Embedded;
+    [EmbeddedInstance("CIM_ManagedElement")] string EmbeddedInstance;
 };
