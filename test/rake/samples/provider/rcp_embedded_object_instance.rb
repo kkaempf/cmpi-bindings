@@ -1,5 +1,6 @@
 #
-# Provider RCP_Embedded_Object_Instance
+# Provider RCP_EmbeddedObjectInstance
+# Instance embedded into Property via EmbeddedObject attribute
 #
 require 'syslog'
 
@@ -20,7 +21,7 @@ module Cmpi
     end
   end
   #
-  class RCP_Embedded_Object_Instance < InstanceProvider
+  class RCP_EmbeddedObjectInstance < InstanceProvider
     
     #
     # Provider initialization
@@ -38,7 +39,7 @@ module Cmpi
     def self.typemap
       {
         "InstanceID" => Cmpi::string,
-        "Embedded" => Cmpi::embedded_object,
+        "EmbeddedObjectInstance" => Cmpi::embedded_object,
       }
     end
 
@@ -48,33 +49,33 @@ module Cmpi
     #  yields references matching reference and properties
     #
     def each( context, reference, properties = nil, want_instance = false )
-      value = "Hello world"
       
       # create embedded instance
-      ns = reference.namespace
-      pembedded = Cmpi::CMPIObjectPath.new ns, "CIM_ManagedElement"
-      pembedded.InstanceID = "id"
-      @trace_file.puts "pembedded #{pembedded}"
+      ref = Cmpi::CMPIObjectPath.new reference.namespace, "CIM_ManagedElement"
+      ref.InstanceID = "id"
+      ref.Caption = "Embedded caption"
+      ref.Description = "Embedded description"
+      ref.ElementName = "Embedded element name"
+      ref.Generation = 42                             
       
-      embedded = Cmpi::CMPIInstance.new pembedded
-      embedded.Description = "descr"
+      embedded = Cmpi::CMPIInstance.new ref
 
-      result = Cmpi::CMPIObjectPath.new reference.namespace, "RCP_Embedded_Object_Instance"
+      result = Cmpi::CMPIObjectPath.new reference.namespace, "RCP_EmbeddedObjectInstance"
       if want_instance
         result = Cmpi::CMPIInstance.new result
       end
-    
+
       # Set key properties
-      
-      result.InstanceID = "Hello world" # string  (-> RCP_Embedded_Object_Instance)
+
+      result.InstanceID = "Hello world" # string
       unless want_instance
         yield result
         return
       end
-      
+
       # Instance: Set non-key properties
-      
-      result.Embedded = embedded
+
+      result.EmbeddedObjectInstance = embedded
       yield result
     end
     public
