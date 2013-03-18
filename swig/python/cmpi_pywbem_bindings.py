@@ -214,7 +214,7 @@ class ContextWrap(object):
     def todict(self):
         d = {}
         for i in xrange(0, self.cmpicontext.get_entry_count()):
-            data, name = self.cmpicontext.get_entry_at(i)
+            name, data = self.cmpicontext.get_entry_at(i)
             _type, is_array = _cmpi_type2string(data.type)
             pval = self.proxy.cmpi2pywbem_data(data, _type, is_array)
             d[name] = pval
