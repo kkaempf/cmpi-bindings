@@ -445,11 +445,6 @@ to_cmpi_string(VALUE data)
 static CMPIType
 target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 {
-  /* A NULL value always has CMPIType CMPI_null */
-  if (Target_Null_p(data)) {
-    value->chars = NULL;
-    return CMPI_null;
-  }
 #if defined(SWIGRUBY)
   /*
    * Array-type
