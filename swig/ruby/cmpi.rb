@@ -276,7 +276,7 @@ module Cmpi
     def self.method_missing name, *args
       v = self.map[name.to_s]
       return v if v
-      STDERR.puts "#{self.class}.#{name} ?"
+      STDERR.puts "#{self}.#{name} ?"
       nil
     end
   end
@@ -343,9 +343,8 @@ module Cmpi
           end
         end
 	t = @typemap[n]
-       raise "Property '#{n}' of Cmpi::#{self.objectpath.classname}.typemap not defined" unless t
-#      STDERR.printf "Instance.#{n} = #{v}[#{v.class}]:#{t}" % [n, v, v.class, t]
-       STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
+        raise "Property '#{n}' of Cmpi::#{self.objectpath.classname}.typemap not defined" unless t
+#       STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
         self[n,v] = t
       else
 #	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"
