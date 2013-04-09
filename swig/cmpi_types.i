@@ -1283,23 +1283,75 @@ FIXME: if clone() is exposed, release() must also
  */
 %extend _CMPISelectExp {
 #if HAVE_CMPI_BROKER
-  _CMPISelectExp(const char *query, const char *language)
+  _CMPISelectExp(const char *query, const char *language, char **keys = NULL)
 #else
-  _CMPISelectExp(const CMPIBroker* broker, const char *query, const char *language)
+  _CMPISelectExp(const CMPIBroker* broker, const char *query, const char *language, char **keys = NULL)
 #endif
   {
 #if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
 #endif
     CMPIStatus st = {CMPI_RC_OK, NULL};
-    CMPISelectExp *exp = CMNewSelectExp(broker, query, language, NULL, &st);
+    CMPIArray *projection;
+    struct complete_select_exp *cmpl;
+    CMPISelectExp *exp = CMNewSelectExp(broker, query, language, &projection, &st);
     RAISE_IF(st);
-    return exp;
+    cmpl = (struct complete_select_exp *)calloc(1, sizeof(struct complete_select_exp));
+    if (cmpl == NULL) {
+      SWIG_exception(SWIG_MemoryError, "malloc failed");
+    }
+    cmpl->exp = exp;
+    if (projection || keys) {
+      size_t kcount = 0;
+      int pcount = 0;
+      int count = 0;
+      if (keys) {
+        kcount = string_array_size(keys);
+      }
+      if (projection) {
+        pcount = CMGetArrayCount(projection, NULL);
+      }
+      count = pcount + kcount;
+      if (count > 0) {
+        int i = 0;
+        cmpl->filter = calloc(count + 1, sizeof(char **)); /* incl. final NULL ptr */
+        for (; i < kcount; i++) {
+          cmpl->filter[i] = strdup(keys[i]);
+        }
+        for (; i < count; i++) {
+          CMPIData data = CMGetArrayElementAt(projection, i-kcount, &st);
+          if (st.rc != CMPI_RC_OK) {
+            while(i) {
+              free(cmpl->filter[--i]);
+            }
+            free(cmpl->filter);
+            CMRelease(cmpl->exp);
+            free(cmpl);
+            cmpl = NULL;            
+            RAISE_IF(st);
+            break;
+          }
+          cmpl->filter[i] = (char *)strdup(CMGetCharsPtr(data.value.string, NULL));
+          CMRelease(data.value.string);
+        }
+      }
+      CMRelease(projection);
+    }
+fail:
+    return (CMPISelectExp *)cmpl;
   }
   
   ~_CMPISelectExp()
   {
-    CMRelease( $self );
+    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
+    CMRelease( cmpl->exp );
+    if (cmpl->filter) {
+      int i = 0;
+      while (cmpl->filter[i])
+        free(cmpl->filter[i++]);
+      free(cmpl->filter);
+    }
+    free(cmpl);
   }
 
 #if defined(SWIGRUBY)
@@ -1309,9 +1361,15 @@ FIXME: if clone() is exposed, release() must also
   int match(CMPIInstance *instance)
   {
     CMPIStatus st = {CMPI_RC_OK, NULL};
-    CMPIBoolean res = CMEvaluateSelExp($self, instance, &st);
+    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
+    CMPIBoolean res = CMEvaluateSelExp(cmpl->exp, instance, &st);
     RAISE_IF(st);
     return res;
+  }
+
+  char **filter() {
+    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
+    return cmpl->filter;
   }
 
   /* Return string representation */
@@ -1323,7 +1381,8 @@ FIXME: if clone() is exposed, release() must also
 #endif
   %newobject string;
   const char* string() {
-    CMPIString *s = CMGetSelExpString($self, NULL);
+    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
+    CMPIString *s = CMGetSelExpString(cmpl->exp, NULL);
     const char *result = strdup(CMGetCharPtr(s));
     CMRelease(s);
     return result;

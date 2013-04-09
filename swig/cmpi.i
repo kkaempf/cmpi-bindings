@@ -125,6 +125,12 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #include <syslog.h>
 #include <pthread.h>
 
+/* CMPISelectExp wrapper to capture also the projections */
+struct complete_select_exp {
+  CMPISelectExp *exp;
+  char **filter;
+};
+
 /*
  * Convert CMPIDateTime to native representation as Target_Type
  *

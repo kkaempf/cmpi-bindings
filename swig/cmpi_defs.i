@@ -22,6 +22,60 @@
 
 #-----------------------------------------------------
 
+#if defined(SWIGRUBY)
+#
+# Conversion from list of Ruby string array to null terminated char** array.
+#
+%typemap(in) char ** 
+{
+  if ($input == Qnil) {
+    $1 = NULL;
+  }
+  else {
+    int count, i;
+    rb_check_type($input, RUBY_T_ARRAY);
+    count = RARRAY_LEN($input);
+    $1 = (char **)calloc(count + 1, sizeof(char **)); /* incl. trailing NULL */
+    if ($1 == NULL) {
+      SWIG_exception(SWIG_MemoryError, "malloc failed");
+    }
+    for (i = 0; i < count; i++) {
+      $1[i] = (char *)target_charptr(rb_ary_entry($input, i));
+      if ($1[i] == NULL) {
+        SWIG_exception(SWIG_MemoryError, "malloc failed");
+      }
+    }
+    $1[i] = NULL;
+  }
+}
+
+%typemap(out) char **
+{
+  if ($1 == NULL) {
+    $result = Qnil;
+  }
+  else {
+    size_t count = string_array_size($1);
+    if (count == 0) {
+      $result = rb_ary_new();
+    }
+    else {
+      int i;
+      $result = rb_ary_new2(count);
+      for (i = 0; i < count; i++) {
+        rb_ary_store($result, i, rb_str_new2($1[i]));
+      }
+    }
+  }
+}
+
+%typemap(freearg) char ** 
+{
+  if ($1)
+    free($1);
+}
+#endif
+
 #if defined(SWIGPYTHON)
 #
 # Conversion from list of python strings to null terminated char** array.

@@ -110,15 +110,15 @@ static void string_array_print(char** array)
 {
     char** p;
 
-    printf("string_array\n");
-    printf("{\n");
+    fprintf(stderr, "string_array\n");
+    fprintf(stderr, "{\n");
 
     for (p = array; *p; p++)
     {
-        printf("    {%s}\n", *p);
+        fprintf(stderr, "    {%s}\n", *p);
     }
 
-    printf("}\n");
+    fprintf(stderr, "}\n");
 }
 #endif
 
