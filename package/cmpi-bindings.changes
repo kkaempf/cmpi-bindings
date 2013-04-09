@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Apr  9 08:43:43 UTC 2013 - kkaempf@suse.com
+
+- Update to 0.9.1
+  - CMPISelectExp constructor and match (to support execQuery in
+    providers)
+
+-------------------------------------------------------------------
 Thu Feb 14 14:35:32 UTC 2013 - kkaempf@suse.com
 
 - Update to 0.9.0
