@@ -1282,11 +1282,38 @@ FIXME: if clone() is exposed, release() must also
  *       and provides mechanism to operate on the query.
  */
 %extend _CMPISelectExp {
+#if HAVE_CMPI_BROKER
+  _CMPISelectExp(const char *query, const char *language)
+#else
+  _CMPISelectExp(const CMPIBroker* broker, const char *query, const char *language)
+#endif
+  {
+#if HAVE_CMPI_BROKER
+    const CMPIBroker* broker = cmpi_broker();
+#endif
+    CMPIStatus st = {CMPI_RC_OK, NULL};
+    CMPISelectExp *exp = CMNewSelectExp(broker, query, language, NULL, &st);
+    RAISE_IF(st);
+    return exp;
+  }
+  
   ~_CMPISelectExp()
   {
     CMRelease( $self );
   }
-  
+
+#if defined(SWIGRUBY)
+  %typemap(out) int match
+    "$result = ($1 != 0) ? Qtrue : Qfalse;";
+#endif
+  int match(CMPIInstance *instance)
+  {
+    CMPIStatus st = {CMPI_RC_OK, NULL};
+    CMPIBoolean res = CMEvaluateSelExp($self, instance, &st);
+    RAISE_IF(st);
+    return res;
+  }
+
   /* Return string representation */
 #ifdef SWIGPYTHON
 %rename ("__str__") string();
