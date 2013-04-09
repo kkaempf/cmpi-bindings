@@ -1337,7 +1337,9 @@ FIXME: if clone() is exposed, release() must also
       }
       CMRelease(projection);
     }
+#if !defined(SWIGRUBY)
 fail:
+#endif
     return (CMPISelectExp *)cmpl;
   }
   
