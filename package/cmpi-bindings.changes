@@ -6,12 +6,33 @@ Tue Apr  9 08:43:43 UTC 2013 - kkaempf@suse.com
     providers)
 
 -------------------------------------------------------------------
+Tue Mar 19 09:26:58 UTC 2013 - cfarrell@suse.com
+
+- license update: BSD-3-Clause and CPL-1.0
+  The SUSE licensed code (.mof files) are CPL-1.0, not EPL-1.0
+
+-------------------------------------------------------------------
+Sat Mar  2 08:16:41 UTC 2013 - coolo@suse.com
+
+- update license to new format
+
+-------------------------------------------------------------------
 Thu Feb 14 14:35:32 UTC 2013 - kkaempf@suse.com
 
 - Update to 0.9.0
   - Added full testsuite
   - Improved CMPI_DateTime handling in Ruby
   - bug fixes
+
+-------------------------------------------------------------------
+Mon Oct  1 08:19:53 UTC 2012 - kkaempf@suse.com
+
+- no Ruby in RHEL6 in OBS ?!
+
+-------------------------------------------------------------------
+Mon Aug  6 10:37:18 UTC 2012 - kkaempf@suse.com
+
+- fix CentOS/RHEL 6 build
 
 -------------------------------------------------------------------
 Fri Jul  6 08:53:56 UTC 2012 - kkaempf@suse.com

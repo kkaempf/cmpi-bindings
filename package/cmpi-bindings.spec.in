@@ -1,7 +1,7 @@
 #
 # spec file for package cmpi-bindings
 #
-# Copyright (c) 2012 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2013 SUSE LINUX Products GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -14,16 +14,16 @@
 
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
-
 # nodebuginfo
+
 
 Url:            http://github.com/kkaempf/cmpi-bindings
 
 Name:           @PACKAGE@
 Version:        @VERSION@
 Release:        1
-License:        BSD-3-Clause ; EPL-1.0
 Summary:        Adapter to write and run CMPI-type CIM providers
+License:        BSD-3-Clause and CPL-1.0
 Group:          Development/Libraries/Other
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  cmake
@@ -46,7 +46,9 @@ BuildRequires:  -vim
 BuildRequires:  curl-devel
 BuildRequires:  pkgconfig
 BuildRequires:  ruby
+%if 0%{?rhel_version} < 600
 BuildRequires:  ruby-devel
+%endif
 BuildRequires:  ruby-libs
 
 %if 0%{?rhel_version} < 500
@@ -54,7 +56,7 @@ BuildRequires:  ruby-libs
 BuildRequires:  irb
 %endif
 
-%if 0%{?rhel_version} >= 500 || 0%{?centos_version} >= 500 || 0%{?fedora}
+%if (0%{?rhel_version} >= 500 && 0%{?rhel_version} < 600) || 0%{?centos_version} >= 500 || 0%{?fedora} < 17
 # rdoc is separate from rhel5 on
 BuildRequires:  ruby-rdoc
 %endif
@@ -83,8 +85,8 @@ BuildRequires:  curl-devel
 BuildRequires:  pkgconfig
 BuildRequires:  ruby
 %else
-BuildRequires:  ruby-devel
 BuildRequires:  pkg-config
+BuildRequires:  ruby-devel
 %endif
 
 %endif
@@ -116,8 +118,8 @@ cd build
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/cmpi
 make install DESTDIR=$RPM_BUILD_ROOT
 
+%if 0%{?rhel_version} < 600
 %package -n cmpi-bindings-ruby
-License:        BSD-3-Clause ; EPL-1.0
 Summary:        Adapter to write and run CMPI-type CIM providers in Ruby
 Group:          Development/Languages/Ruby
 # for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
@@ -149,8 +151,9 @@ Requires:       ruby(abi) = 1.8
 %dir %{ruby_sitelib}/cmpi/providers
 %{ruby_sitelib}/cmpi/provider.rb
 
+%endif #!RHEL6
+
 %package -n cmpi-bindings-pywbem
-License:        BSD-3-Clause ; EPL-1.0
 Summary:        Adapter to write and run CMPI-type CIM providers in Python
 Group:          Development/Languages/Python
 # for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
@@ -172,7 +175,6 @@ Provides:       %{name} = %{version}-%{release}
 %{python_sitelib}/cmpi.py*
 
 %package -n cmpi-bindings-perl
-License:        BSD-3-Clause ; EPL-1.0
 Requires:       perl = %{perl_version}
 Summary:        Adapter to write and run CMPI-type CIM providers in Perl
 Group:          Development/Languages/Perl
