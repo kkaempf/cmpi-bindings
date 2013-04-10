@@ -33,7 +33,7 @@
   }
   else {
     int count, i;
-    rb_check_type($input, RUBY_T_ARRAY);
+    rb_check_type($input, T_ARRAY);
     count = RARRAY_LEN($input);
     $1 = (char **)calloc(count + 1, sizeof(char **)); /* incl. trailing NULL */
     if ($1 == NULL) {
