@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Apr 10 08:54:57 UTC 2013 - kkaempf@suse.com
+
+- Update to 0.9.3
+  - Raise exception on nil assignment to numeric properties
+  - Fix bug in CMPIObjectPath constructor if reference has string
+    value keys
+
+-------------------------------------------------------------------
 Tue Apr  9 12:37:36 UTC 2013 - kkaempf@suse.com
 
 - Update to 0.9.2
