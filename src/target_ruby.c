@@ -176,6 +176,11 @@ get_exc_trace(const CMPIBroker* broker)
   CMPIString *result;
 
   if (NIL_P(exception)) {
+    _SBLIM_TRACE(1,("<%d> Ruby: get_exc_trace: no exception", getpid()));
+    return NULL;
+  }
+  if (NIL_P(trace)) {
+    _SBLIM_TRACE(1,("<%d> Ruby: get_exc_trace: no trace ($@ is nil)", getpid()));
     return NULL;
   }
   backtrace = rb_funcall(trace, rb_intern("join"), 1, rb_str_new("\n\t", 2));
@@ -496,13 +501,13 @@ TargetCleanup(ProviderMIHandle * hdl)
   if (--_MI_COUNT > 0) 
   {
     pthread_mutex_unlock(&_CMPI_INIT_MUTEX);
-    _SBLIM_TRACE(1,("_MI_COUNT > 0: %d", _MI_COUNT));
+    _SBLIM_TRACE(0,("_MI_COUNT > 0: %d", _MI_COUNT));
     return;
   }
 
   if (_TARGET_INIT)  // if Ruby is initialized and _MI_COUNT == 0, call ruby_finalize
   {
-    _SBLIM_TRACE(1,("Calling ruby_finalize()"));
+    _SBLIM_TRACE(0,("Calling ruby_finalize(), unloading Ruby"));
     ruby_finalize();
     _TARGET_INIT = 0; // false
   }

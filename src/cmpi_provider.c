@@ -223,7 +223,7 @@ Cleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)    
 {
-    _SBLIM_TRACE(1,("Cleanup() called, miHdl %p, miHdl->implementation %p, context %p, terminating %d", 
+    _SBLIM_TRACE(0,("Cleanup() called, miHdl %p, miHdl->implementation %p, context %p, terminating %d", 
                     miHdl, miHdl->implementation, context, terminating));
     CMPIStatus status = {CMPI_RC_OK, NULL}; 
 
@@ -1305,11 +1305,11 @@ static int
 createInit(ProviderMIHandle* miHdl, CMPIStatus* st)
 {
     const char *trace_level = getenv("CMPI_BINDINGS_TRACE_LEVEL");
-    _SBLIM_TRACE(0,("\n>>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p, trace_level %s\n", miHdl->broker, miHdl->miName, miHdl->context, st, trace_level?trace_level:"(null)"));
+    _SBLIM_TRACE(1,(">>>>> createInit() called, broker %p, miname= %s (ctx=%p), status %p, trace_level %s", miHdl->broker, miHdl->miName, miHdl->context, st, trace_level?trace_level:"(null)"));
 
     if (trace_level) {
       cmpi_bindings_trace_level = *trace_level - '0';
-      _SBLIM_TRACE(0,("tracing at level %d\n", cmpi_bindings_trace_level));
+      _SBLIM_TRACE(0,("tracing at level %d", cmpi_bindings_trace_level));
     }
     return TargetInitialize(miHdl, st);
 }
@@ -1321,7 +1321,7 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
 { \
     CMPI##ptype##MI *mi; \
     ProviderMIHandle *hdl; \
-    _SBLIM_TRACE(1, ("\n>>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname)); \
+    _SBLIM_TRACE(1, (">>>>> in FACTORY: CMPI"#ptype"MI* _Generic_Create_"#ptype"MI... miname=%s", miname)); \
     hdl = (ProviderMIHandle*)malloc(sizeof(ProviderMIHandle)); \
     if (hdl) { \
         hdl->implementation = Target_Null; \
@@ -1340,7 +1340,7 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
         mi->ft = &ptype##MIFT__; \
     } \
     ++_MI_COUNT; \
-    _SBLIM_TRACE(1, ("\n>>>>>_MI_COUNT %d:  returning mi=0x%08x  hdl=0x%08x, hdl->implementation=%p   mi->ft=0x%08x\n", _MI_COUNT, mi, mi->hdl, hdl->implementation, mi->ft)); \
+    _SBLIM_TRACE(0, (">>>>> CMPI"#ptype"MI(%s) _MI_COUNT %d: returning mi=%p : miHdl=%p, hdl->implementation=%p, mi->ft=%p", miname, _MI_COUNT, mi, mi->hdl, hdl->implementation, mi->ft)); \
     return mi; \
 }
 
