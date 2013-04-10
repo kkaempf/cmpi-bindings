@@ -125,12 +125,6 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 #include <syslog.h>
 #include <pthread.h>
 
-/* CMPISelectExp wrapper to capture also the projections */
-struct complete_select_exp {
-  CMPISelectExp *exp;
-  char **filter;
-};
-
 /*
  * Convert CMPIDateTime to native representation as Target_Type
  *
@@ -876,6 +870,85 @@ static void log_message(
 */
 
 #include "string_array.h"
+
+/*
+ *==============================================================================
+ * CMPISelectExp wrapper to capture also the projections
+ *==============================================================================
+ */
+
+typedef struct select_filter_exp {
+  CMPISelectExp *exp;
+  char **filter;
+} select_filter_exp;
+
+static select_filter_exp *
+create_select_filter_exp(const CMPIBroker* broker, const char *query, const char *language, char **keys)
+{
+  CMPIStatus st = {CMPI_RC_OK, NULL};
+  CMPIArray *projection;
+  select_filter_exp *sfe;
+  CMPISelectExp *exp = CMNewSelectExp(broker, query, language, &projection, &st);
+  RAISE_IF(st);
+  sfe = (select_filter_exp *)calloc(1, sizeof(select_filter_exp));
+  if (sfe == NULL) {
+    SWIG_exception(SWIG_MemoryError, "malloc failed");
+  }
+  sfe->exp = exp;
+  if (projection || keys) {
+    size_t kcount = 0;
+    int pcount = 0;
+    int count = 0;
+    if (keys) {
+      kcount = string_array_size(keys);
+    }
+    if (projection) {
+      pcount = CMGetArrayCount(projection, NULL);
+    }
+    count = pcount + kcount;
+    if (count > 0) {
+      int i = 0;
+      sfe->filter = calloc(count + 1, sizeof(char **)); /* incl. final NULL ptr */
+      for (; i < kcount; i++) {
+        sfe->filter[i] = strdup(keys[i]);
+      }
+      for (; i < count; i++) {
+        CMPIData data = CMGetArrayElementAt(projection, i-kcount, &st);
+        if (st.rc != CMPI_RC_OK) {
+          while(i) {
+            free(sfe->filter[--i]);
+          }
+          free(sfe->filter);
+          CMRelease(sfe->exp);
+          free(sfe);
+          sfe = NULL;            
+          RAISE_IF(st);
+          break;
+        }
+        sfe->filter[i] = (char *)strdup(CMGetCharsPtr(data.value.string, NULL));
+        CMRelease(data.value.string);
+      }
+    }
+    CMRelease(projection);
+  }
+#if !defined(SWIGRUBY)
+fail:
+#endif
+  return sfe;
+}
+
+static void
+release_select_filter_exp(select_filter_exp *sfe)
+{
+  CMRelease( sfe->exp );
+  if (sfe->filter) {
+    int i = 0;
+    while (sfe->filter[i])
+      free(sfe->filter[i++]);
+    free(sfe->filter);
+  }
+  free(sfe);
+}
 
 %}
 

@@ -456,15 +456,9 @@ typedef struct _CMPIBroker {} CMPIBroker;
   CMPISelectExp* new_select_exp(
     const char *query, 
     const char *lang, 
-    CMPIArray **projection) 
+    char **projection) 
   {
-    CMPIStatus st = { CMPI_RC_OK, NULL };
-    CMPISelectExp* result;
-
-    return CMNewSelectExp($self, query, lang, projection, &st);
-    RAISE_IF(st);
-
-    return result;
+    return (CMPISelectExp *)create_select_filter_exp($self, query, lang, projection);
   }
 
   /* Create a new CMPIError object.

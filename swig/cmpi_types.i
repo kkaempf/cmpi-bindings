@@ -420,7 +420,7 @@ typedef struct _CMPIException {} CMPIException;
 {
 #if HAVE_CMPI_BROKER
 #if defined(SWIGRUBY)
-  _CMPIObjectPath(VALUE ns_t, VALUE cn_t = Qnil) /* Can't use Target_Type here, this is SWIG level */
+  _CMPIObjectPath(VALUE ns_t, VALUE cn_t = Qnil) /* Can't use Target_Type here: this is SWIG level, not C */
 #else
   _CMPIObjectPath(const char *ns, const char *cn = NULL)
 #endif
@@ -442,7 +442,6 @@ typedef struct _CMPIException {} CMPIException;
       /* parse <namespace>:<classname>[.<key>=<value>[,<key>=<value>]...] */
       CMPIValue value;
       const char *ptr;
-      
       /* find and extract namespace */
       ptr = strchr(ns, ':');
       if (ptr == NULL) {
@@ -459,7 +458,6 @@ typedef struct _CMPIException {} CMPIException;
       }
       path = CMNewObjectPath( broker, ns, cn, &st );
       RAISE_IF(st);
-      
       
       /* find and extract properties (if any) */
 
@@ -493,7 +491,12 @@ typedef struct _CMPIException {} CMPIException;
 	    ptr++;
 	  }
 	  val = strndup(val, ptr-val);
-	  ++ptr;
+	  ++ptr; /* skip " */
+          if (*ptr) { /* not EOS */
+            if (*(++ptr) != ',') {
+              SWIG_exception_fail(SWIG_ValueError, "Missing ',' after string value");
+            }
+          }
 	}
 	else {
 	  ptr = strchr(ptr, ',');
@@ -501,8 +504,9 @@ typedef struct _CMPIException {} CMPIException;
 	    val = strndup(val, ptr-val);
 	    ++ptr;
 	  }
-	  else
+	  else {
 	    val = strdup(val);
+          }
 	}
 	value.string = CMNewString(broker, val, &st);
 	RAISE_IF(st);
@@ -1291,69 +1295,12 @@ FIXME: if clone() is exposed, release() must also
 #if HAVE_CMPI_BROKER
     const CMPIBroker* broker = cmpi_broker();
 #endif
-    CMPIStatus st = {CMPI_RC_OK, NULL};
-    CMPIArray *projection;
-    struct complete_select_exp *cmpl;
-    CMPISelectExp *exp = CMNewSelectExp(broker, query, language, &projection, &st);
-    RAISE_IF(st);
-    cmpl = (struct complete_select_exp *)calloc(1, sizeof(struct complete_select_exp));
-    if (cmpl == NULL) {
-      SWIG_exception(SWIG_MemoryError, "malloc failed");
-    }
-    cmpl->exp = exp;
-    if (projection || keys) {
-      size_t kcount = 0;
-      int pcount = 0;
-      int count = 0;
-      if (keys) {
-        kcount = string_array_size(keys);
-      }
-      if (projection) {
-        pcount = CMGetArrayCount(projection, NULL);
-      }
-      count = pcount + kcount;
-      if (count > 0) {
-        int i = 0;
-        cmpl->filter = calloc(count + 1, sizeof(char **)); /* incl. final NULL ptr */
-        for (; i < kcount; i++) {
-          cmpl->filter[i] = strdup(keys[i]);
-        }
-        for (; i < count; i++) {
-          CMPIData data = CMGetArrayElementAt(projection, i-kcount, &st);
-          if (st.rc != CMPI_RC_OK) {
-            while(i) {
-              free(cmpl->filter[--i]);
-            }
-            free(cmpl->filter);
-            CMRelease(cmpl->exp);
-            free(cmpl);
-            cmpl = NULL;            
-            RAISE_IF(st);
-            break;
-          }
-          cmpl->filter[i] = (char *)strdup(CMGetCharsPtr(data.value.string, NULL));
-          CMRelease(data.value.string);
-        }
-      }
-      CMRelease(projection);
-    }
-#if !defined(SWIGRUBY)
-fail:
-#endif
-    return (CMPISelectExp *)cmpl;
+    return (CMPISelectExp *)create_select_filter_exp(broker, query, language, keys);
   }
-  
+
   ~_CMPISelectExp()
   {
-    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
-    CMRelease( cmpl->exp );
-    if (cmpl->filter) {
-      int i = 0;
-      while (cmpl->filter[i])
-        free(cmpl->filter[i++]);
-      free(cmpl->filter);
-    }
-    free(cmpl);
+    release_select_filter_exp((select_filter_exp *)$self);
   }
 
 #if defined(SWIGRUBY)
@@ -1363,15 +1310,15 @@ fail:
   int match(CMPIInstance *instance)
   {
     CMPIStatus st = {CMPI_RC_OK, NULL};
-    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
-    CMPIBoolean res = CMEvaluateSelExp(cmpl->exp, instance, &st);
+    select_filter_exp *sfe = (select_filter_exp *)$self;
+    CMPIBoolean res = CMEvaluateSelExp(sfe->exp, instance, &st);
     RAISE_IF(st);
     return res;
   }
 
   char **filter() {
-    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
-    return cmpl->filter;
+    select_filter_exp *sfe = (select_filter_exp *)$self;
+    return sfe->filter;
   }
 
   /* Return string representation */
@@ -1383,8 +1330,8 @@ fail:
 #endif
   %newobject string;
   const char* string() {
-    struct complete_select_exp *cmpl = (struct complete_select_exp *)$self;
-    CMPIString *s = CMGetSelExpString(cmpl->exp, NULL);
+    select_filter_exp *sfe = (select_filter_exp *)$self;
+    CMPIString *s = CMGetSelExpString(sfe->exp, NULL);
     const char *result = strdup(CMGetCharPtr(s));
     CMRelease(s);
     return result;
