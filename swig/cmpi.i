@@ -454,8 +454,12 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
 
     const CMPIBroker* broker = cmpi_broker();
     int size, i;
-    CMPIType element_type = 0;
+    CMPIType element_type = 0;    
     if (TYPE(data) != T_ARRAY) {
+      if (Target_Null_p(data)) {
+        value->array = NULL;
+        return CMPI_null;
+      }
       data = rb_funcall(data, rb_intern("to_a"), 0 );
     }
     size = RARRAY_LEN(data);
@@ -492,16 +496,26 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
      */
 
     if ((type & CMPI_REAL)) {
+      if (Target_Null_p(data)) {
+        SWIG_exception(SWIG_ValueError, "can't convert NULL to real");
+      }
       if (TYPE(data) != T_FLOAT) {
         data = rb_funcall(data, rb_intern("to_f"), 0 );
       }
     }
     else if ((type & CMPI_INTEGER)) {
+      if (Target_Null_p(data)) {
+        SWIG_exception(SWIG_ValueError, "can't convert NULL to integer");
+      }
       if (!FIXNUM_P(data)) {
         data = rb_funcall(data, rb_intern("to_i"), 0 );
       }
     }
-    
+    else if (Target_Null_p(data)) {
+      /* A NULL value always has CMPIType CMPI_null */
+      value->chars = NULL;
+      return CMPI_null;
+    }
     switch (type) {
       case CMPI_null: /*         0 */
 	/* CMPIType not given, deduce it from Ruby type */
