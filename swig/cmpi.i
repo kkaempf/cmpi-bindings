@@ -407,10 +407,12 @@ cmpi_broker()
   VALUE broker = rb_funcall(mCmpi, rb_intern("broker"), 0);
   res1 = SWIG_ConvertPtr(broker, &ptr, SWIGTYPE_p__CMPIBroker, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "broker", 1, broker));
+    SWIG_exception(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "broker", 1, broker));
   }
   return (CMPIBroker *)ptr;
+#if !defined (SWIGRUBY)
 fail:
+#endif
   return NULL;
 }
 
@@ -614,7 +616,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
           res = SWIG_ConvertPtr(data, (void *)&(value->inst), SWIGTYPE_p__CMPIInstance, 0 |  0 );
 	}
 	if (!SWIG_IsOK(res)) {
-	  SWIG_exception_fail(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIInstance *","target_to_value", 1, data )); 
+	  SWIG_exception(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIInstance *","target_to_value", 1, data )); 
         }
         break;
       }
@@ -635,7 +637,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
           res = SWIG_ConvertPtr(data, (void *)&(value->ref), SWIGTYPE_p__CMPIObjectPath, 0 |  0 );
 	}
 	if (!SWIG_IsOK(res)) {
-	  SWIG_exception_fail(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIObjectPath *","target_to_value", 1, data )); 
+	  SWIG_exception(SWIG_ArgError(res), Ruby_Format_TypeError( "", "CMPIObjectPath *","target_to_value", 1, data )); 
 	}
         break;
       }
@@ -709,7 +711,9 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       break;
     } /* switch (type) */
   }
+#if !defined (SWIGRUBY)
 fail:
+#endif
   return type;
 #else
 #error Undefined
