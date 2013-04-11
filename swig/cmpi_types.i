@@ -443,10 +443,11 @@ typedef struct _CMPIException {} CMPIException;
       CMPIValue value;
       const char *ptr;
       /* find and extract namespace */
+/*      fprintf(stderr, "CMPIObjectPath.new(%s)\n", ns); */
       ptr = strchr(ns, ':');
       if (ptr == NULL) {
  	path = NULL;
-	SWIG_exception_fail(SWIG_ValueError, "Missing ':' between namespace and classname");
+	SWIG_exception(SWIG_ValueError, "Missing ':' between namespace and classname");
       }
       ns = strndup(ns, ptr-ns);
       /* find and extract classname */
@@ -473,18 +474,18 @@ typedef struct _CMPIException {} CMPIException;
 	ptr = strchr(key, '=');
 	if (ptr == NULL) {
  	  path = NULL;
-	  SWIG_exception_fail(SWIG_ValueError, "Missing '=' between property name and value");
+	  SWIG_exception(SWIG_ValueError, "Missing '=' between property name and value");
         }
 	key = strndup(key, ptr-key);
 	val = ++ptr;
 	if (*val == '"') {
 	  val++;
 	  ptr = val;
-	  for (;;) {
+	  for (;*ptr;) {
 	    ptr = strchr(ptr, '"');
 	    if (ptr == NULL) {
 	      path = NULL;
-	      SWIG_exception_fail(SWIG_ValueError, "Missing '\"' at end of string value");
+	      SWIG_exception(SWIG_ValueError, "Missing '\"' at end of string value");
 	    }
 	    if (*(ptr-1) != '\\') /* not escaped " */
 	      break;
@@ -493,8 +494,8 @@ typedef struct _CMPIException {} CMPIException;
 	  val = strndup(val, ptr-val);
 	  ++ptr; /* skip " */
           if (*ptr) { /* not EOS */
-            if (*(++ptr) != ',') {
-              SWIG_exception_fail(SWIG_ValueError, "Missing ',' after string value");
+            if (*ptr++ != ',') {
+              SWIG_exception(SWIG_ValueError, "Missing ',' after string value");
             }
           }
 	}
@@ -520,7 +521,9 @@ typedef struct _CMPIException {} CMPIException;
       path = CMNewObjectPath( broker, ns, cn, &st );
       RAISE_IF(st);
     }
+#if !defined (SWIGRUBY)
 fail:
+#endif
     return path;
   }
 
