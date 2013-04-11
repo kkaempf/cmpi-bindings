@@ -462,7 +462,6 @@ def get_cmpi_proxy_provider(miname, broker, ctx):
 class CMPIProxyProvider(object):
 
     def __init__(self, miname, broker, ctx):
-        print 'called CMPIProxyProvider(', miname, ',', broker, ')'
         self.miname = miname
         self.broker = broker
         env = ProviderEnvironment(self, ctx)
@@ -477,7 +476,6 @@ class CMPIProxyProvider(object):
         #print '*** broker.version()', broker.version()
 
     def enum_instance_names(self, ctx, rslt, objname):
-        print 'provider.py: In enum_instance_names()' 
         #test_conversions()
         env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objname)
@@ -491,7 +489,6 @@ class CMPIProxyProvider(object):
         return (0, '')
 
     def enum_instances(self, ctx, rslt, objname, plist):
-        print 'provider.py: In enum_instances()' 
         env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objname)
         try:
@@ -504,7 +501,6 @@ class CMPIProxyProvider(object):
         return (0, '')
 
     def get_instance(self, ctx, rslt, objname, plist):
-        print 'provider.py: In get_instance()' 
         env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objname)
         try:
@@ -586,7 +582,6 @@ class CMPIProxyProvider(object):
 
 
     def reference_names(self, ctx, rslt, objName, resultClass, role):
-        print 'pycmpi_provider.py: In reference_names()' 
         env = ProviderEnvironment(self, ctx)
         piname = self.cmpi2pywbem_instname(objName)
 
@@ -617,7 +612,6 @@ class CMPIProxyProvider(object):
 
 
     def invoke_method(self, ctx, rslt, objName, method, inargs, outargs):
-        print '*** in invoke_method'
         env = ProviderEnvironment(self, ctx)
         op = self.cmpi2pywbem_instname(objName)
         pinargs = self.cmpi2pywbem_args(inargs)
