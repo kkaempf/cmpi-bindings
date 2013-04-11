@@ -806,9 +806,24 @@ static void _raise_ex(const CMPIStatus* st)
  */
 
 typedef struct select_filter_exp {
-  CMPISelectExp *exp;
+  const CMPISelectExp *exp;
   char **filter;
 } select_filter_exp;
+
+static select_filter_exp *
+wrap_select_filter(const CMPISelectExp *exp, char **keys)
+{
+  select_filter_exp *sfe = (select_filter_exp *)calloc(1, sizeof(select_filter_exp));
+  if (sfe == NULL) {
+    SWIG_exception(SWIG_MemoryError, "malloc failed");
+  }
+  sfe->exp = exp;
+  sfe->filter = keys;
+#if !defined(SWIGRUBY)
+fail:
+#endif
+  return sfe;
+}
 
 /*
 **==============================================================================
@@ -898,11 +913,7 @@ create_select_filter_exp(const CMPIBroker* broker, const char *query, const char
   select_filter_exp *sfe;
   CMPISelectExp *exp = CMNewSelectExp(broker, query, language, &projection, &st);
   RAISE_IF(st);
-  sfe = (select_filter_exp *)calloc(1, sizeof(select_filter_exp));
-  if (sfe == NULL) {
-    SWIG_exception(SWIG_MemoryError, "malloc failed");
-  }
-  sfe->exp = exp;
+  sfe = wrap_select_filter(exp, NULL);
   if (projection || keys) {
     size_t kcount = 0;
     int pcount = 0;
@@ -927,7 +938,7 @@ create_select_filter_exp(const CMPIBroker* broker, const char *query, const char
             free(sfe->filter[--i]);
           }
           free(sfe->filter);
-          CMRelease(sfe->exp);
+          CMRelease((CMPISelectExp *)sfe->exp);
           free(sfe);
           sfe = NULL;            
           RAISE_IF(st);
@@ -948,7 +959,7 @@ fail:
 static void
 release_select_filter_exp(select_filter_exp *sfe)
 {
-  CMRelease( sfe->exp );
+  CMRelease((CMPISelectExp *)sfe->exp);
   if (sfe->filter) {
     int i = 0;
     while (sfe->filter[i])
