@@ -1047,6 +1047,7 @@ authorizeFilter(
     Target_Type _classPath;
     Target_Type _className;
     Target_Type _owner;
+    select_filter_exp *sfe = (select_filter_exp *)filter;
 
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
   
@@ -1054,7 +1055,7 @@ authorizeFilter(
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
-    _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
+    _filter = SWIG_NewPointerObj((void*) sfe->exp, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _className = string2target(className); 
     _owner = string2target(owner); 
@@ -1090,12 +1091,13 @@ activateFilter(
     Target_Type _classPath;
     Target_Type _firstActivation;
     Target_Type _className;
-   
+    select_filter_exp *sfe = (select_filter_exp *)filter;
+
     _SBLIM_TRACE(1,("activateFilter() called, ctx %p, filter %p, className %s, classPath %p, firstActivation %d", ctx, filter, className, classPath, firstActivation));
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
-    _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
+    _filter = SWIG_NewPointerObj((void*) sfe->exp, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _firstActivation = Target_Bool(firstActivation); 
     _className = string2target(className); 
@@ -1131,12 +1133,13 @@ deActivateFilter(
     Target_Type _classPath;
     Target_Type _lastActivation;
     Target_Type _className;
+    select_filter_exp *sfe = (select_filter_exp *)filter;
    
     _SBLIM_TRACE(1,("deActivateFilter() called, ctx %p, filter %p, className %s, classPath %p, lastActivation %d", ctx, filter, className, classPath, lastActivation));
 
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
-    _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
+    _filter = SWIG_NewPointerObj((void*) sfe->exp, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _lastActivation = Target_Bool(lastActivation); 
     _className = string2target(className); 
@@ -1172,6 +1175,7 @@ mustPoll(
     Target_Type _className;
     Target_Type _filter;
     Target_Type _classPath;
+    select_filter_exp *sfe = (select_filter_exp *)filter;
     CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};
    
     //_SBLIM_TRACE(1,("mustPoll() called, ctx %p, rslt %p, filter %p, className %s, classPath %p", ctx, rslt, filter, className, classPath));
@@ -1180,7 +1184,7 @@ mustPoll(
     TARGET_THREAD_BEGIN_BLOCK; 
     _ctx = SWIG_NewPointerObj((void*) ctx, SWIGTYPE_p__CMPIContext, 0);
     //Target_Type _rslt = SWIG_NewPointerObj((void*) rslt, SWIGTYPE_p__CMPIResult, 0);
-    _filter = SWIG_NewPointerObj((void*) filter, SWIGTYPE_p__CMPISelectExp, 0);
+    _filter = SWIG_NewPointerObj((void*) sfe->exp, SWIGTYPE_p__CMPISelectExp, 0);
     _classPath = SWIG_NewPointerObj((void*) classPath, SWIGTYPE_p__CMPIObjectPath, 0);
     _className = string2target(className); 
 

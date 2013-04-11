@@ -800,6 +800,17 @@ static void _raise_ex(const CMPIStatus* st)
 }
 
 /*
+ *==============================================================================
+ * CMPISelectExp wrapper to capture also the projections
+ *==============================================================================
+ */
+
+typedef struct select_filter_exp {
+  CMPISelectExp *exp;
+  char **filter;
+} select_filter_exp;
+
+/*
 **==============================================================================
 **
 ** Shim code converting CMPI provider calls to target language
@@ -876,15 +887,8 @@ static void log_message(
 #include "string_array.h"
 
 /*
- *==============================================================================
- * CMPISelectExp wrapper to capture also the projections
- *==============================================================================
+ * helper for CMPISelectExp wrapper
  */
-
-typedef struct select_filter_exp {
-  CMPISelectExp *exp;
-  char **filter;
-} select_filter_exp;
 
 static select_filter_exp *
 create_select_filter_exp(const CMPIBroker* broker, const char *query, const char *language, char **keys)
