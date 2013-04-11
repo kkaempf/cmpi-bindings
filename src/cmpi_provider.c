@@ -223,7 +223,7 @@ Cleanup(
         const CMPIContext * context,
         CMPIBoolean terminating)    
 {
-    _SBLIM_TRACE(0,("Cleanup() called, miHdl %p, miHdl->implementation %p, context %p, terminating %d", 
+    _SBLIM_TRACE(1,("Cleanup() called, miHdl %p, miHdl->implementation %p, context %p, terminating %d", 
                     miHdl, miHdl->implementation, context, terminating));
     CMPIStatus status = {CMPI_RC_OK, NULL}; 
 
@@ -1344,7 +1344,7 @@ CMPI##ptype##MI* _Generic_Create_##ptype##MI(const CMPIBroker* broker, \
         mi->ft = &ptype##MIFT__; \
     } \
     ++_MI_COUNT; \
-    _SBLIM_TRACE(0, (">>>>> CMPI"#ptype"MI(%s) _MI_COUNT %d: returning mi=%p : miHdl=%p, hdl->implementation=%p, mi->ft=%p", miname, _MI_COUNT, mi, mi->hdl, hdl->implementation, mi->ft)); \
+    _SBLIM_TRACE(1, (">>>>> CMPI"#ptype"MI(%s) _MI_COUNT %d: returning mi=%p : miHdl=%p, hdl->implementation=%p, mi->ft=%p", miname, _MI_COUNT, mi, mi->hdl, hdl->implementation, mi->ft)); \
     return mi; \
 }
 
