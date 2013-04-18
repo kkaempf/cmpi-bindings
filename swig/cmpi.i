@@ -905,6 +905,19 @@ static void log_message(
  * helper for CMPISelectExp wrapper
  */
 
+static void
+release_select_filter_exp(select_filter_exp *sfe)
+{
+  CMRelease((CMPISelectExp *)sfe->exp);
+  if (sfe->filter) {
+    int i = 0;
+    while (sfe->filter[i])
+      free(sfe->filter[i++]);
+    free(sfe->filter);
+  }
+  free(sfe);
+}
+
 static select_filter_exp *
 create_select_filter_exp(const CMPIBroker* broker, const char *query, const char *language, char **keys)
 {
@@ -934,12 +947,7 @@ create_select_filter_exp(const CMPIBroker* broker, const char *query, const char
       for (; i < count; i++) {
         CMPIData data = CMGetArrayElementAt(projection, i-kcount, &st);
         if (st.rc != CMPI_RC_OK) {
-          while(i) {
-            free(sfe->filter[--i]);
-          }
-          free(sfe->filter);
-          CMRelease((CMPISelectExp *)sfe->exp);
-          free(sfe);
+          release_select_filter_exp(sfe);
           sfe = NULL;            
           RAISE_IF(st);
           break;
@@ -948,25 +956,14 @@ create_select_filter_exp(const CMPIBroker* broker, const char *query, const char
         CMRelease(data.value.string);
       }
     }
-    CMRelease(projection);
+    if (projection) {
+      CMRelease(projection);
+    }
   }
 #if !defined(SWIGRUBY)
 fail:
 #endif
   return sfe;
-}
-
-static void
-release_select_filter_exp(select_filter_exp *sfe)
-{
-  CMRelease((CMPISelectExp *)sfe->exp);
-  if (sfe->filter) {
-    int i = 0;
-    while (sfe->filter[i])
-      free(sfe->filter[i++]);
-    free(sfe->filter);
-  }
-  free(sfe);
 }
 
 %}
