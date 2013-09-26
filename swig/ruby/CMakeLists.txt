@@ -29,7 +29,7 @@ SET( SWIG_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/../cmpi.i" )
 
 ADD_CUSTOM_COMMAND (
    OUTPUT  ${SWIG_OUTPUT}
-   COMMAND ${CMAKE_COMMAND} -E echo_append "Creating wrapper code for ruby..."
+   COMMAND ${CMAKE_COMMAND} -E echo_append "Creating wrapper code for Ruby..."
    COMMAND ${SWIG_EXECUTABLE} -ruby -o ${SWIG_OUTPUT} -outdir ${CMAKE_CURRENT_BINARY_DIR} -DHAVE_CMPI_BROKER=1 -I/usr/include ${SWIG_INPUT}
    COMMAND ${CMAKE_COMMAND} -E echo "Done."
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
