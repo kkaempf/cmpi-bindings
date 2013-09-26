@@ -58,9 +58,9 @@ devel packages.  It will skip any others.
   ------------
   cmake 2.4 or later
   CMPI header files, e.g. from sblim-cmpi-devel
-  python interface requires:  python-devel, pywbem-0.7.0
-  perl interface requires: ?
-  ruby interface requires: ruby-1.8 ruby-devel-1.8
+  Python interface requires:  python-devel, pywbem-0.7.0
+  Perl interface requires: perl
+  Ruby interface requires: ruby ruby-devel (1.8, 1.9, or 2.0)
 
   Build
   -----
@@ -81,7 +81,7 @@ devel packages.  It will skip any others.
   For each language, there is a test/<language> directory.
   Within that directory, there should be test providers, scripts that use 
   the test providers, and scripts to register the mofs and providers with 
-  cimoms.
+  CIMOMs.
 
 
 Testing
