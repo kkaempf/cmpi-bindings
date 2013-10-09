@@ -937,7 +937,7 @@ invokeMethod(
       return status;
   
     VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
-    if (check_ruby_type(argsin, T_ARRAY, "invoke: Input arguments must be Array", &status, (ProviderMIHandle*)self->hdl ) < 0)
+    if (check_ruby_type(argsin, T_ARRAY, "invoke: Input arguments of <method>_args must be Array", &status, (ProviderMIHandle*)self->hdl ) < 0)
       return status;
 
     int number_of_arguments = RARRAY_LEN(argsin) / 2;
@@ -968,12 +968,17 @@ invokeMethod(
     /* actual provider call, passes output args and return value via 'result' */
     VALUE result = TargetCall((ProviderMIHandle*)self->hdl, &status, methodname, -(2+number_of_arguments), input);
 
-    /* argsout is array of [<return_type>, <output_arg_name>, <output_arg_type>, ... */
+    /* check CMPIStatus */
+    if (status.rc != CMPI_RC_OK) {
+      return status;
+    }
+
+    /* argsout (from <method>_args) is array of [<return_type>, <output_arg_name>, <output_arg_type>, ... */
     VALUE argsout = rb_ary_entry(args, 1);
     CMPIValue value;
     CMPIType expected_type;
     CMPIType actual_type;
-    if (check_ruby_type(argsout, T_ARRAY, "invoke: Output arguments must be Array", &status, (ProviderMIHandle*)self->hdl) < 0)
+    if (check_ruby_type(argsout, T_ARRAY, "invoke: Output arguments of <method>_args must be Array", &status, (ProviderMIHandle*)self->hdl) < 0)
       return status;
     number_of_arguments = (RARRAY_LEN(argsout) - 1);
 
