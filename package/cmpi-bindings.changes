@@ -4,6 +4,11 @@ Wed Oct  9 08:17:54 UTC 2013 - kkaempf@suse.com
 - Update to 0.9.6
   Return correct status for failed method invocation in Ruby.
 
+------------------------------------------------------------------
+Thu Sep 26 07:18:08 UTC 2013 - kkaempf@suse.com
+
+- Drop explicit ruby(abi) requires (bnc#842433)
+
 -------------------------------------------------------------------
 Thu Apr 11 13:52:08 UTC 2013 - kkaempf@suse.com
 
