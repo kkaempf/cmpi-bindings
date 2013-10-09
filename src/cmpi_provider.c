@@ -874,27 +874,6 @@ references(
 }
 
 
-#if defined(SWIGRUBY)
-/*
- * Check type of VALUE
- *
- * return 0 if ok
- * return -1 if bad type, set status accordingly
- *
- */
-
-static int
-check_ruby_type( VALUE value, int type, const char *message, CMPIStatus *status, ProviderMIHandle* hdl )
-{
-  if (TYPE(value) != type) {
-    status->rc = CMPI_RC_ERR_TYPE_MISMATCH;
-    status->msg = CMNewString(hdl->broker, message, NULL);
-    return -1;
-  }
-  return 0;
-}
-#endif
-
 /*
  * invokeMethod
  */
