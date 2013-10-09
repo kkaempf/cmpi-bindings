@@ -538,6 +538,54 @@ check_ruby_type( VALUE value, int type, const char *message, CMPIStatus *status,
 
 
 /*
+ * protected_target_to_value
+ * call target_to_value via rb_protect in order to catch exceptions
+ *
+ */
+
+static VALUE
+call_ttv(VALUE args)
+{
+  VALUE *values = (VALUE *)args;
+  return target_to_value((Target_Type)values[0], (CMPIValue *)values[1], (CMPIType)values[2]);
+}
+
+static VALUE
+protected_target_to_value(ProviderMIHandle *hdl, Target_Type data, CMPIValue *value, CMPIType type, CMPIStatus *status)
+{
+  int error = 0;
+  VALUE args[3];
+  VALUE result;
+  args[0] = (VALUE)data;
+  args[1] = (VALUE)value;
+  args[2] = (VALUE)type;
+  result = rb_protect(call_ttv, (VALUE)args, &error);
+
+  if (error) {
+    CMPIString *trace = get_exc_trace(hdl->broker);
+    char *trace_s;
+    char* str;
+    if (trace) {
+      trace_s = CMGetCharPtr(trace);
+    }
+    else {
+      trace_s = "Unknown reason";
+    }
+    str = fmtstr("Ruby: %s", trace_s); 
+    if (trace)
+      trace->ft->release(trace);
+    _SBLIM_TRACE(1,("%s", str));
+    status->rc = CMPI_RC_ERR_FAILED; 
+    status->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
+    free(str);
+  }
+  else {
+    status->rc = CMPI_RC_OK;
+  }
+  return result;
+}
+
+/*
  * TargetInvoke
  * Ruby style method invocation
  */
@@ -628,7 +676,11 @@ TargetInvoke(
       const char *argname;
       argname = target_charptr(rb_ary_entry(argsout, i+1));
       expected_type = FIX2ULONG(rb_ary_entry(argsout, i+2));
-      actual_type = target_to_value(rb_ary_entry(result, (i >> 1) + 1), &value, expected_type);
+      actual_type = protected_target_to_value(hdl, rb_ary_entry(result, (i >> 1) + 1), &value, expected_type, status);
+      if (status->rc != CMPI_RC_OK) {
+        _SBLIM_TRACE(0,("Failed (rc %d) type conversion for output arg %d:%s in call to %s; expected type %x, actual type %x", status->rc, i>>1, argname, method, expected_type, actual_type));
+        return;
+      }
       *status = CMAddArg(out, argname, &value, actual_type);
       if (status->rc != CMPI_RC_OK) {
         _SBLIM_TRACE(1,("Failed (rc %d) to set output arg %d:%s for %s; expected type %x, actual type %x", status->rc, i>>1, argname, method, expected_type, actual_type));
@@ -640,7 +692,11 @@ TargetInvoke(
     
   }
   expected_type = FIX2ULONG(rb_ary_entry(argsout, 0));
-  actual_type = target_to_value(result, &value, expected_type);
+  actual_type = protected_target_to_value(hdl, result, &value, expected_type, status);
+  if (status->rc != CMPI_RC_OK) {
+    _SBLIM_TRACE(0,("Failed (rc %d) type conversion for return value of %s; expected type %x, actual type %x", status->rc, method, expected_type, actual_type));
+    return;
+  }
   CMReturnData(rslt, &value, actual_type);
   CMReturnDone(rslt);
 }
