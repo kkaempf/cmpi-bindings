@@ -899,7 +899,7 @@ invokeMethod(
     _objName = SWIG_NewPointerObj((void*) objName, SWIGTYPE_p__CMPIObjectPath, 0);
   
 #if defined(SWIGRUBY)
-    TargetInvoke(self, _ctx, rslt, _objName, method, in, out, &status);
+    TargetInvoke((ProviderMIHandle*)self->hdl, _ctx, rslt, _objName, method, in, out, &status);
 #else
     Target_Type _rslt;
     Target_Type _in;

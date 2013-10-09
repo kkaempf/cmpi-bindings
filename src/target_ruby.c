@@ -543,7 +543,7 @@ check_ruby_type( VALUE value, int type, const char *message, CMPIStatus *status,
  */
 static void
 TargetInvoke(
-        CMPIMethodMI* self,
+        ProviderMIHandle* hdl,
         Target_Type _ctx,
         const CMPIResult* rslt,
         Target_Type _objName,
@@ -562,13 +562,13 @@ TargetInvoke(
   snprintf(argsname, argsnamesize, "%s_args", methodname);
 
   /* get the args array, gives names of input and output arguments */
-  VALUE args = rb_funcall(((ProviderMIHandle*)self->hdl)->implementation, rb_intern(argsname), 0);
-  if (check_ruby_type(args, T_ARRAY, "invoke: <method>_args must be Array",  status, (ProviderMIHandle*)self->hdl ) < 0) {
+  VALUE args = rb_funcall(hdl->implementation, rb_intern(argsname), 0);
+  if (check_ruby_type(args, T_ARRAY, "invoke: <method>_args must be Array",  status, hdl ) < 0) {
     return;
   }
   
   VALUE argsin = rb_ary_entry(args, 0); /* array of input arg names */
-  if (check_ruby_type(argsin, T_ARRAY, "invoke: Input arguments of <method>_args must be Array", status, (ProviderMIHandle*)self->hdl ) < 0) {
+  if (check_ruby_type(argsin, T_ARRAY, "invoke: Input arguments of <method>_args must be Array", status, hdl ) < 0) {
     return;
   }
 
@@ -598,7 +598,7 @@ TargetInvoke(
   }
 
   /* actual provider call, passes output args and return value via 'result' */
-  VALUE result = TargetCall((ProviderMIHandle*)self->hdl, status, methodname, -(2+number_of_arguments), input);
+  VALUE result = TargetCall(hdl, status, methodname, -(2+number_of_arguments), input);
 
   /* check CMPIStatus */
   if (status->rc != CMPI_RC_OK) {
@@ -610,7 +610,7 @@ TargetInvoke(
   CMPIValue value;
   CMPIType expected_type;
   CMPIType actual_type;
-  if (check_ruby_type(argsout, T_ARRAY, "invoke: Output arguments of <method>_args must be Array", status, (ProviderMIHandle*)self->hdl) < 0) {
+  if (check_ruby_type(argsout, T_ARRAY, "invoke: Output arguments of <method>_args must be Array", status, hdl) < 0) {
     return;
   }
   number_of_arguments = (RARRAY_LEN(argsout) - 1);
@@ -620,7 +620,7 @@ TargetInvoke(
      * result[0] is the return value
      * result[1..n] are the output args in argsout order
      */
-    if (check_ruby_type(result, T_ARRAY, "invoke: function with output arguments must return Array", status, (ProviderMIHandle*)self->hdl) < 0) {
+    if (check_ruby_type(result, T_ARRAY, "invoke: function with output arguments must return Array", status, hdl) < 0) {
       return;
     }
     /* loop over output arg names and types and set CMPIData via CMSetArg() */
