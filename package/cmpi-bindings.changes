@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Oct  9 11:56:48 UTC 2013 - kkaempf@suse.com
+
+- Update to 0.9.7
+  Catch and log Ruby exceptions caused by invoke method type
+  conversions.
+
+-------------------------------------------------------------------
 Wed Oct  9 08:17:54 UTC 2013 - kkaempf@suse.com
 
 - Update to 0.9.6
