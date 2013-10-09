@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Oct  9 08:17:54 UTC 2013 - kkaempf@suse.com
+
+- Update to 0.9.6
+  Return correct status for failed method invocation in Ruby.
+
+-------------------------------------------------------------------
 Thu Apr 11 13:52:08 UTC 2013 - kkaempf@suse.com
 
 - Update to 0.9.5
