@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Dec 12 12:47:52 UTC 2013 - kkaempf@suse.com
+
+- Update to 0.9.8
+  - Create Ruby documentation
+  - Split off package cmpi-bindings-ruby-docs
+  - Fix Fedora 19 build
+
+-------------------------------------------------------------------
 Wed Oct  9 11:56:48 UTC 2013 - kkaempf@suse.com
 
 - Update to 0.9.7
