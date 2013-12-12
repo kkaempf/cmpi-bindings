@@ -78,8 +78,7 @@ module RDoc
     @@module_name = nil
     
     # prepare to parse a SWIG file
-    # RHEL4 has Ruby 1.8.1 which does not provide stats
-    def initialize(top_level, file_name, body, options, stats = nil)
+    def initialize(top_level, file_name, body, options, stats)
       @known_classes = KNOWN_CLASSES.dup
       @body = handle_tab_width(handle_ifdefs_in(body))
       @options = options
@@ -162,16 +161,12 @@ module RDoc
         enclosure = @top_level
       end
 
-      if RUBY_VERSION == "1.8.1"
-	return nil unless enclosure # workaround for RHEL4
-      end
-
       if class_mod == "class" 
         cm = enclosure.add_class(NormalClass, class_name, parent_name)
-        @stats.num_classes += 1 if @stats
+        @stats.num_classes += 1
       else
         cm = enclosure.add_module(NormalModule, class_name)
-        @stats.num_modules += 1 if @stats
+        @stats.num_modules += 1
       end
       cm.record_location(enclosure.toplevel)
       cm.body = options[:content]
@@ -180,6 +175,7 @@ module RDoc
       find_class_comment(class_name, cm)
       @classes[class_name] = cm
       @known_classes[class_name] = cm.full_name
+      cm
     end
 
     ##
@@ -255,7 +251,7 @@ module RDoc
 	  extends[name] = true
 	  cn = class_name.to_s
 	  cn.capitalize! unless cn[0,1] =~ /[A-Z_]/
-	  handle_class_module("class", cn, :parent => "rb_cObject", :content => content.to_s, :extend_name => name)
+	  swig_class = handle_class_module("class", cn, :parent => "rb_cObject", :content => content.to_s, :extend_name => name)
 	end
       end
       @body.scan(/^%extend\s*(\w+)\s*\{(.*)\}/mx) do |class_name,content|
@@ -263,7 +259,7 @@ module RDoc
 	unless extends[cn]
 #	  puts "Class #{cn}"
 	  cn.capitalize! unless cn[0,1] =~ /[A-Z_]/
-	  handle_class_module("class", cn, :parent => "rb_cObject", :content => content)
+	  swig_class = handle_class_module("class", cn, :parent => "rb_cObject", :content => content)
 	  extends[cn] = true
 	end
       end
@@ -353,7 +349,7 @@ module RDoc
       c = find_class class_name
       c.body.scan(%r{%alias\s+(\w+)\s+"([^"]+)"\s*;}m) do #"
         |old_name, new_name|
-        @stats.num_methods += 1 if @stats
+        @stats.num_methods += 1
         raise "Unknown class '#{class_name}'" unless @known_classes[class_name]
         class_obj  = find_class(class_name)
 
@@ -478,7 +474,7 @@ module RDoc
       seen_before = class_obj.method_list.find { |meth| meth.name == meth_name }
       return nil if seen_before
       
-      @stats.num_methods += 1 if @stats
+      @stats.num_methods += 1
       if meth_name == "initialize"
 	meth_name = "new"
 	type = "singleton_method"

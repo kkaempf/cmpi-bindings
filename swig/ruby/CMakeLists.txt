@@ -5,8 +5,6 @@
 enable_testing()
 ADD_SUBDIRECTORY(tests)
 
-EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['ruby_version']" OUTPUT_VARIABLE RUBY_VERSION)
-
 EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['vendorarchdir']" OUTPUT_VARIABLE RUBY_ARCH_DIR)
 EXECUTE_PROCESS(COMMAND ${RUBY_EXECUTABLE} -r rbconfig -e "print RbConfig::CONFIG['vendorlibdir']" OUTPUT_VARIABLE RUBY_LIB_DIR)
 
@@ -71,20 +69,20 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmpi DESTINATION ${RUBY_LIB_DIR}
 	PATTERN "*~" EXCLUDE)
 
 # rdoc
-IF(RUBY_VERSION VERSION_LESS "1.9.1")
 SET(rdoc_dir "${CMAKE_CURRENT_BINARY_DIR}/html")
 ADD_CUSTOM_COMMAND (
    OUTPUT ${rdoc_dir}
    COMMAND ${CMAKE_COMMAND} -E echo_append "Creating rdoc documentation ..."
    COMMAND rm -rf ${rdoc_dir}
-   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/rdoc -o ${rdoc_dir} cmpi.i *.i ruby/cmpi.rb ruby/cmpi/*.rb
+   COMMAND ./ruby/rdoc${RUBY_VERSION_MAJOR}.${RUBY_VERSION_MINOR} -o ${rdoc_dir} -t "cmpi-bindings - writing CIM providers in Ruby" -m cmpi.i *.i ruby/cmpi.rb ruby/cmpi/*.rb
    COMMAND ${CMAKE_COMMAND} -E echo "Done."
    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/swig
-   DEPENDS ${CMAKE_SOURCE_DIR}/swig/*.i ${CMAKE_SOURCE_DIR}/swig/ruby/*.rb ${CMAKE_SOURCE_DIR}/swig/ruby/cmpi/*.rb
+   DEPENDS ${CMAKE_SOURCE_DIR}/swig/*.i
+   DEPENDS ${CMAKE_SOURCE_DIR}/swig/ruby/*.rb
+   DEPENDS ${CMAKE_SOURCE_DIR}/swig/ruby/cmpi/*.rb
 )
+
 ADD_CUSTOM_TARGET(ruby_rdoc ALL DEPENDS "${rdoc_dir}")
-ADD_DEPENDENCIES(ruby_rdoc ${NAME})
-ENDIF(RUBY_VERSION VERSION_LESS "1.9.1")
 
 IF( BUILD_RUBY_GEM )
 #
