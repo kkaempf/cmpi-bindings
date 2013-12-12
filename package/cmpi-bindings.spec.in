@@ -61,6 +61,10 @@ BuildRequires:  irb
 BuildRequires:  ruby-rdoc
 %endif
 
+%if 0%{?fedora} == 19
+BuildRequires:  rubypick
+%endif
+
 %if 0%{?fedora} || 0%{?rhel_version} >= 600 || 0%{?centos_version} >= 600
 BuildRequires:  perl-devel
 %endif
