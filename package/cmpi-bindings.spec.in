@@ -104,6 +104,13 @@ Source:         %{name}-%{version}.tar.bz2
 %setup -q 
 
 %build
+
+# enforce installed FindRuby
+
+if [ -f /usr/share/cmake/Modules/FindRuby.cmake ]; then
+  rm -f cmake/modules/FindRuby.cmake
+fi
+
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=%_prefix \
@@ -121,8 +128,9 @@ make %{?_smp_mflags}
 cd build
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/cmpi
 make install DESTDIR=$RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT%{_docdir}
+cp -a swig/ruby/html $RPM_BUILD_ROOT%{_docdir}/cmpi-bindings-ruby-docs
 
-%if 0%{?rhel_version} < 600
 %package -n cmpi-bindings-ruby
 Summary:        Adapter to write and run CMPI-type CIM providers in Ruby
 Group:          Development/Languages/Ruby
@@ -134,7 +142,7 @@ Provides:       %{name} = %{version}-%{release}
 %endif
 
 %description -n cmpi-bindings-ruby
--
+Adapter to write and run CMPI-type CIM providers in Ruby
 
 %files -n cmpi-bindings-ruby
 %defattr(-,root,root,-)
@@ -145,7 +153,19 @@ Provides:       %{name} = %{version}-%{release}
 %dir %{ruby_sitelib}/cmpi/providers
 %{ruby_sitelib}/cmpi/provider.rb
 
-%endif #!RHEL6
+
+%package -n cmpi-bindings-ruby-doc
+Summary:        RDoc-style documentation for cmpi-bindings-ruby
+Group:          Documentation/HTML
+
+%description -n cmpi-bindings-ruby-doc
+RDoc-style documentation for cmpi-bindings-ruby
+
+%files -n cmpi-bindings-ruby-doc
+%defattr(-,root,root,-)
+%dir %{_docdir}/cmpi-bindings-ruby-docs
+%{_docdir}/cmpi-bindings-ruby-docs
+
 
 %package -n cmpi-bindings-pywbem
 Summary:        Adapter to write and run CMPI-type CIM providers in Python
