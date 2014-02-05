@@ -46,9 +46,7 @@ BuildRequires:  -vim
 BuildRequires:  curl-devel
 BuildRequires:  pkgconfig
 BuildRequires:  ruby
-%if 0%{?rhel_version} < 600
 BuildRequires:  ruby-devel
-%endif
 BuildRequires:  ruby-libs
 
 %if 0%{?rhel_version} < 500
