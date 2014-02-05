@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.9
+#!/usr/bin/ruby2.0
 #
 #  RDoc: Documentation tool for source code
 #        (see lib/rdoc/rdoc.rb for more information)
