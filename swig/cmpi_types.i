@@ -1586,6 +1586,8 @@ Python for compatibility */
   }	
   /*
    * Add entry by name
+   * call-seq:
+   *   add_entry(name, CMPIValue, CMPIType)
    */
   void add_entry(const char* name, const CMPIValue* data, 
                      const CMPIType type) {
@@ -1594,6 +1596,8 @@ Python for compatibility */
 
   /*
    * Get entry by name
+   * call-seq:
+   *   get_entry(name) -> CMPIData
    */
   CMPIData get_entry(const char* name) {
     CMPIStatus st = { CMPI_RC_OK, NULL };
@@ -1610,6 +1614,9 @@ Python for compatibility */
 
   /*
    * Get entry by index or name
+   * call-seq:
+   *   get_entry_at(index) -> [name, CMPIData]
+   *   [index] -> [name, CMPIData]
    *
    * returns a name:string,value:CMPIData pair
    */
