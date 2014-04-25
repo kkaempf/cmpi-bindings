@@ -59,7 +59,7 @@ BuildRequires:  irb
 BuildRequires:  ruby-rdoc
 %endif
 
-%if 0%{?fedora} == 19
+%if 0%{?fedora} > 18
 BuildRequires:  rubypick
 %endif
 
