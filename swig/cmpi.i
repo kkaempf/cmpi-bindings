@@ -796,6 +796,20 @@ static void _raise_ex(const CMPIStatus* st)
     PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p__CMPIException), obj);
     SWIG_PYTHON_THREAD_END_BLOCK;
     _set_raised();
+#else
+    char* msg;
+    if (st->msg) {
+      msg = strdup(CMGetCharsPtr(st->msg, NULL));
+    }
+    else {
+      msg = (char *)malloc(16);
+      snprintf(msg, 15, "Cmpi rc %d", st->rc);
+    }
+    SWIG_exception(SWIG_RuntimeError, msg);
+#if !defined (SWIGRUBY)
+fail:
+#endif
+    return;
 #endif /* SWIGPYTHON */
 }
 
