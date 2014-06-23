@@ -624,8 +624,10 @@ FIXME: if clone() is exposed, release() must also
     name = target_charptr(property);
 #endif
     result = CMGetKey($self, name, &st);
-    RAISE_IF(st);
-
+    /* key not found is ok, will return NULL */
+    if (st.rc != CMPI_RC_ERR_NOT_FOUND) {
+      RAISE_IF(st);
+    }
 #if defined(SWIGRUBY)
     return data_value(&result);
 #else
