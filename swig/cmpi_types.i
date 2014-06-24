@@ -584,7 +584,14 @@ FIXME: if clone() is exposed, release() must also
       SWIG_exception(SWIG_ValueError, "bad expected_type");
     }
     name = target_charptr(property);
-    actual_type = target_to_value(data, &value, type);
+    if (NIL_P(data)) {
+      actual_type = type; /* prevent type error */
+      value.chars = NULL;
+    }
+    else {
+      actual_type = target_to_value(data, &value, type);
+    }
+/*    fprintf(stderr, "CMPIObjectPath.%s <expected %04x, actual %04x>\n",name, type, actual_type); */
     status = CMAddKey($self, name, &value, actual_type);
     RAISE_IF(status);
     return status;
@@ -919,7 +926,14 @@ FIXME: if clone() is exposed, release() must also
       SWIG_exception(SWIG_ValueError, "bad expected_type");
     }
     name = target_charptr(property);
-    actual_type = target_to_value(data, &value, type);
+    if (NIL_P(data)) {
+      actual_type = type; /* prevent type error */
+      value.chars = NULL;
+    }
+    else {
+      actual_type = target_to_value(data, &value, type);
+    }
+/*    fprintf(stderr, "CMPIInstance.%s <expected %04x, actual %04x>\n",name, type, actual_type); */
     status = CMSetProperty($self, name, &value, actual_type);
     RAISE_IF(status);
     return status;
