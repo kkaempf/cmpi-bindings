@@ -1,7 +1,10 @@
 -------------------------------------------------------------------
-Tue Mar 11 08:35:19 UTC 2014 - kkaempf@suse.com
+Wed Jun 25 10:35:41 UTC 2014 - kkaempf@suse.com
 
 - Update to 1.0.0
+  - Transport CMPIStatus information from Ruby to CMPI API.
+  - Add Ruby classes representing CMPI error codes.
+  - Capture call results and raise proper exceptions.
   - Fix Fedora 20 build
 
 -------------------------------------------------------------------
