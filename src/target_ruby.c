@@ -166,9 +166,9 @@ call_mi(VALUE args)
 
 #define TB_ERROR(str) {tbstr = str; goto cleanup;}
 static CMPIString *
-get_exc_trace(const CMPIBroker* broker)
+get_exc_trace(const CMPIBroker* broker, int *rc_ptr)
 {
-  VALUE exception = rb_gv_get("$!"); /* get last exception */
+  VALUE exception = rb_errinfo(); /* get last exception */
   VALUE reason = rb_funcall(exception, rb_intern("to_s"), 0 );
   VALUE trace = rb_gv_get("$@"); /* get last exception trace */
   VALUE backtrace;
@@ -178,6 +178,12 @@ get_exc_trace(const CMPIBroker* broker)
   if (NIL_P(exception)) {
     _SBLIM_TRACE(1,("<%d> Ruby: get_exc_trace: no exception", getpid()));
     return NULL;
+  }
+  if (rc_ptr) {
+    VALUE rc = rb_iv_get(exception, "@rc");
+    if (FIXNUM_P(rc)) {
+      *rc_ptr = FIX2INT(rc);
+    }
   }
   if (NIL_P(trace)) {
     _SBLIM_TRACE(1,("<%d> Ruby: get_exc_trace: no trace ($@ is nil)", getpid()));
@@ -320,9 +326,10 @@ TargetInitialize(ProviderMIHandle* hdl, CMPIStatus* st)
 
 fail:
   if (error) {
-    CMPIString *trace = get_exc_trace(hdl->broker);
+    int rc;
+    CMPIString *trace = get_exc_trace(hdl->broker, &rc);
     if (st != NULL) {
-      st->rc = CMPI_RC_ERR_INVALID_CLASS;
+      st->rc = rc;
       st->msg = trace;
     }
   }
@@ -414,9 +421,11 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
   result = rb_protect(call_mi, (VALUE)args, &i);
 
   if (i) { /* exception ? */
-    CMPIString *trace = get_exc_trace(hdl->broker);
+    int rc;
+    CMPIString *trace = get_exc_trace(hdl->broker, &rc);
     char *trace_s;
     char* str;
+
     if (trace) {
       trace_s = CMGetCharPtr(trace);
     }
@@ -426,8 +435,8 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
     str = fmtstr("Ruby: calling '%s' failed: %s", opname, trace_s); 
     if (trace)
       trace->ft->release(trace);
-    _SBLIM_TRACE(1,("%s", str));
-    st->rc = CMPI_RC_ERR_FAILED; 
+    _SBLIM_TRACE(1,("TargetCall %s failed, trace: %s", opname, str));
+    st->rc = rc; 
     st->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
     free(str);
     goto done;
@@ -562,7 +571,8 @@ protected_target_to_value(ProviderMIHandle *hdl, Target_Type data, CMPIValue *va
   result = rb_protect(call_ttv, (VALUE)args, &error);
 
   if (error) {
-    CMPIString *trace = get_exc_trace(hdl->broker);
+    int rc;
+    CMPIString *trace = get_exc_trace(hdl->broker, &rc);
     char *trace_s;
     char* str;
     if (trace) {
@@ -575,7 +585,7 @@ protected_target_to_value(ProviderMIHandle *hdl, Target_Type data, CMPIValue *va
     if (trace)
       trace->ft->release(trace);
     _SBLIM_TRACE(1,("%s", str));
-    status->rc = CMPI_RC_ERR_FAILED; 
+    status->rc = rc; 
     status->msg = hdl->broker->eft->newString(hdl->broker, str, NULL); 
     free(str);
   }
