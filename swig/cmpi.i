@@ -777,40 +777,54 @@ static void _clr_raised()
 
 static void _raise_ex(const CMPIStatus* st)
 {
+    char* msg = NULL;
+    if (st->msg) {
+      msg = strdup(CMGetCharsPtr(st->msg, NULL));
+    }
 #ifdef SWIGPYTHON
     PyObject* obj;
     CMPIException* ex;
     
     ex = (CMPIException*)malloc(sizeof(CMPIException));
     ex->error_code = st->rc;
-
-    if (st->msg) {
-        const char* chars = CMGetCharsPtr(st->msg, NULL);
-        ex->description = strdup(chars);
-    }
-    else
-        ex->description = NULL;
+    ex->description = msg;
 
     SWIG_PYTHON_THREAD_BEGIN_BLOCK;
     obj = SWIG_NewPointerObj(ex, SWIGTYPE_p__CMPIException, SWIG_POINTER_OWN);
     PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p__CMPIException), obj);
     SWIG_PYTHON_THREAD_END_BLOCK;
     _set_raised();
-#else
-    char* msg;
-    if (st->msg) {
-      msg = strdup(CMGetCharsPtr(st->msg, NULL));
+    if (msg)
+      free(msg);
+#endif
+
+#ifdef SWIGRUBY
+    VALUE exception_klass = rb_funcall(mCmpi, rb_intern("rc_to_exception"), 1, Target_Int(st->rc));
+    VALUE exception;
+    if (NIL_P(exception_klass)) {
+      /* no error */
+      return;
     }
-    else {
+    exception = rb_funcall(exception_klass, rb_intern("new"), 2, Target_Int(st->rc), Target_String(msg ? msg : ""));
+    if (msg)
+      free(msg);
+    rb_exc_raise(exception);
+#endif
+
+#if !defined(SWIGPYTHON) && !defined(SWIGRUBY)
+    /* default implementation */
+    if (msg == NULL) {
       msg = (char *)malloc(16);
       snprintf(msg, 15, "Cmpi rc %d", st->rc);
     }
     SWIG_exception(SWIG_RuntimeError, msg);
+    if (msg)
+      free(msg);
+#endif
 #if !defined (SWIGRUBY)
 fail:
 #endif
     return;
-#endif /* SWIGPYTHON */
 }
 
 /*
