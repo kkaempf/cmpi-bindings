@@ -192,6 +192,57 @@ module Cmpi
     CMPI_ARRAY | self.embedded_instance
   end
 
+  class RCErr < ::StandardError
+    def initialize rc,msg
+      super msg
+      @rc = rc
+    end
+  end
+  class RCErrFailed < RCErr; end
+  class RCErrAccessDenied < RCErr; end
+  class RCErrInvalidNamespace < RCErr; end
+  class RCErrInvalidParameter < RCErr; end
+  class RCErrInvalidClass < RCErr; end
+  class RCErrNotFound < RCErr; end
+  class RCErrNotSupported < RCErr; end
+  class RCErrClassHasChildren < RCErr; end
+  class RCErrClassHasInstances < RCErr; end
+  class RCErrInvalidSuperclass < RCErr; end
+  class RCErrAlreadyExists < RCErr; end
+  class RCErrNoSuchProperty < RCErr; end
+  class RCErrTypeMismatch < RCErr; end
+  class RCErrQueryLanguageNotSupported < RCErr; end 
+  class RCErrInvalidQuery < RCErr; end
+  class RCErrMethodNotAvailable < RCErr; end
+  class RCErrMethodNotFound < RCErr; end
+  class RCErrSystem < RCErr; end
+  # convert CMPIStatus rc code to Ruby exception
+  def self.rc_to_exception rc
+    return nil if rc == 0
+    klass =
+      [nil,                    #  0 /** Success */    CMPI_RC_OK = 0,
+       RCErrFailed,            #  1 /** Generic failure */    CMPI_RC_ERR_FAILED = 1,
+       RCErrAccessDenied,      #  2 /** Specified user does not have access to perform the requested action */    CMPI_RC_ERR_ACCESS_DENIED = 2,
+       RCErrInvalidNamespace,  #  3 /** invalid namespace specified */    CMPI_RC_ERR_INVALID_NAMESPACE = 3,
+       RCErrInvalidParameter,  #  4 /** invalid parameter specified */    CMPI_RC_ERR_INVALID_PARAMETER = 4,
+       RCErrInvalidClass,      #  5 /** Invalid class specified */    CMPI_RC_ERR_INVALID_CLASS = 5,
+       RCErrNotFound,          #  6 /** Item was not found */    CMPI_RC_ERR_NOT_FOUND = 6,
+       RCErrNotSupported,      #  7 /** Operation not supported */    CMPI_RC_ERR_NOT_SUPPORTED = 7,
+       RCErrClassHasChildren,  #  8 /** Object has child objects */    CMPI_RC_ERR_CLASS_HAS_CHILDREN = 8,
+       RCErrClassHasInstances, #  9 /** Object has instances */    CMPI_RC_ERR_CLASS_HAS_INSTANCES = 9,
+       RCErrInvalidSuperclass, # 10 /** Invalid super class specified */    CMPI_RC_ERR_INVALID_SUPERCLASS = 10,
+       RCErrAlreadyExists,     # 11 /** specified object already exists */    CMPI_RC_ERR_ALREADY_EXISTS = 11,
+       RCErrNoSuchProperty,    # 12 /** Property does not exist */    CMPI_RC_ERR_NO_SUCH_PROPERTY = 12,
+       RCErrTypeMismatch,      # 13 /** This is a type mismatch */    CMPI_RC_ERR_TYPE_MISMATCH = 13,
+       RCErrQueryLanguageNotSupported, # 14 /** Query language not supported */    CMPI_RC_ERR_QUERY_LANGUAGE_NOT_SUPPORTED = 14,
+       RCErrInvalidQuery,      # 15 /** Invalid query */    CMPI_RC_ERR_INVALID_QUERY = 15,
+       RCErrMethodNotAvailable,# 16 /** Method is not available */    CMPI_RC_ERR_METHOD_NOT_AVAILABLE = 16,
+       RCErrMethodNotFound     # 17 /** could not find the specified method */    CMPI_RC_ERR_METHOD_NOT_FOUND = 17,
+      ][rc]
+    return RuntimeError unless klass
+    klass
+  end
+    
   #
   # Convert CIM DateTime string representation (see DSP0004, 2.2.1)
   # to Ruby Time (timestamp) or Float (interval, as seconds with fraction)
@@ -217,7 +268,7 @@ module Cmpi
       off += str[15,6].to_i / 1000
       return off
     else
-      raise "Invalid CIM DateTime '#{str}'"
+      raise RCErrInvalidParameter.new(CMPI_RC_ERR_INVALID_PARAMETER, "Invalid CIM DateTime '#{str}'")
     end
   end
 
@@ -314,16 +365,21 @@ module Cmpi
       end
     end
     def to_s
+      # objectpath only covers the key properties
       path = objectpath
       keys = []
       path.each { |val,name| keys << name }
+      # now iterate over the instance properties, filter
+      # out the key properties from the objectpath
+      # and collect the non-key properties
       s = ""
       self.each do |value,name|
-	next unless value
-	next if keys.include? name
-	s << ", " unless s.empty?
-	s << "\"#{name}\"=>#{value.inspect}"
+        next unless value
+        next if keys.include? name
+        s << ", " unless s.empty?
+        s << "\"#{name}\"=#{value.inspect}"
       end
+      # path has the key properties, s has the non-key properties
       "#{path} #{s}"
     end
     #
@@ -339,12 +395,12 @@ module Cmpi
           begin
             @typemap = Cmpi.const_get(self.objectpath.classname).typemap
           rescue NoMethodError
-            raise "Cmpi::#{self.objectpath.classname}.typemap not defined"
+            raise RCErrInvalidClass.new(CMPI_RC_ERR_INVALID_CLASS, "Cmpi::#{self.objectpath.classname}.typemap not defined")
           end
         end
 	t = @typemap[n]
-        raise "Property '#{n}' of Cmpi::#{self.objectpath.classname}.typemap not defined" unless t
-#        STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
+        raise RCErrNotFound.new(CMPI_RC_ERR_NOT_FOUND, "Property '#{n}' of Cmpi::#{self.objectpath.classname}.typemap not defined") unless t
+        STDERR.printf "Instance.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
         self[n,v] = t
       else
 #	STDERR.puts "CMPIInstance.#{name} -> #{self[s].inspect}"
@@ -371,11 +427,11 @@ module Cmpi
           begin
             @typemap = Cmpi.const_get(self.classname).typemap
           rescue NameError
-            raise "Cmpi::#{self.classname}.typemap not defined"
+            raise RCErrInvalidClass.new(CMPI_RC_ERR_INVALID_CLASS, "Cmpi::#{self.classname}.typemap not defined")
           end
         end
 	t = @typemap[n]
-        raise "Property '#{n}' of Cmpi::#{self.classname}.typemap not defined" unless t
+        raise RCErrNotFound.new(CMPI_RC_ERR_NOT_FOUND, "Property '#{n}' of Cmpi::#{self.classname}.typemap not defined") unless t
 #        STDERR.printf "ObjectPath.%s = %s[%s]:%04x\n" % [n, v, v.class, t]
         self[n,v] = t
       else
