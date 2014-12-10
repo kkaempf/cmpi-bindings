@@ -265,7 +265,7 @@ TargetCall(ProviderMIHandle* hdl, CMPIStatus* st,
         prstr = PyTuple_GetItem(prv, 1); 
     }
 
-    if (! PyInt_Check(prc) || (! PyString_Check(prstr) && prstr != Py_None))
+    if (! PyInt_Check(prc) || (prstr != Py_None && ! PyString_Check(prstr) && ! PyUnicode_Check(prstr)))
     {
         TARGET_THREAD_BEGIN_ALLOW;
         char* str = fmtstr("Python function \"%s\" didn't return a {<int>, <str>) two-tuple", opname); 
