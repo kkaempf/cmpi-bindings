@@ -1005,11 +1005,11 @@ fail:
 %apply SWIGTYPE *DISOWN { CMPIInstance *instance_disown };
 %apply SWIGTYPE *DISOWN { CMPIObjectPath *path_disown };
 
-# Definitions
+/* Definitions */
 %include "cmpi_defs.i"
 
-# Data types
+/* Data types */
 %include "cmpi_types.i"
 
-# Broker callbacks
+/* Broker callbacks */
 %include "cmpi_callbacks.i"

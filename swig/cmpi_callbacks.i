@@ -1,7 +1,7 @@
-# cmpi_callbacks.i
-#
-# swig bindings for CMPI broker callbacks
-#
+/* cmpi_callbacks.i
+ *
+ * swig bindings for CMPI broker callbacks
+ */
 
 %nodefault _CMPIBroker;
 %rename(CMPIBroker) CMPIBroker;
@@ -443,10 +443,10 @@ typedef struct _CMPIBroker {} CMPIBroker;
     return result;
   }
 
-#-----------------------------------------------------
-#
-# TODO: CMPIMsgFileHandle stuff
-#
+/*-----------------------------------------------------
+ *
+ * TODO: CMPIMsgFileHandle stuff
+ */
   /*
    * query: The select expression.
    * lang: The query language.

@@ -1,7 +1,7 @@
-# cmpi_defs.i
-#
-# swig bindings for CMPI constant definitions
-#
+/* cmpi_defs.i
+ *
+ * swig bindings for CMPI constant definitions
+ */
 
 %nodefault CMPIData;
 #%ignore _CMPIData::type;
@@ -23,9 +23,9 @@
 #-----------------------------------------------------
 
 #if defined(SWIGRUBY)
-#
-# Conversion from list of Ruby string array to null terminated char** array.
-#
+
+/* Conversion from list of Ruby string array to null terminated char** array. */
+
 %typemap(in) char ** 
 {
   if ($input == Qnil) {
@@ -77,9 +77,9 @@
 #endif
 
 #if defined(SWIGPYTHON)
-#
-# Conversion from list of python strings to null terminated char** array.
-#
+
+/* Conversion from list of python strings to null terminated char** array. */
+
 
 %typemap(in) char ** 
 {
@@ -127,10 +127,10 @@
 }
 #endif /* defined(SWIGPYTHON) */
 
-#-----------------------------------------------------
-#
-# CMPIData
-#
+/*-----------------------------------------------------
+ *
+ * CMPIData
+ */
 
 %extend _CMPIData {
 /*
@@ -197,10 +197,10 @@
 }
 
 
-#-----------------------------------------------------
-#
-# CMPIStatus
-#
+/*-----------------------------------------------------
+ *
+ * CMPIStatus
+ */
 
 %extend _CMPIStatus {
   _CMPIStatus()

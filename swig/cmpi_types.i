@@ -29,16 +29,16 @@
 * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-# cmpift.i
-#
-# swig bindings for CMPI function tables
-#
+/* cmpift.i
+ *
+ * swig bindings for CMPI function tables
+ */#
 
-#
-# Prevent default con-/destructors for all types
-# CMPI types are handled through function tables
-# and the broker.
-#
+/*
+ * Prevent default con-/destructors for all types
+ * CMPI types are handled through function tables
+ * and the broker.
+ */
 
 %nodefault _CMPIError;
 %rename(CMPIError) _CMPIError;
@@ -100,11 +100,12 @@ typedef struct _CMPIContext {} CMPIContext;
 %rename(CMPIDateTime) _CMPIDateTime;
 typedef struct _CMPIDateTime {} CMPIDateTime;
 
-#-----------------------------------------------------
-#
-# CMPIException
-#
-#-----------------------------------------------------
+/*-----------------------------------------------------
+ *
+ * CMPIException
+ *
+ *-----------------------------------------------------
+ */
 
 %nodefault _CMPIException;
 %rename(CMPIException) CMPIException;
@@ -153,11 +154,12 @@ typedef struct _CMPIException {} CMPIException;
   }
 }
 
-#-----------------------------------------------------
-#
-# %exception
-#
-#-----------------------------------------------------
+/*-----------------------------------------------------
+ *
+ * %exception
+ *
+ *-----------------------------------------------------
+ */
 
 %exception 
 {
@@ -175,10 +177,11 @@ typedef struct _CMPIException {} CMPIException;
     }
 }
 
-#-----------------------------------------------------
-#
-# CMPIError
-#
+/*-----------------------------------------------------
+ *
+ * CMPIError
+ *
+ */
 
 /*
  * Document-class: CMPIError
@@ -370,10 +373,11 @@ typedef struct _CMPIException {} CMPIException;
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPIResult
-#
+/*-----------------------------------------------------
+ *
+ * CMPIResult
+ *
+ */
 
 /*
  * Document-class: CMPIResult
@@ -407,10 +411,11 @@ typedef struct _CMPIException {} CMPIException;
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPIObjectPath
-#
+/*-----------------------------------------------------
+ *
+ * CMPIObjectPath
+ *
+ */
 
 /*
  * Document-class: CMPIObjectPath
@@ -867,10 +872,11 @@ FIXME: if clone() is exposed, release() must also
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPIInstance
-#
+/*-----------------------------------------------------
+ *
+ * CMPIInstance
+ *
+ */
 
 /*
  * Document-class: CMPIInstance
@@ -1180,9 +1186,11 @@ FIXME: if clone() is exposed, release() must also
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPIArgs
+/*-----------------------------------------------------
+ *
+ * CMPIArgs
+ *
+ */
 
 /*
  * CMPI Arguments
@@ -1296,9 +1304,11 @@ FIXME: if clone() is exposed, release() must also
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPISelectExp
+/*-----------------------------------------------------
+ *
+ * CMPISelectExp
+ *
+ */
 
 /*
  * This structure encompasses queries
@@ -1357,9 +1367,11 @@ FIXME: if clone() is exposed, release() must also
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPISelectCond
+/*-----------------------------------------------------
+ *
+ * CMPISelectCond
+ *
+ */
 
 /*
  * Select conditions
@@ -1386,9 +1398,11 @@ FIXME: if clone() is exposed, release() must also
 #endif
 }
 
-#-----------------------------------------------------
-#
-# CMPISubCond
+/*-----------------------------------------------------
+ *
+ * CMPISubCond
+ *
+ */
 
 /*
  * Sub Conditions
@@ -1398,9 +1412,11 @@ FIXME: if clone() is exposed, release() must also
 %extend _CMPISubCond {
 }
 
-#-----------------------------------------------------
-#
-# CMPIPredicate
+/*-----------------------------------------------------
+ *
+ * CMPIPredicate
+ *
+ */
 
 /*
  * Predicate
@@ -1427,9 +1443,11 @@ FIXME: if clone() is exposed, release() must also
 #endif
 }
 
-#-----------------------------------------------------
-#
-# CMPIEnumeration
+/*-----------------------------------------------------
+ *
+ * CMPIEnumeration
+ *
+ */
 
 /*
  * Enumeration provide a linked-list type access to multiple elements
@@ -1488,9 +1506,11 @@ Python for compatibility */
 
 }
 
-#-----------------------------------------------------
-#
-# CMPIArray
+/*-----------------------------------------------------
+ *
+ * CMPIArray
+ *
+ */
 
 /*
  * Array of equally-typed elements
@@ -1562,11 +1582,13 @@ Python for compatibility */
   }
 }
 
-#BOOKMARK
+/* BOOKMARK */
 
-#-----------------------------------------------------
-#
-# CMPIString
+/*-----------------------------------------------------
+ *
+ * CMPIString
+ *
+ */
 
 /*
  * A string
@@ -1587,9 +1609,11 @@ Python for compatibility */
   }
 }
 
-#-----------------------------------------------------
-#
-# CMPIContext
+/*-----------------------------------------------------
+ *
+ * CMPIContext
+ *
+ */
 
 /*
  * Context of the provider invocation
@@ -1708,9 +1732,11 @@ Python for compatibility */
 
 }
 
-#-----------------------------------------------------
-#
-# CMPIDateTime
+/*-----------------------------------------------------
+ *
+ * CMPIDateTime
+ *
+ */
 
 /*
  * Date and Time
@@ -1752,4 +1778,4 @@ Python for compatibility */
   }
 }
 
-# EOF
+/* EOF */
