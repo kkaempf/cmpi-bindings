@@ -192,29 +192,92 @@ module Cmpi
     CMPI_ARRAY | self.embedded_instance
   end
 
+  # generic Error class, derived from ::Exception
+  #
   class RCErr < ::StandardError
     def initialize rc,msg
       super msg
       @rc = rc
     end
+    # CMPI result code
+    #
+    # normally not needed since errors are
+    # encapsulated into respective RCErrxxx subclasses
+    def rc
+      @rc
+    end
   end
+  # CMPIStatus as Exception: failed
+  #
+  # See Cmpi::RCErr
   class RCErrFailed < RCErr; end
+  # CMPIStatus as Exception: access denied
+  #
+  # See Cmpi::RCErr
   class RCErrAccessDenied < RCErr; end
+  # CMPIStatus as Exception: invalid namespace
+  #
+  # See Cmpi::RCErr
   class RCErrInvalidNamespace < RCErr; end
+  # CMPIStatus as Exception: invalid parameter
+  #
+  # See Cmpi::RCErr
   class RCErrInvalidParameter < RCErr; end
+  # CMPIStatus as Exception: invalid class
+  #
+  # See Cmpi::RCErr
   class RCErrInvalidClass < RCErr; end
+  # CMPIStatus as Exception: not found
+  #
+  # See Cmpi::RCErr
   class RCErrNotFound < RCErr; end
+  # CMPIStatus as Exception: not supported
+  #
+  # See Cmpi::RCErr
   class RCErrNotSupported < RCErr; end
+  # CMPIStatus as Exception: class has children
+  #
+  # See Cmpi::RCErr
   class RCErrClassHasChildren < RCErr; end
+  # CMPIStatus as Exception: class has instances
+  #
+  # See Cmpi::RCErr
   class RCErrClassHasInstances < RCErr; end
+  # CMPIStatus as Exception: invalid superclass
+  #
+  # See Cmpi::RCErr
   class RCErrInvalidSuperclass < RCErr; end
+  # CMPIStatus as Exception: already exits
+  #
+  # See Cmpi::RCErr
   class RCErrAlreadyExists < RCErr; end
+  # CMPIStatus as Exception: no such property
+  #
+  # See Cmpi::RCErr
   class RCErrNoSuchProperty < RCErr; end
+  # CMPIStatus as Exception: type mismatch
+  #
+  # See Cmpi::RCErr
   class RCErrTypeMismatch < RCErr; end
+  # CMPIStatus as Exception: query language not supported
+  #
+  # See Cmpi::RCErr
   class RCErrQueryLanguageNotSupported < RCErr; end 
+  # CMPIStatus as Exception: invalid query
+  #
+  # See Cmpi::RCErr
   class RCErrInvalidQuery < RCErr; end
+  # CMPIStatus as Exception: method not available
+  #
+  # See Cmpi::RCErr
   class RCErrMethodNotAvailable < RCErr; end
+  # CMPIStatus as Exception: method not found
+  #
+  # See Cmpi::RCErr
   class RCErrMethodNotFound < RCErr; end
+  # CMPIStatus as Exception: system error
+  #
+  # See Cmpi::RCErr
   class RCErrSystem < RCErr; end
   # convert CMPIStatus rc code to Ruby exception
   def self.rc_to_exception rc
