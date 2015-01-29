@@ -9,7 +9,7 @@
 
    
 #if defined(SWIGRUBY)
-# fix doc generation, has no influence on code
+/* fix doc generation, has no influence on code */
 %module Cmpi
 #else
 %module cmpi
