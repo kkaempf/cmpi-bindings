@@ -14,7 +14,7 @@ typedef struct _CMPIBroker {} CMPIBroker;
  */
 
 
-%extend CMPIBroker 
+%extend _CMPIBroker 
 {
 #if defined(SWIGPERL)
   int __eq__( const CMPIBroker *broker )
