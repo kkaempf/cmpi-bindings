@@ -4,7 +4,13 @@ Thu Jan 29 07:15:49 UTC 2015 - kkaempf@suse.com
 - Update to 1.0.1
   - fix comment characters in .i files for swig 3.0.4
     (dimstar@opensuse.org)
+    this includes cmpi-bindings-swig-3.0.patch
   - improve documentation coverage
+
+-------------------------------------------------------------------
+Mon Jan 26 14:01:04 UTC 2015 - dimstar@opensuse.org
+
+- Add cmpi-bindings-swig-3.0.patch: Fix build with SWIG 3.0.
 
 -------------------------------------------------------------------
 Wed Jun 25 10:35:41 UTC 2014 - kkaempf@suse.com
