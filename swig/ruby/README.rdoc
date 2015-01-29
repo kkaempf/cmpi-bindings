@@ -5,7 +5,6 @@ wiki :: https://github.com/~kkaempf/cmpi-bindings/wiki
 source :: https://github.com/~kkaempf/cmpi-bindings
 rdoc :: http://www.suse.de/~kkaempf/cmpi-bindings
 bugs :: https://github.com/~kkaempf/cmpi-bindings/issues
-code climate :: {<img src="https://codeclimate.com/github/~kkaempf/cmpi-bindings.png">}[https://codeclimate.com/github/~kkaempf/cmpi-bindings]
 
 == Description
 
