@@ -128,15 +128,18 @@
 #endif /* defined(SWIGPYTHON) */
 
 /*-----------------------------------------------------
+ * Document-class: CMPIData
  *
- * CMPIData
+ * Representation of data with value, type, and flags (null, key, array)
+ *
  */
 
-%extend _CMPIData {
 /*
   type, state, value are created by SWIG via %include cmpidt above
 
 */
+
+%extend _CMPIData {
   _CMPIData(CMPIData *data)
   {
     return data_clone(data);
@@ -199,7 +202,10 @@
 
 /*-----------------------------------------------------
  *
- * CMPIStatus
+ * Document-class: CMPIStatus
+ *
+ * Status (return) value from a CMPI operation
+ *
  */
 
 %extend _CMPIStatus {

@@ -3,11 +3,13 @@
  * swig bindings for CMPI broker callbacks
  */
 
+%rename(CMPIBroker) _CMPIBroker;
 %nodefault _CMPIBroker;
-%rename(CMPIBroker) CMPIBroker;
 typedef struct _CMPIBroker {} CMPIBroker;
 
 /*
+ * Document-class: CMPIBroker
+ *
  * The CMPIBroker represents the running CIMOM and provides utility
  * functions to the Provider
  *

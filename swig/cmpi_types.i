@@ -40,6 +40,10 @@
  * and the broker.
  */
 
+%nodefault _CMPIException;
+%rename(CMPIException) _CMPIException;
+typedef struct _CMPIException {} CMPIException;
+
 %nodefault _CMPIError;
 %rename(CMPIError) _CMPIError;
 typedef struct _CMPIError {} CMPIError;
@@ -107,12 +111,9 @@ typedef struct _CMPIDateTime {} CMPIDateTime;
  *-----------------------------------------------------
  */
 
-%nodefault _CMPIException;
-%rename(CMPIException) CMPIException;
-typedef struct _CMPIException {} CMPIException;
-
 /*
- *
+ * Document-class: CMPIException
+ * 
  * Container for a fault, contains numeric error_code and textual
  * description
  *
@@ -185,6 +186,8 @@ typedef struct _CMPIException {} CMPIException;
 
 /*
  * Document-class: CMPIError
+ *
+ * Representation of error information
  *
  */
 %extend _CMPIError 
@@ -382,6 +385,8 @@ typedef struct _CMPIException {} CMPIException;
 /*
  * Document-class: CMPIResult
  *
+ * Result of a CMPI operation
+ *
  */
 %extend _CMPIResult 
 {
@@ -413,12 +418,30 @@ typedef struct _CMPIException {} CMPIException;
 
 /*-----------------------------------------------------
  *
+ * CMPIMsgFileHandle
+ *
+ */
+
+/*
+ * Document-class: CMPIMsgFileHandle
+ *
+ * Message File Handle
+ *
+ */
+%extend _CMPIMsgFileHandle
+{
+}
+
+/*-----------------------------------------------------
+ *
  * CMPIObjectPath
  *
  */
 
 /*
  * Document-class: CMPIObjectPath
+ *
+ * Represents the access path to a class or an instance
  *
  */
 %extend _CMPIObjectPath 
@@ -881,6 +904,8 @@ FIXME: if clone() is exposed, release() must also
 /*
  * Document-class: CMPIInstance
  *
+ * Class instance (object)
+ *
  */
 %extend _CMPIInstance 
 {
@@ -965,7 +990,7 @@ FIXME: if clone() is exposed, release() must also
    * get a named property value
    * Property access in Ruby:
    * data = instance[:propname]     # access by name (symbol)
-   * data = instance["propname"     # access by name (string)
+   * data = instance["propname"]    # access by name (string)
    * data = instance[1]             # access by index
    *
    * See get_property_at to retrieve property name and value
@@ -1193,6 +1218,8 @@ FIXME: if clone() is exposed, release() must also
  */
 
 /*
+ * Document-class: CMPIArgs
+ *
  * CMPI Arguments
  *
  * Arguments are passed in an ordered Hash-like fashion (name/value pairs) and can
@@ -1311,10 +1338,13 @@ FIXME: if clone() is exposed, release() must also
  */
 
 /*
+ * Document-class: CMPISelectExp
+ *
  * This structure encompasses queries
  *       and provides mechanism to operate on the query.
  */
-%extend _CMPISelectExp {
+%extend _CMPISelectExp
+{
 #if HAVE_CMPI_BROKER
   _CMPISelectExp(const char *query, const char *language, char **keys = NULL)
 #else
@@ -1374,11 +1404,13 @@ FIXME: if clone() is exposed, release() must also
  */
 
 /*
- * Select conditions
+ * Document-class: CMPISelectCond
  *
+ * Select condition
  *
  */
-%extend _CMPISelectCond {
+%extend _CMPISelectCond
+{
   /* Return string representation */
 #if HAVE_CMPI_BROKER
 #ifdef SWIGPYTHON
@@ -1405,11 +1437,13 @@ FIXME: if clone() is exposed, release() must also
  */
 
 /*
+ * Document-class: CMPISubCond
+ *
  * Sub Conditions
  *
- *
  */
-%extend _CMPISubCond {
+%extend _CMPISubCond
+{
 }
 
 /*-----------------------------------------------------
@@ -1419,11 +1453,13 @@ FIXME: if clone() is exposed, release() must also
  */
 
 /*
+ * Document-class: CMPIPredicate
+ *
  * Predicate
  *
- *
  */
-%extend _CMPIPredicate {
+%extend _CMPIPredicate
+{
   /* Return string representation */
 #if HAVE_CMPI_BROKER
 #ifdef SWIGPYTHON
@@ -1450,8 +1486,9 @@ FIXME: if clone() is exposed, release() must also
  */
 
 /*
- * Enumeration provide a linked-list type access to multiple elements
+ * Document-class: CMPIEnumeration
  *
+ * Enumeration provide a linked-list type access to multiple elements
  *
  */
 %extend _CMPIEnumeration 
@@ -1513,8 +1550,9 @@ Python for compatibility */
  */
 
 /*
- * Array of equally-typed elements
+ * Document-class: CMPIArray
  *
+ * Array of equally-typed elements
  *
  */
 %extend _CMPIArray 
@@ -1591,10 +1629,13 @@ Python for compatibility */
  */
 
 /*
+ * Document-class: CMPIString
+ *
  * A string
  *
  */
-%extend _CMPIString {
+%extend _CMPIString
+{
   ~_CMPIString() {
     CMRelease( $self );
   }	
@@ -1616,11 +1657,13 @@ Python for compatibility */
  */
 
 /*
+ * Document-class: CMPIContext
+ *
  * Context of the provider invocation
  *
- *
  */
-%extend _CMPIContext {
+%extend _CMPIContext
+{
   ~_CMPIContext() {
     CMRelease( $self );
   }	
@@ -1739,11 +1782,13 @@ Python for compatibility */
  */
 
 /*
+ * Document-class: CMPIDateTime
+ *
  * Date and Time
  *
- *
  */
-%extend _CMPIDateTime {
+%extend _CMPIDateTime
+{
   ~_CMPIDateTime()
   {
     CMRelease( $self );

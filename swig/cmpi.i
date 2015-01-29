@@ -1,4 +1,3 @@
-%{
 /* Document-module: Cmpi
  *
  * Cmpi is the module namespace for cmpi-bindings.
@@ -7,10 +6,14 @@
  * target language by using the SWIG bindings generator.
  *
  */
-%}
 
    
+#if defined(SWIGRUBY)
+# fix doc generation, has no influence on code
+%module Cmpi
+#else
 %module cmpi
+#endif
 %feature("autodoc","1");
 
 %include "typemaps.i"
