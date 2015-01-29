@@ -1,7 +1,7 @@
 #
 # spec file for package cmpi-bindings
 #
-# Copyright (c) 2013 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -151,7 +151,6 @@ Adapter to write and run CMPI-type CIM providers in Ruby
 %dir %{ruby_sitelib}/cmpi/providers
 %{ruby_sitelib}/cmpi/provider.rb
 
-
 %package -n cmpi-bindings-ruby-doc
 Summary:        RDoc-style documentation for cmpi-bindings-ruby
 Group:          Documentation/HTML
@@ -163,7 +162,6 @@ RDoc-style documentation for cmpi-bindings-ruby
 %defattr(-,root,root,-)
 %dir %{_docdir}/cmpi-bindings-ruby-docs
 %{_docdir}/cmpi-bindings-ruby-docs
-
 
 %package -n cmpi-bindings-pywbem
 Summary:        Adapter to write and run CMPI-type CIM providers in Python
