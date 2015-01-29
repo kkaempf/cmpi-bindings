@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Jan 29 07:15:49 UTC 2015 - kkaempf@suse.com
+
+- Update to 1.0.1
+  - fix comment characters in .i files for swig 3.0.4
+    (dimstar@opensuse.org)
+  - improve documentation coverage
+
+-------------------------------------------------------------------
 Wed Jun 25 10:35:41 UTC 2014 - kkaempf@suse.com
 
 - Update to 1.0.0
