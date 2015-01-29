@@ -1,56 +1,34 @@
-= \Openwsman - WS-Management for all
+= \cmpi-bindings - write CIM providers in any programming language
 
-home :: http://openwsman.github.io
-wiki :: https://github.com/Openwsman/openwsman/wiki
-mailing list :: openwsman-devel@lists.sourceforge.net
-source :: https://github.com/Openwsman/openwsman
-rdoc :: http://www.suse.de/~kkaempf/openwsman
-bugs :: https://github.com/Openwsman/openwsman/issues
-code climate :: {<img src="https://codeclimate.com/github/Openwsman/openwsman.png">}[https://codeclimate.com/github/Openwsman/openwsman]
+home :: https://github.com/kkaempf/cmpi-bindings
+wiki :: https://github.com/~kkaempf/cmpi-bindings/wiki
+source :: https://github.com/~kkaempf/cmpi-bindings
+rdoc :: http://www.suse.de/~kkaempf/cmpi-bindings
+bugs :: https://github.com/~kkaempf/cmpi-bindings/issues
+code climate :: {<img src="https://codeclimate.com/github/~kkaempf/cmpi-bindings.png">}[https://codeclimate.com/github/~kkaempf/cmpi-bindings]
 
 == Description
 
-Openwsman is an open source implementation of WS-Management; enabling
-the in-band management of Linux/uni*/Windows platforms.
-Openwsman supports the generic WS-Management protocol as well as
-specific protocol extensions for the 
-{Common Information Model}[http://www.dmtf.org/standards/cim] (CIM)
+This implements a CMPI-compliant provider interface for various
+languages via SWIG.
 
-Openwsman provides 'C' language API by default and a 'C++' API in an
-'alpha' state. For other languages, see the bindings.
+Currently supported languages
 
-== About the bindings
-
-The bindings provide the simplest way to perform WS-Management
-operations with Openwsman.
-
-Bindings exist for
-{Ruby}[https://github.com/Openwsman/openwsman/tree/master/bindings/ruby],
-{Python}[https://github.com/Openwsman/openwsman/tree/master/bindings/python],
-{Perl}[https://github.com/Openwsman/openwsman/tree/master/bindings/perl], and
-{Java}[https://github.com/Openwsman/openwsman/tree/master/bindings/java].
-with plenty of examples in the respective 'tests' directories.
-
-The Ruby bindings are fully maintained an considered 'production'
-quality.
+- Ruby
+- Python
+- Perl (beginning support)
 
 == Bugs
 
-If you have problems using Openwsman, report to the
-{mailing list}[mailto:openwsman-devel@lists.sourceforge.net]
-first.
-
 If you are sure to have found a bug, please report it via the
-{Github issue tracker}[https://github.com/Openwsman/openwsman/issues]
+{Github issue tracker}[https://github.com/cmpi-bindings/~kkaempf/issues]
 
 == License
 
-Openwsman is copyright (C) 2004-2006 by Intel Corp, 2006-2013 by SUSE
-Linux Products GmbH.
+cmpi-bindings is copyright (C) 2006-2015 by SUSE Linux GmbH.
 
-Openwsman is free software, and may be redistributed under the terms
-of the
-{BSD-3-Clause}[https://github.com/Openwsman/openwsman/blob/master/COPYING]
+cmpi-bindings is free software, and may be redistributed under the terms
+of the {BSD-3-Clause}[https://github.com/cmpi-bindings/cmpi-bindings/blob/master/COPYING]
 license.
 
 == Warranty
