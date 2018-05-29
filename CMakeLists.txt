@@ -10,10 +10,18 @@ enable_testing()
 #
 # cmake2.6: backward compatibility to cmake 2.4
 #
+if(${CMAKE_VERSION} VERSION_LESS "3.0.0")
+# OLD is deprecated in 3.x
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 OLD)
 endif(COMMAND cmake_policy)
-	      
+endif()
+
+# ignore non-existing dependencies
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0046 OLD)
+endif(COMMAND cmake_policy)
+
 # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 #SET(CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/share/cmake/Modules ${CMAKE_MODULE_PATH})
