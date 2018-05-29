@@ -97,7 +97,9 @@ ADD_CUSTOM_COMMAND (
    DEPENDS ${CMAKE_SOURCE_DIR}/swig/ruby/cmpi/*.rb
 )
 
+IF ( ${RUBY_VERSION} VERSION_LESS "2.5.0" )
 ADD_CUSTOM_TARGET(ruby_rdoc ALL DEPENDS "${rdoc_dir}")
+ENDIF ( ${RUBY_VERSION} VERSION_LESS "2.5.0" )
 
 IF( BUILD_RUBY_GEM )
 #
@@ -117,7 +119,6 @@ ADD_CUSTOM_COMMAND (
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMAND "gem" "build" "${CMAKE_CURRENT_BINARY_DIR}/cmpi-bindings.gemspec"
    DEPENDS "ext"
-   DEPENDS ${rdoc_dir}
    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmpi-bindings.gemspec
 )
 
