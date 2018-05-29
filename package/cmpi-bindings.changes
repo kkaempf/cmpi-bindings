@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May 29 11:20:34 UTC 2018 - kkaempf@suse.com
+
+- Update to 1.0.2
+  - disable ruby documentation for Ruby 2.5.0
+    (rdoc-6.0.1 breaks swig documentation hack)
+
+-------------------------------------------------------------------
 Thu Jan 29 07:15:49 UTC 2015 - kkaempf@suse.com
 
 - Update to 1.0.1

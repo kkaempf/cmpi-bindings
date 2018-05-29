@@ -127,7 +127,9 @@ cd build
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/cmpi
 make install DESTDIR=$RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{_docdir}
+%if 0%{?suse_version} < 1500
 cp -a swig/ruby/html $RPM_BUILD_ROOT%{_docdir}/cmpi-bindings-ruby-docs
+%endif
 
 %package -n cmpi-bindings-ruby
 Summary:        Adapter to write and run CMPI-type CIM providers in Ruby
@@ -151,6 +153,8 @@ Adapter to write and run CMPI-type CIM providers in Ruby
 %dir %{ruby_sitelib}/cmpi/providers
 %{ruby_sitelib}/cmpi/provider.rb
 
+%if 0%{?suse_version} < 1500
+# ruby 2.5.0 broke swig-rdoc
 %package -n cmpi-bindings-ruby-doc
 Summary:        RDoc-style documentation for cmpi-bindings-ruby
 Group:          Documentation/HTML
@@ -162,6 +166,7 @@ RDoc-style documentation for cmpi-bindings-ruby
 %defattr(-,root,root,-)
 %dir %{_docdir}/cmpi-bindings-ruby-docs
 %{_docdir}/cmpi-bindings-ruby-docs
+%endif
 
 %package -n cmpi-bindings-pywbem
 Summary:        Adapter to write and run CMPI-type CIM providers in Python
