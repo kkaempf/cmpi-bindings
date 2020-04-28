@@ -14,13 +14,15 @@ if(${CMAKE_VERSION} VERSION_LESS "3.0.0")
 # OLD is deprecated in 3.x
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 OLD)
+  cmake_policy(SET CMP0046 NEW)
 endif(COMMAND cmake_policy)
 endif()
 
-# ignore non-existing dependencies
-if(COMMAND cmake_policy)
-  cmake_policy(SET CMP0046 OLD)
-endif(COMMAND cmake_policy)
+SET( BUILD_PYTHON2_EXPLICIT ${BUILD_PYTHON2})
+SET( BUILD_PYTHON3_EXPLICIT ${BUILD_PYTHON3})
+
+OPTION( BUILD_PYTHON3 "Build Python3 bindings" NO )
+OPTION( BUILD_PYTHON2 "Build Python2 bindings" NO )
 
 # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})

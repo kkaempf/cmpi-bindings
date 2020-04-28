@@ -7,8 +7,6 @@ add_subdirectory(tests)
 
 SET (BUILD_SHARED_LIBS ON)
 
-FIND_PACKAGE(PythonInterp REQUIRED)
-
 EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "from sys import stdout; from distutils import sysconfig; stdout.write(sysconfig.get_python_lib())" OUTPUT_VARIABLE PYTHON_LIB_DIR)
 
 IF (NOT PYTHON_SITE_DIR)
