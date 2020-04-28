@@ -43,8 +43,12 @@ ADD_DEFINITIONS(-DCMPI_PLATFORM_LINUX_GENERIC_GNU -DCMPI_VERSION=200)
 #
 # cmpi_provider: provider .so
 #
-
+IF (BUILD_PYTHON3)
+SET( NAME py3CmpiProvider )
+ELSE (BUILD_PYTHON3)
 SET( NAME pyCmpiProvider )
+ENDIF (BUILD_PYTHON3)
+
 ADD_LIBRARY( ${NAME} SHARED ${SWIG_OUTPUT})
 #TARGET_LINK_LIBRARIES( ${NAME} ${PYTHON_LIBRARIES} )
 TARGET_LINK_LIBRARIES( ${NAME} python${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION} )
@@ -66,8 +70,3 @@ INSTALL(FILES cmpi_pywbem_bindings.py DESTINATION ${PYTHON_SITE_DIR} )
 INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c \"from py_compile import compile; compile('\$ENV{DESTDIR}${PYTHON_SITE_DIR}/cmpi.py', dfile='${PYTHON_SITE_DIR}/cmpi.py')\")")
 
 INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c \"from py_compile import compile; compile('\$ENV{DESTDIR}${PYTHON_SITE_DIR}/cmpi_pywbem_bindings.py', dfile='${PYTHON_SITE_DIR}/cmpi_pywbem_bindings.py')\")")
-
-
-
-
-
