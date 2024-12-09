@@ -165,9 +165,19 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   _TARGET_INIT=1;//true
   
   _SBLIM_TRACE(1,("<%d/0x%x> Python: Loading", getpid(), pthread_self()));
-  
+#if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 11
   Py_SetProgramName(proname);
   Py_Initialize();
+#else
+  /* Py_SetProgramName got deprecated in 3.11 */
+  PyStatus status;
+  PyConfig config;
+  PyConfig_InitIsolatedConfig(&config);
+  config.isolated = 1;
+  status = Py_InitializeFromConfig(&config);
+  if (PyStatus_Exception(status))
+    return -1;
+#endif
 #if PY_MAJOR_VERSION < 3
   SWIGEXPORT void SWIG_init(void);
   SWIG_init();
