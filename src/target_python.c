@@ -154,7 +154,6 @@ cleanup:
 static int
 PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
 {
-  const wchar_t proname[] = L"cmpi_swig";
 /*  _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() called", getpid(), pthread_self())); */
   
   if (_TARGET_INIT)
@@ -166,6 +165,7 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   
   _SBLIM_TRACE(1,("<%d/0x%x> Python: Loading", getpid(), pthread_self()));
 #if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 11
+  const wchar_t proname[] = L"cmpi_swig";
   Py_SetProgramName(proname);
   Py_Initialize();
 #else
