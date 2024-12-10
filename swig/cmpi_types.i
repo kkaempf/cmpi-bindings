@@ -1722,7 +1722,7 @@ Python for compatibility */
   )
   {
     Target_Type tdata;
-    Target_Type result;
+    Target_Type result = Target_Null;
     CMPIString *s = NULL;
     CMPIStatus st = { CMPI_RC_OK, NULL };
     CMPIData data;
@@ -1742,12 +1742,13 @@ Python for compatibility */
     if (st.rc)
     {
         RAISE_IF(st);
-	result = Target_Null;
 	Target_INCREF(result);
         return result;
     }
     if (s)
       name = CMGetCharPtr(s);
+    else
+      return result;
     TARGET_THREAD_BEGIN_BLOCK;
     tdata = data_data(&data);
 #if defined (SWIGPYTHON)
