@@ -1,9 +1,9 @@
 #
 # CMakeLists.txt for cmpi-bindings
 #
-PROJECT(cmpi-bindings)
-
 cmake_minimum_required(VERSION 2.4)
+
+PROJECT(cmpi-bindings)
 
 include(CTest)
 enable_testing()
