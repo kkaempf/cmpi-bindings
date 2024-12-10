@@ -137,8 +137,9 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 static Target_Type
 Target_DateTime(CMPIDateTime *datetime)
 {
-  CMPIStatus st;
   Target_Type result;
+#if defined (SWIGRUBY)
+  CMPIStatus st;
   if (datetime) {
     /* this used to call datetime->ft->getBinaryFormat(datetime, &st)
      * but was abandoned since getBinaryFormat cannot handle pre-epoch
@@ -146,21 +147,16 @@ Target_DateTime(CMPIDateTime *datetime)
      */
     CMPIString *dtstr = datetime->ft->getStringFormat(datetime, &st);
     if (st.rc) {
-#if !defined (SWIGRUBY)
-      result = Target_Null;
-#endif
       SWIG_exception(SWIG_ValueError, "bad CMPIDateTime value");
     }
-#if defined(SWIGRUBY)
     result = rb_funcall(mCmpi, rb_intern("cimdatetime_to_ruby"), 1, Target_String(CMGetCharPtr(dtstr)));
-#else
-    SWIG_exception(SWIG_RuntimeError, "CMPIDate conversion not implemented");
-#endif
   }
   else {
     result = Target_Null;
   }
-#if !defined (SWIGRUBY)
+#else
+  result = Target_Null;
+  SWIG_exception(SWIG_RuntimeError, "CMPIDate conversion not implemented");
 fail:
 #endif
   return result;
@@ -324,7 +320,7 @@ data_value(const CMPIData *dp)
   else {
     result = value_value(&(dp->value), dp->type);
   }
-#if !defined (SWIGRUBY)
+#if !defined(SWIGRUBY)
 fail:
 #endif
   return result;
@@ -359,6 +355,7 @@ target_charptr(Target_Type target)
 #else
 #warning target_charptr not defined
   str = NULL;
+fail:
 #endif
   return str;
 }
@@ -413,7 +410,7 @@ cmpi_broker()
     SWIG_exception(SWIG_ArgError(res1), Ruby_Format_TypeError("", "CMPIBroker *", "broker", 1, broker));
   }
   return (CMPIBroker *)ptr;
-#if !defined (SWIGRUBY)
+#if defined (SWIGPYTHON)
 fail:
 #endif
   return NULL;
@@ -714,7 +711,7 @@ target_to_value(Target_Type data, CMPIValue *value, CMPIType type)
       break;
     } /* switch (type) */
   }
-#if !defined (SWIGRUBY)
+#if defined (SWIGPYTHON)
 fail:
 #endif
   return type;
@@ -821,11 +818,9 @@ static void _raise_ex(const CMPIStatus* st)
       snprintf(msg, 15, "Cmpi rc %d", st->rc);
     }
     SWIG_exception(SWIG_RuntimeError, msg);
+fail:
     if (msg)
       free(msg);
-#endif
-#if !defined (SWIGRUBY)
-fail:
 #endif
     return;
 }
@@ -991,9 +986,6 @@ create_select_filter_exp(const CMPIBroker* broker, const char *query, const char
       CMRelease(projection);
     }
   }
-#if !defined(SWIGRUBY)
-fail:
-#endif
   return sfe;
 }
 
