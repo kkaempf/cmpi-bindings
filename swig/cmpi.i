@@ -137,7 +137,7 @@ SWIGINTERNINLINE SV *SWIG_From_double  SWIG_PERL_DECL_ARGS_1(double value);
 static Target_Type
 Target_DateTime(CMPIDateTime *datetime)
 {
-  Target_Type result;
+  Target_Type result = Target_Null;
 #if defined (SWIGRUBY)
   CMPIStatus st;
   if (datetime) {
@@ -172,7 +172,7 @@ fail:
 static Target_Type
 value_value(const CMPIValue *value, const CMPIType type)
 {
-  Target_Type result;
+  Target_Type result = Target_Null;
   switch (type)
     {
       case CMPI_null:
@@ -296,7 +296,7 @@ data_clone(const CMPIData *dp)
 static Target_Type
 data_value(const CMPIData *dp)
 {
-  Target_Type result;
+  Target_Type result = Target_Null;
 
   if ((dp->state & CMPI_notFound)  /* should CMPI_notFound raise or return NULL ? */
       || (dp->state & CMPI_nullValue)
@@ -353,7 +353,7 @@ target_charptr(Target_Type target)
 #elif defined (SWIGPYTHON)
   str = PyString_AsString(target);
 #else
-#warning target_charptr not defined
+#warning target_charptr not defined (expected for Perl)
   str = NULL;
 fail:
 #endif
@@ -369,7 +369,7 @@ fail:
 static Target_Type
 data_data(const CMPIData *dp)
 {
-  Target_Type result;
+  Target_Type result = Target_Null;
 
   if (dp->state & CMPI_notFound) {
     SWIG_exception(SWIG_IndexError, "value not found");

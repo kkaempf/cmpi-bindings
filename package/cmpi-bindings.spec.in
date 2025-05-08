@@ -1,7 +1,7 @@
 #
 # spec file for package cmpi-bindings
 #
-# Copyright (c) 2023 SUSE LLC
+# Copyright (c) 2025 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -197,18 +197,20 @@ Summary:        Adapter to write and run CMPI-type CIM providers in Python 2
 Group:          Development/Languages/Python
 # for the debug package. we dont use debug_package_requires here as it would enforce to install both packages.
 Provides:       %{name} = %{version}-%{release}
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 %if %{python3}
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "import site; print(site.getsitepackages()[1])")}
+%{!?python_sitearch: %global python_sitearch %(%{__python} -c "import site; print(site.getsitepackages()[0])")}
 %{!?py3_requires: %define py3_requires Requires: python3}
 %{py3_requires}
 %else
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 %{!?py_requires: %define py_requires Requires: python}
 %{py_requires}
 %endif
 
 %description -n %{pywbemname}
--
+Adapter to write and run CMPI-type CIM providers in Python
 
 %files -n %{pywbemname}
 %defattr(-,root,root,-)
@@ -233,7 +235,7 @@ Group:          Development/Languages/Perl
 Provides:       %{name} = %{version}-%{release}
 
 %description -n cmpi-bindings-perl
--
+Adapter to write and run CMPI-type CIM providers in Perl
 
 %files -n cmpi-bindings-perl
 %defattr(-,root,root,-)

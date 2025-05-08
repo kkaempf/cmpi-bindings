@@ -39,8 +39,9 @@
 
 #include <Python.h>
 
-
+#if PY_MAJOR_VERSION > 2 && PY_MINOR_VERSION < 13  
 static PyThreadState* cmpiMainPyThreadState = NULL; 
+#endif
 
 /*
  * get Python exception trace -> CMPIString
@@ -173,20 +174,35 @@ PyGlobalInitialize(const CMPIBroker* broker, CMPIStatus* st)
   PyStatus status;
   PyConfig config;
   PyConfig_InitIsolatedConfig(&config);
+  status = PyConfig_SetBytesString(&config, &config.program_name, "cmpi_pywbem_bindings");
+  if (PyStatus_Exception(status)) {
+    _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() failed in PyConfig_SetBytesString", getpid(), pthread_self()));
+    goto exception;
+  }
   config.isolated = 1;
   status = Py_InitializeFromConfig(&config);
-  if (PyStatus_Exception(status))
-    return -1;
+  if (PyStatus_Exception(status)) {
+    _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() failed in Py_InitializeFromConfig", getpid(), pthread_self()));
+    goto exception;
+  }
+  PyConfig_Clear(&config);
 #endif
 #if PY_MAJOR_VERSION < 3
   SWIGEXPORT void SWIG_init(void);
   SWIG_init();
-#endif
+#elsif PY_MINOR_VERSION < 13
   cmpiMainPyThreadState = PyGILState_GetThisThreadState();
   PyEval_ReleaseThread(cmpiMainPyThreadState); 
-  
+#else /* 3.13 or later */
+#endif
   _SBLIM_TRACE(1,("<%d/0x%x> PyGlobalInitialize() succeeded", getpid(), pthread_self())); 
-  return 0; 
+  return 0;
+#if PY_MAJOR_VERSION > 2 && PY_MINOR_VERSION > 12
+exception:
+  PyConfig_Clear(&config);
+  Py_ExitStatusException(status);
+  return -1;
+#endif
 }
 
 
@@ -441,9 +457,11 @@ TargetCleanup(ProviderMIHandle * hdl)
   TARGET_THREAD_BEGIN_BLOCK;
   Py_DecRef(_TARGET_MODULE);
   TARGET_THREAD_END_BLOCK;
-  
+#if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 13  
   PyEval_AcquireLock(); 
-  PyThreadState_Swap(cmpiMainPyThreadState); 
+  PyThreadState_Swap(cmpiMainPyThreadState);
+#else
+#endif
   if (_TARGET_INIT)  // if Python is initialized and _MI_COUNT == 0, call Py_Finalize
   {
     _SBLIM_TRACE(1,("Calling Py_Finalize()"));
