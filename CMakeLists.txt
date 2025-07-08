@@ -1,7 +1,7 @@
 #
 # CMakeLists.txt for cmpi-bindings
 #
-cmake_minimum_required(VERSION 2.4)
+cmake_minimum_required(VERSION 3.5)
 
 PROJECT(cmpi-bindings)
 
